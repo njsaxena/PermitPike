@@ -28,6 +28,7 @@
     "proposedBreakerAmps": 25,
     "conductorAWG": "10",
     "disconnectWithinSight": true,
+    "gfciProtected": true,
     "outdoorUnitSetbackFt": 3,
     "panelUpgrade": null
   },
@@ -36,7 +37,8 @@
     "heatPump.mocpAmps": 0.94,
     "proposedBreakerAmps": 0.9,
     "outdoorUnitSetbackFt": 0.95,
-    "existingLoad.dwellingSqFt": 0.8
+    "existingLoad.dwellingSqFt": 0.8,
+    "gfciProtected": 0.88
   },
   "missingFields": [],
   "model": "fixture",

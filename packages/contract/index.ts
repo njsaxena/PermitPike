@@ -249,6 +249,12 @@ export const HeatPumpPanelFields = ServiceFields.extend({
   proposedBreakerAmps: z.number().positive(),
   conductorAWG: z.string().nullable(),
   disconnectWithinSight: z.boolean().nullable(),
+  /**
+   * GFCI protection on the outdoor unit circuit (NEC 210.8(F)): true when a GFCI breaker or
+   * listed device is shown or stated, false when the documents say there is none. Null or
+   * missing when the documents don't say.
+   */
+  gfciProtected: z.boolean().nullable().optional(),
   /** Outdoor unit distance to the nearest property line. */
   outdoorUnitSetbackFt: z.number().nonnegative().nullable(),
   /** Null when the job does not include a panel/service upgrade. */

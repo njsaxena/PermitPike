@@ -72,6 +72,7 @@ export function fieldSource(key: string): FieldSource {
 export const RULE_FIELDS: Record<string, string[]> = {
   "heat_pump_panel.breaker_sizing": ["proposedBreakerAmps", "heatPump.mcaAmps", "heatPump.mocpAmps"],
   "heat_pump_panel.outdoor_setback": ["outdoorUnitSetbackFt"],
+  "heat_pump_panel.outdoor_gfci": ["gfciProtected", "proposedBreakerAmps"],
   "shared.service_capacity": ["existingServiceAmps", "panelUpgrade"],
   "ev_charger.breaker_125_percent": ["proposedBreakerAmps", "charger.outputAmps"],
   "ev_charger.gfci": ["gfciProtected"],

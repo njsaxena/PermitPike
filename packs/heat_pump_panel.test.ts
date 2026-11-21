@@ -57,6 +57,14 @@ describe("heat_pump_panel pack", () => {
       expect(c.status).toBe("warn");
       expectFix(c);
     });
+    it("passes when the documents show GFCI protection", () => {
+      expect(check("outdoor_gfci", { gfciProtected: true }).status).toBe("pass");
+    });
+    it("fails when the documents say there is no GFCI protection", () => {
+      const c = check("outdoor_gfci", { gfciProtected: false });
+      expect(c.status).toBe("fail");
+      expectFix(c);
+    });
   });
 
   describe("conductor_ampacity", () => {

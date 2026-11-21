@@ -73,6 +73,7 @@ export function fieldGroups(f: ExtractedFields): FieldGroup[] {
             { key: "proposedBreakerAmps", label: "Proposed breaker", value: unit(f.proposedBreakerAmps, "A") },
             { key: "conductorAWG", label: "Conductor", value: f.conductorAWG && `${f.conductorAWG} AWG` },
             { key: "disconnectWithinSight", label: "Disconnect within sight", value: yesNo(f.disconnectWithinSight) },
+            { key: "gfciProtected", label: "GFCI protected", value: yesNo(f.gfciProtected ?? null) },
             { key: "outdoorUnitSetbackFt", label: "Outdoor unit to property line", value: unit(f.outdoorUnitSetbackFt, "ft") },
             {
               key: "panelUpgrade",

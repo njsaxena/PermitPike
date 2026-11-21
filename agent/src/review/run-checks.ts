@@ -17,11 +17,22 @@ import { getPack, type Rule, type RulePack } from "@permitpike/packs";
 /**
  * Dot paths each rule reads. When the extraction lists one of these in missingFields,
  * the rule is skipped and recorded for manual review instead of run on a guessed value.
- * Rules not listed here always run.
+ * Every heat pump rule must be listed here (agent/test/review.test.ts checks it).
  */
 export const RULE_REQUIRED_FIELDS: Record<string, string[]> = {
   "heat_pump_panel.breaker_sizing": ["heatPump.mcaAmps", "heatPump.mocpAmps", "proposedBreakerAmps"],
   "heat_pump_panel.outdoor_setback": ["outdoorUnitSetbackFt"],
+  "heat_pump_panel.disconnect_within_sight": ["disconnectWithinSight"],
+  "heat_pump_panel.outdoor_gfci": ["gfciProtected", "proposedBreakerAmps", "serviceVoltage"],
+  "heat_pump_panel.conductor_ampacity": ["conductorAWG", "heatPump.mcaAmps"],
+  "heat_pump_panel.breaker_space_available": ["availableBreakerSpaces", "heatPump.voltage"],
+  "heat_pump_panel.panel_working_clearance": ["panelWorkingClearanceIn"],
+  "heat_pump_panel.panel_upgrade_matches_service": [
+    "panelUpgrade",
+    "existingServiceAmps",
+    "heatPump.mcaAmps",
+    "heatPump.voltage",
+  ],
 };
 
 /** Dot paths the load calc reads. If any is missing the review can't finish. */

@@ -131,11 +131,16 @@ const outdoorGfci: Rule<"heat_pump_panel"> = {
         `A ${f.proposedBreakerAmps} A circuit on a ${f.serviceVoltage} V service is outside the 210.8(F) scope used here (${OUTDOOR_GFCI_MAX_BREAKER_AMPS} A or less, 150 V to ground or less).`,
       );
     }
-    // The contract has no GFCI field for heat pumps, so this can't be confirmed from the documents.
+    const gfci = f.gfciProtected ?? null;
+    if (gfci === true) {
+      return result(this, "pass", `The documents show GFCI protection on the ${f.proposedBreakerAmps} A outdoor unit circuit.`);
+    }
     return result(
       this,
-      "warn",
-      `The ${f.proposedBreakerAmps} A outdoor unit circuit needs GFCI protection, and the documents don't show it.`,
+      gfci === null ? "warn" : "fail",
+      gfci === null
+        ? `The ${f.proposedBreakerAmps} A outdoor unit circuit needs GFCI protection, and the documents don't show it.`
+        : `The ${f.proposedBreakerAmps} A outdoor unit circuit needs GFCI protection, and the documents say there is none.`,
       "Show GFCI protection for the outdoor unit circuit (GFCI breaker or listed device) on the panel schedule, or note the exception that applies.",
     );
   },
@@ -297,6 +302,7 @@ export const heatPumpPanelPack: RulePack<"heat_pump_panel"> = {
       "heatPump.backupHeatKW: electric backup / supplemental / auxiliary heat or 'heat strip' / 'heat kit' kW for the air handler, from the spec sheet or the electrician's notes. Null for ductless mini-splits or when none is listed.",
       "conductorAWG: size and material from the single-line diagram, e.g. \"8 AWG Cu\".",
       "disconnectWithinSight: true when the site plan shows a disconnect next to the outdoor unit.",
+      "gfciProtected: true only if a GFCI breaker or listed GFCI device is shown or stated for the outdoor unit circuit; false if the documents say there is none; null otherwise.",
       "panelWorkingClearanceIn: clear depth in front of the panel from the photo or a note.",
     ],
   },

@@ -8,7 +8,8 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { AgentReviewRequest, Extraction, Recommendation } from "@permitpike/contract";
 import { buildRecommendation, confidenceFrom, decide } from "../src/review/recommend";
-import { ReviewIncompleteError, runChecks } from "../src/review/run-checks";
+import { heatPumpPanelPack } from "@permitpike/packs";
+import { RULE_REQUIRED_FIELDS, ReviewIncompleteError, runChecks } from "../src/review/run-checks";
 import { usableExtraction } from "../src/review/request";
 
 const fixture = (name: string) =>
@@ -20,19 +21,23 @@ function review(extraction: Extraction) {
   return { rec: Recommendation.parse(rec), manualReviewRuleIds };
 }
 
-// The pack's GFCI rule always warns: the contract has no heat pump GFCI field yet.
 const GFCI = "heat_pump_panel.outdoor_gfci";
 
-test("clean pass: every rule passes except the GFCI reminder, load fits", () => {
+/** A heat pump fixture with some fields changed. */
+function withFields(name: string, changes: Record<string, unknown>, missingFields?: string[]): Extraction {
+  const e = fixture(name);
+  return Extraction.parse({ ...e, fields: { ...e.fields, ...changes }, missingFields: missingFields ?? e.missingFields });
+}
+
+test("clean pass: every rule passes, load fits, approve", () => {
   const { rec, manualReviewRuleIds } = review(fixture("hp-clean-pass"));
   assert.deepEqual(manualReviewRuleIds, []);
-  const notPass = rec.checks.filter((c) => c.status !== "pass").map((c) => c.ruleId);
-  assert.deepEqual(notPass, [GFCI], JSON.stringify(rec.checks.map((c) => [c.ruleId, c.status])));
+  assert.ok(rec.checks.every((c) => c.status === "pass"), JSON.stringify(rec.checks.map((c) => [c.ruleId, c.status])));
   assert.ok(rec.checks.every((c) => c.citation.length > 0));
   assert.ok(rec.checks.some((c) => c.ruleId === "shared.service_capacity"));
   assert.equal(rec.loadCalc.result, "fits");
-  assert.equal(rec.decision, "approve_with_conditions");
-  assert.equal(rec.conditions.length, 1);
+  assert.equal(rec.decision, "approve");
+  assert.deepEqual(rec.conditions, []);
   assert.equal(rec.utilityFlag, null);
   assert.equal(rec.confidence, 0.88);
   assert.ok(rec.inspectorChecklist.length > 0);
@@ -56,7 +61,39 @@ test("missing field: rule is skipped for manual review, not run on the placehold
   assert.match(setback?.message ?? "", /Manual review/);
   assert.ok(setback?.citation);
   assert.equal(rec.decision, "approve_with_conditions");
-  assert.equal(rec.conditions.length, 2); // manual review + GFCI
+  assert.equal(rec.conditions.length, 1);
+});
+
+test("GFCI not shown: a condition, not a guess", () => {
+  const { rec } = review(withFields("hp-clean-pass", { gfciProtected: null }));
+  assert.equal(rec.checks.find((c) => c.ruleId === GFCI)?.status, "warn");
+  assert.equal(rec.decision, "approve_with_conditions");
+  assert.equal(rec.conditions.length, 1);
+});
+
+test("documents say there is no GFCI: return for fixes", () => {
+  const { rec } = review(withFields("hp-clean-pass", { gfciProtected: false }));
+  assert.equal(rec.checks.find((c) => c.ruleId === GFCI)?.status, "fail");
+  assert.equal(rec.decision, "return_for_fixes");
+});
+
+test("an application saved before gfciProtected existed still reviews", () => {
+  const e = fixture("hp-clean-pass");
+  const { gfciProtected: _dropped, ...older } = e.fields as Record<string, unknown>;
+  const { rec } = review(Extraction.parse({ ...e, fields: older }));
+  assert.equal(rec.checks.find((c) => c.ruleId === GFCI)?.status, "warn");
+});
+
+test("a missing field on one of the newer rules is flagged, not guessed", () => {
+  const { rec, manualReviewRuleIds } = review(withFields("hp-clean-pass", { conductorAWG: "14" }, ["conductorAWG"]));
+  assert.deepEqual(manualReviewRuleIds, ["heat_pump_panel.conductor_ampacity"]);
+  // 14 AWG on an 18 A MCA would fail; skipping it makes a manual-review warn instead.
+  assert.equal(rec.checks.find((c) => c.ruleId === "heat_pump_panel.conductor_ampacity")?.status, "warn");
+});
+
+test("every heat pump rule lists the fields it reads", () => {
+  const unlisted = heatPumpPanelPack.rules.map((r) => r.id).filter((id) => !RULE_REQUIRED_FIELDS[id]);
+  assert.deepEqual(unlisted, []);
 });
 
 test("missing load calc input stops the review instead of guessing", () => {
