@@ -85,10 +85,6 @@ export function LoadCalcPanel({
           draws and the new load, line by line as the electrical code sets out, and compares the total to the{" "}
           <span className="font-semibold">{calc.serviceAmps} A</span> service.
         </p>
-        <p className="text-sm text-muted">
-          Under 80% of the rating fits. 80 to 100% is tight: allowed, but with little room left. Over 100% needs a
-          bigger service before the work can go ahead. The 80% line is a PermitPike setting, not a code rule.
-        </p>
       </div>
       <div className="flex flex-col gap-5 border border-border bg-surface p-card">
         <ServiceMeter calc={calc} label={before ? "On the new service" : "Calculated load"} />
