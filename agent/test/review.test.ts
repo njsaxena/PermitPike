@@ -20,15 +20,19 @@ function review(extraction: Extraction) {
   return { rec: Recommendation.parse(rec), manualReviewRuleIds };
 }
 
-test("clean pass: every rule passes, load fits, approve", () => {
+// The pack's GFCI rule always warns: the contract has no heat pump GFCI field yet.
+const GFCI = "heat_pump_panel.outdoor_gfci";
+
+test("clean pass: every rule passes except the GFCI reminder, load fits", () => {
   const { rec, manualReviewRuleIds } = review(fixture("hp-clean-pass"));
   assert.deepEqual(manualReviewRuleIds, []);
-  assert.ok(rec.checks.every((c) => c.status === "pass"), JSON.stringify(rec.checks.map((c) => [c.ruleId, c.status])));
+  const notPass = rec.checks.filter((c) => c.status !== "pass").map((c) => c.ruleId);
+  assert.deepEqual(notPass, [GFCI], JSON.stringify(rec.checks.map((c) => [c.ruleId, c.status])));
   assert.ok(rec.checks.every((c) => c.citation.length > 0));
   assert.ok(rec.checks.some((c) => c.ruleId === "shared.service_capacity"));
   assert.equal(rec.loadCalc.result, "fits");
-  assert.equal(rec.decision, "approve");
-  assert.deepEqual(rec.conditions, []);
+  assert.equal(rec.decision, "approve_with_conditions");
+  assert.equal(rec.conditions.length, 1);
   assert.equal(rec.utilityFlag, null);
   assert.equal(rec.confidence, 0.88);
   assert.ok(rec.inspectorChecklist.length > 0);
@@ -52,7 +56,7 @@ test("missing field: rule is skipped for manual review, not run on the placehold
   assert.match(setback?.message ?? "", /Manual review/);
   assert.ok(setback?.citation);
   assert.equal(rec.decision, "approve_with_conditions");
-  assert.equal(rec.conditions.length, 1);
+  assert.equal(rec.conditions.length, 2); // manual review + GFCI
 });
 
 test("missing load calc input stops the review instead of guessing", () => {
