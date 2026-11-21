@@ -2,6 +2,7 @@
 
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import { cx } from "@/lib/cx";
 
 /** The tracking code as a value, with a Copy button that says when it worked. */
@@ -15,14 +16,7 @@ export function TrackingCodeCopy({
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   async function copy() {
-    let done = false;
-    try {
-      await navigator.clipboard.writeText(code);
-      done = true;
-    } catch {
-      // Webviews and some browsers refuse the Clipboard API; the older select-and-copy still works there.
-      done = legacyCopy(code);
-    }
+    const done = await copyText(code);
     setState(done ? "copied" : "failed");
     window.setTimeout(() => setState("idle"), 2500);
   }
@@ -58,21 +52,4 @@ export function TrackingCodeCopy({
       )}
     </div>
   );
-}
-
-function legacyCopy(text: string): boolean {
-  const area = document.createElement("textarea");
-  area.value = text;
-  area.setAttribute("readonly", "");
-  area.style.position = "fixed";
-  area.style.opacity = "0";
-  document.body.appendChild(area);
-  area.select();
-  try {
-    return document.execCommand("copy");
-  } catch {
-    return false;
-  } finally {
-    area.remove();
-  }
 }

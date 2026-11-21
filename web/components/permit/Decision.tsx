@@ -2,6 +2,8 @@ import { APPROVAL_VALID_DAYS, type ApplicationDetail, type ReviewerAction } from
 import { isExpired } from "@/lib/expiry";
 import { Callout, SignatureBlock } from "@/components/ui";
 import { longDate, stamp } from "@/lib/format";
+import { isStep0Text, parseStep0Text, splitStep0 } from "@/lib/step0";
+import { Step0DraftCard } from "./Step0Draft";
 
 /** The official's latest action on the current version, if any. */
 export function latestAction(detail: ApplicationDetail): ReviewerAction | undefined {
@@ -16,12 +18,15 @@ export function Decision({ detail }: { detail: ApplicationDetail }) {
 
   if (app.status === "approved") {
     const conditions = action.type === "approve" ? action.conditions : [];
+    // An override's reason is shown; an approval note stays with the city, apart from a Step 0 draft attached to it.
+    const reason = action.type === "override" ? splitStep0(action.reason) : null;
+    const draft = action.type === "approve" ? (action.note ? splitStep0(action.note).draft : null) : (reason?.draft ?? null);
     return (
       <section aria-labelledby="decision" className="flex flex-col gap-4">
         <h2 id="decision" className="text-lg text-ink">
           Approved
         </h2>
-        {action.type === "override" && <p className="text-ink">{action.reason}</p>}
+        {reason?.message && <p className="text-ink">{reason.message}</p>}
         {conditions.length > 0 && (
           <Callout tone="warning" title="Conditions of approval">
             <ul className="list-disc pl-5">
@@ -32,6 +37,7 @@ export function Decision({ detail }: { detail: ApplicationDetail }) {
           </Callout>
         )}
         <SignatureBlock name={action.actor.name} signedAt={stamp(action.timestamp)} permitNumber={app.permitNumber} />
+        {draft && <Step0DraftCard draft={parseStep0Text(draft)} id="step0-sent" />}
         {app.expiresAt &&
           (isExpired(app) ? (
             <Callout title={`This approval expired on ${longDate(app.expiresAt)}.`}>
@@ -47,21 +53,26 @@ export function Decision({ detail }: { detail: ApplicationDetail }) {
   }
 
   if (app.status === "returned") {
-    const fixes = action.type === "return" ? action.requestedFixes : [];
+    const all = action.type === "return" ? action.requestedFixes : [];
+    const fixes = all.filter((f) => !isStep0Text(f));
+    const draft = all.find(isStep0Text) ?? null;
     const reason = action.type === "approve" ? null : action.reason;
     return (
-      <Callout tone="warning" title={`Returned for fixes by ${action.actor.name}`}>
-        <div className="flex flex-col gap-2">
-          {reason && <p>{reason}</p>}
-          {fixes.length > 0 && (
-            <ul className="list-disc pl-5">
-              {fixes.map((f) => (
-                <li key={f}>{f}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </Callout>
+      <div className="flex flex-col gap-4">
+        <Callout tone="warning" title={`Returned for fixes by ${action.actor.name}`}>
+          <div className="flex flex-col gap-2">
+            {reason && <p>{reason}</p>}
+            {fixes.length > 0 && (
+              <ul className="list-disc pl-5">
+                {fixes.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Callout>
+        {draft && <Step0DraftCard draft={parseStep0Text(draft)} id="step0-sent" />}
+      </div>
     );
   }
   return null;

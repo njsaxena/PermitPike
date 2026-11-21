@@ -7,6 +7,8 @@ import { api, ApiRequestError, TRACK_POLL_MS } from "@/lib/api-client";
 import { readApplicantId } from "@/lib/applicant";
 import { clockTime, longDate } from "@/lib/format";
 import { cx } from "@/lib/cx";
+import { applicantProposesUpgrade, buildStep0Draft } from "@/lib/step0";
+import { Step0DraftCard } from "@/components/permit/Step0Draft";
 import { ProgramsCard } from "./ProgramsCard";
 import { TrackLookup } from "./TrackLookup";
 
@@ -75,7 +77,10 @@ export function TrackView({ view }: { view: PublicTrackView }) {
         </section>
       </div>
 
-      <ProgramsCardForLabel label={view.jobTypeLabel} />
+      <aside aria-label="While you wait" className="flex flex-col gap-8">
+        {(view.status === "received" || view.status === "in_queue") && <OwnerStep0 code={view.code} />}
+        <ProgramsCardForLabel label={view.jobTypeLabel} />
+      </aside>
     </div>
   );
 }
@@ -151,4 +156,19 @@ function OwnerResubmitLink({ code }: { code: string }) {
       Resubmit corrected documents
     </ButtonLink>
   );
+}
+
+/**
+ * The Step 0 draft, only for the electrician who filed this permit and only when they
+ * entered a bigger service. The public view never carries it: like the resubmit link, the
+ * page asks "My permits" for the permit with this code and builds the draft from that.
+ */
+function OwnerStep0({ code }: { code: string }) {
+  const applicantId = typeof window === "undefined" ? null : readApplicantId();
+  const { data } = useSWR(applicantId ? ["mine", applicantId] : null, () =>
+    api.listApplications({ applicantId: applicantId! }),
+  );
+  const mine = data?.applications.find((a) => a.trackingCode === code);
+  if (!mine || !applicantProposesUpgrade(mine)) return null;
+  return <Step0DraftCard draft={buildStep0Draft(mine)} compact />;
 }

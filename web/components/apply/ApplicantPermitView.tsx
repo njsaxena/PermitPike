@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { ApplicationDetail, CheckStatus } from "@permitpike/contract";
 import { Callout, CheckRow, CheckSummary, TrailTimeline } from "@/components/ui";
-import { Decision } from "@/components/permit/Decision";
+import { Decision, latestAction } from "@/components/permit/Decision";
 import { PermitHeading } from "@/components/permit/PermitHeading";
+import { Step0DraftCard } from "@/components/permit/Step0Draft";
 import { ServiceMeter } from "@/components/review/LoadCalcPanel";
 import { ProgramsCard } from "@/components/track/ProgramsCard";
 import { TrackingCodeCopy } from "@/components/track/TrackingCode";
+import { applicantProposesUpgrade, buildStep0Draft, STEP0_TITLE } from "@/lib/step0";
 import { trailSteps } from "@/lib/trail";
 
 /*
@@ -40,6 +42,9 @@ export function ApplicantPermitView({
   const app = detail.application;
   const rec = detail.versions.find((v) => v.version === app.version)?.recommendation ?? null;
   const failing = rec?.checks.filter((c) => c.status === "fail").length ?? 0;
+  // The electrician's own Step 0 draft: only when they entered a bigger service, built from
+  // their inputs alone (no review, load calc or flag). Not twice if an official already sent one.
+  const ownStep0 = applicantProposesUpgrade(app) && !officialSentStep0(detail) ? buildStep0Draft(app) : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -114,8 +119,25 @@ export function ApplicantPermitView({
         </section>
       )}
 
+      {ownStep0 && (
+        <section aria-labelledby="while-you-wait" className="flex max-w-3xl flex-col gap-3">
+          <h2 id="while-you-wait" className="text-lg text-ink">
+            While you wait
+          </h2>
+          <Step0DraftCard draft={ownStep0} heading="h3" />
+        </section>
+      )}
       <ProgramsCard jobType={app.jobType} />
       {footer}
     </div>
   );
+}
+
+/** Whether the official's decision on this version carries a Step 0 draft. */
+function officialSentStep0(detail: ApplicationDetail): boolean {
+  const action = latestAction(detail);
+  if (!action) return false;
+  const texts =
+    action.type === "approve" ? [action.note ?? ""] : action.type === "return" ? action.requestedFixes : [action.reason];
+  return texts.some((t) => t.includes(STEP0_TITLE));
 }

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, CircleCheck, CornerUpLeft, TriangleAlert } from "lucide-react";
 import type { Application, Recommendation, ReviewerActionInput } from "@permitpike/contract";
-import { Button, Callout, ConfirmDialog, StatusChip, Textarea } from "@/components/ui";
+import { Button, Callout, Checkbox, ConfirmDialog, StatusChip, Textarea } from "@/components/ui";
+import type { Step0Draft } from "@/lib/step0";
 import { cx } from "@/lib/cx";
 
 /*
@@ -11,6 +12,8 @@ import { cx } from "@/lib/cx";
  * permit can move on: approve, or return for fixes. Each opens its own confirmation.
  * PermitPike only recommends; these, and only these, change the permit. Approving past a
  * failing check or a "return" recommendation is an override and needs a written reason.
+ * When the permit has a utility flag, either dialog can attach the Eversource Step 0 draft
+ * to the message the electrician gets. Off by default: the official decides whether it goes.
  */
 
 export function ChangeStatus({
@@ -18,9 +21,12 @@ export function ChangeStatus({
   rec,
   onSubmit,
   keepMounted,
+  step0,
 }: {
   app: Application;
   rec: Recommendation | null;
+  /** The draft the electrician would get. Only offered when the permit has a utility flag. */
+  step0?: Step0Draft | null;
   /** Saves the action. Resolves to an error message, or null when it worked. */
   onSubmit: (action: ReviewerActionInput) => Promise<string | null>;
   /** Keep dialog content in the page while closed (static copies of the page). */
@@ -39,6 +45,9 @@ export function ChangeStatus({
   const [reason, setReason] = useState("");
   const [fixes, setFixes] = useState(defaultFixes);
   const [reasonError, setReasonError] = useState<string | undefined>();
+  const [sendStep0, setSendStep0] = useState(false);
+  const offerStep0 = !!rec?.utilityFlag && !!step0;
+  const attach = offerStep0 && sendStep0 ? step0!.text : null;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
@@ -73,6 +82,7 @@ export function ChangeStatus({
   function close() {
     setOpen(null);
     setReasonError(undefined);
+    setSendStep0(false);
   }
 
   async function send(action: ReviewerActionInput) {
@@ -89,12 +99,13 @@ export function ChangeStatus({
       if (!reason.trim()) return setReasonError("Explain why you are approving against the recommendation.");
       return void send({
         type: "override",
-        reason: reason.trim(),
+        // The draft goes after the official's reason, where the electrician reads it.
+        reason: attach ? `${reason.trim()}\n\n${attach}` : reason.trim(),
         finalDecision: "approved",
         overriddenRuleIds: failing.map((c) => c.ruleId),
       });
     }
-    return void send({ type: "approve", conditions, note: null });
+    return void send({ type: "approve", conditions, note: attach });
   }
 
   function confirmReturn() {
@@ -102,10 +113,14 @@ export function ChangeStatus({
     return void send({
       type: "return",
       reason: reason.trim(),
-      requestedFixes: fixes
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean),
+      // Not in the reason: the reason is shown on the public status page; requested fixes are not.
+      requestedFixes: [
+        ...fixes
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean),
+        ...(attach ? [attach] : []),
+      ],
     });
   }
 
@@ -221,6 +236,15 @@ export function ChangeStatus({
             />
           </>
         )}
+        {offerStep0 && (
+          <Checkbox
+            label="Send the Eversource Step 0 draft to the electrician"
+            description="Goes with your message, without the load calculation. PermitPike does not send it to Eversource."
+            checked={sendStep0}
+            onChange={(e) => setSendStep0(e.target.checked)}
+            data-send-step0=""
+          />
+        )}
       </ConfirmDialog>
 
       <ConfirmDialog
@@ -250,6 +274,15 @@ export function ChangeStatus({
           onChange={(e) => setFixes(e.target.value)}
           data-fixes=""
         />
+        {offerStep0 && (
+          <Checkbox
+            label="Send the Eversource Step 0 draft to the electrician"
+            description="Goes with your message, without the load calculation. PermitPike does not send it to Eversource."
+            checked={sendStep0}
+            onChange={(e) => setSendStep0(e.target.checked)}
+            data-send-step0=""
+          />
+        )}
       </ConfirmDialog>
     </div>
   );
