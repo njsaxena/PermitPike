@@ -747,7 +747,7 @@ export default function DesignPage() {
           <Sample state="empty, required">
             <DocumentSlotDemo
               title="Heat pump spec sheet"
-              hint="The manufacturer's sheet for the outdoor unit. It lists the minimum circuit ampacity (MCA) and maximum overcurrent protection (MOCP)."
+              hint="The manufacturer's sheet for the outdoor unit listing minimum circuit ampacity (MCA) and maximum overcurrent protection (MOCP)."
               required
               accept=".pdf,.jpg,.png"
             />
@@ -755,7 +755,7 @@ export default function DesignPage() {
           <Sample state="attached">
             <DocumentSlotDemo
               title="Photo of the electrical panel"
-              hint="Door open, with the main breaker and the label inside the door readable. A phone photo is fine."
+              hint="The main breaker and interior label must be readable."
               required
               accept=".jpg,.png"
               files={FILES.slice(0, 1)}
@@ -764,7 +764,7 @@ export default function DesignPage() {
           <Sample state="optional, focus">
             <DocumentSlotDemo
               title="Site plan"
-              hint="Where the outdoor unit and its disconnect go. A photo of a hand sketch is fine."
+              hint="Location for outdoor unit and disconnect."
               accept=".pdf,.jpg,.png"
               data-demo="focus"
             />
@@ -772,14 +772,14 @@ export default function DesignPage() {
           <Sample state="dragging over">
             <DocumentSlotDemo
               title="Load calculation"
-              hint="Only if you already did one. PermitPike runs its own either way."
+              hint="PermitPike runs this either way."
               data-demo="dragging"
             />
           </Sample>
           <Sample state="error">
             <DocumentSlotDemo
               title="Photo of the electrical panel"
-              hint="Door open, with the main breaker and the label inside the door readable. A phone photo is fine."
+              hint="The main breaker and interior label must be readable."
               required
               error="Attach the photo of the electrical panel."
             />
