@@ -1,7 +1,6 @@
 "use client";
 
 import useSWR from "swr";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import type { ApplicantRecord } from "@permitpike/contract";
@@ -26,12 +25,7 @@ export function ApplicantAccount() {
 
   return (
     <div className="flex max-w-xl flex-col gap-10">
-      <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <h1 className="text-title text-ink">Your account</h1>
-        <Link href="/apply" className="pp-link text-sm">
-          Your permits
-        </Link>
-      </div>
+      <h1 className="text-title text-ink">Your account</h1>
 
       {error && !data && <p className="text-critical">Could not load your details. Reload to try again.</p>}
       {data && (

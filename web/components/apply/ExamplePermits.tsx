@@ -12,7 +12,8 @@ import type { ExampleSummary } from "@/lib/example-filing";
  * Example permits to start from, below "Your own job" on the first screen of "File a
  * permit". Each shows only the request and its documents: what happens to it is found
  * out by filing it. "Use this example" opens the filled-in form; "View details" shows where
- * the property is on the live parcel map, then each document, to look through first.
+ * the property is on the live parcel map, then each document, to look through first; its
+ * footer stays in view with "Use this example" while the body scrolls.
  * The dialogs are always in the markup (data-dialog-open / data-dialog-close) so the
  * static copy on the design artifact opens them without React.
  */
@@ -94,9 +95,9 @@ function ExampleCard({ example: e, href }: { example: ExampleSummary; href: stri
         id={id}
         aria-labelledby={`${id}-title`}
         onClose={() => setOpen(false)}
-        className="m-auto w-full max-w-3xl border border-ink bg-surface p-0 text-ink"
+        className="m-auto max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col border border-ink bg-surface p-0 text-ink open:flex"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-ink bg-accent px-card py-4">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-ink bg-accent px-card py-4">
           <div className="flex flex-col gap-0.5">
             <h2 id={`${id}-title`} className="text-lg text-ink">
               {e.request}
@@ -113,7 +114,7 @@ function ExampleCard({ example: e, href }: { example: ExampleSummary; href: stri
             <span className="sr-only">Close</span>
           </button>
         </div>
-        <div className="p-card">
+        <div className="min-h-0 flex-1 overflow-y-auto p-card">
           <Tabs
             label={`Details for ${e.request}`}
             panelClassName="pt-4"
@@ -128,7 +129,7 @@ function ExampleCard({ example: e, href }: { example: ExampleSummary; href: stri
               },
               ...e.documents.map((d) => ({
               id: `${e.slug}-${d.kind}-${d.name}`,
-              label: d.title,
+              label: d.tab,
               content: (
                 <figure className="flex flex-col gap-2">
                   <div className="flex h-[min(60vh,32rem)] items-center justify-center overflow-auto border border-border bg-sunken">
@@ -151,12 +152,12 @@ function ExampleCard({ example: e, href }: { example: ExampleSummary; href: stri
             ]}
           />
         </div>
-        <div className="flex flex-wrap justify-end gap-3 border-t border-border px-card py-4">
+        <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-border px-card py-4">
           <Button variant="secondary" onClick={hide} data-dialog-close="">
             Close
           </Button>
           <ButtonLink href={href} icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}>
-            Start from this example
+            Use this example
           </ButtonLink>
         </div>
       </dialog>
@@ -172,9 +173,17 @@ function ExampleLocation({ example: e }: { example: ExampleSummary }) {
   const typed = addressLine(e.address);
   useEffect(() => {
     const controller = new AbortController();
-    api
-      .lookupParcel({ address: e.address.street, zip: e.address.zip }, controller.signal)
-      .then((res) => setState({ kind: "done", res }))
+    (async () => {
+      const byAddress = () => api.lookupParcel({ address: e.address.street, zip: e.address.zip }, controller.signal);
+      let res = await byAddress();
+      // "unavailable" means the city was slow or down, not that the address is wrong: try once more.
+      if (res.result === "unavailable") res = await byAddress();
+      // Several parcels share the address (a condo, a corner lot): show the first.
+      if (res.result === "ambiguous" && res.candidates[0]) {
+        res = await api.lookupParcel({ pid: res.candidates[0].parcelId }, controller.signal);
+      }
+      setState({ kind: "done", res });
+    })()
       .catch(() => {
         // Closed before it answered.
       });

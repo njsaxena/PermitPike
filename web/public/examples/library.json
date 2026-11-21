@@ -48,7 +48,7 @@
       "slug": "heat-pump-service-upgrade",
       "jobType": "heat_pump_panel",
       "address": {
-        "street": "64 Ashfield St",
+        "street": "64 Kittredge St",
         "unit": null,
         "neighborhood": "Roslindale",
         "city": "Boston",
@@ -73,7 +73,7 @@
           "name": "panel-photo.jpg",
           "url": "http://localhost:3100/examples/heat-pump-service-upgrade/panel-photo.jpg",
           "contentType": "image/jpeg",
-          "sizeBytes": 122569,
+          "sizeBytes": 122728,
           "uploadedAt": "2026-11-20T15:30:00.000Z"
         },
         {
@@ -82,7 +82,7 @@
           "name": "site-plan.pdf",
           "url": "http://localhost:3100/examples/heat-pump-service-upgrade/site-plan.pdf",
           "contentType": "application/pdf",
-          "sizeBytes": 71180,
+          "sizeBytes": 71466,
           "uploadedAt": "2026-11-20T15:30:00.000Z"
         }
       ]
@@ -134,7 +134,7 @@
       "slug": "ev-triple-decker-load-management",
       "jobType": "ev_charger",
       "address": {
-        "street": "29 Westville St",
+        "street": "29 Wheatland Ave",
         "unit": "2",
         "neighborhood": "Dorchester",
         "city": "Boston",
@@ -168,7 +168,7 @@
           "name": "panel-photo.jpg",
           "url": "http://localhost:3100/examples/ev-triple-decker-load-management/panel-photo.jpg",
           "contentType": "image/jpeg",
-          "sizeBytes": 125564,
+          "sizeBytes": 126191,
           "uploadedAt": "2026-11-17T19:10:00.000Z"
         },
         {
@@ -177,7 +177,7 @@
           "name": "site-plan.pdf",
           "url": "http://localhost:3100/examples/ev-triple-decker-load-management/site-plan.pdf",
           "contentType": "application/pdf",
-          "sizeBytes": 69760,
+          "sizeBytes": 70148,
           "uploadedAt": "2026-11-17T19:10:00.000Z"
         }
       ]
@@ -186,7 +186,7 @@
       "slug": "battery-solar-busbar",
       "jobType": "home_battery",
       "address": {
-        "street": "18 Metropolitan Ave",
+        "street": "18 Williams Ave",
         "unit": null,
         "neighborhood": "Hyde Park",
         "city": "Boston",
@@ -211,7 +211,7 @@
           "name": "panel-photo.jpg",
           "url": "http://localhost:3100/examples/battery-solar-busbar/panel-photo.jpg",
           "contentType": "image/jpeg",
-          "sizeBytes": 204396,
+          "sizeBytes": 203834,
           "uploadedAt": "2026-11-21T08:20:00.000Z"
         },
         {
@@ -220,7 +220,7 @@
           "name": "site-plan.pdf",
           "url": "http://localhost:3100/examples/battery-solar-busbar/site-plan.pdf",
           "contentType": "application/pdf",
-          "sizeBytes": 73276,
+          "sizeBytes": 73022,
           "uploadedAt": "2026-11-21T08:20:00.000Z"
         }
       ]

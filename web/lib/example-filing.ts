@@ -23,7 +23,7 @@ export interface LibraryEntry {
 /** What someone starting a permit sees of an example: the request and its documents, nothing about how it went. */
 export interface ExampleSummary {
   slug: string;
-  /** "Heat pump at 64 Ashfield St". */
+  /** "Heat pump at 64 Kittredge St". */
   request: string;
   jobType: JobType;
   neighborhood: string | null;
@@ -36,6 +36,8 @@ export interface ExampleDocument {
   kind: FileKind;
   /** What the document is, e.g. "Heat pump spec sheet". */
   title: string;
+  /** Short enough that every tab fits on one row, e.g. "Spec sheet". */
+  tab: string;
   name: string;
   /** The file itself, on this site. */
   href: string;
@@ -49,6 +51,19 @@ const JOB_NOUN: Record<JobType, string> = {
   home_battery: "Home battery",
 };
 
+const TAB: Partial<Record<FileKind, string>> = {
+  spec_sheet: "Spec sheet",
+  panel_photo: "Panel photo",
+  site_plan: "Site plan",
+  load_calc: "Load calculation",
+};
+
+/** "load-manager-spec.pdf" -> "Load manager spec": an "Other" file is named by what it is. */
+function fromFileName(name: string): string {
+  const words = name.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 /** Library URLs are absolute to the site that built them; serve them from this one. */
 const local = (url: string) => url.replace(/^https?:\/\/[^/]+/, "");
 
@@ -60,13 +75,20 @@ export function exampleSummary(entry: LibraryEntry): ExampleSummary {
     jobType: entry.jobType,
     neighborhood: entry.address.neighborhood,
     address: entry.address,
-    documents: entry.files.map((f) => ({
-      kind: f.kind,
-      title: asks.find((a) => a.kind === f.kind)?.title ?? f.name,
-      name: f.name,
-      href: local(f.url),
-      preview: f.contentType === "application/pdf" ? local(f.url).replace(/\.pdf$/, ".png") : local(f.url),
-    })),
+    // In the order the filing form asks for them, so "Other" comes last.
+    documents: [...entry.files]
+      .sort((a, b) => asks.findIndex((x) => x.kind === a.kind) - asks.findIndex((x) => x.kind === b.kind))
+      .map((f) => {
+        const named = f.kind === "other" ? fromFileName(f.name) : null;
+        return {
+          kind: f.kind,
+          title: named ?? asks.find((a) => a.kind === f.kind)?.title ?? f.name,
+          tab: named ?? TAB[f.kind] ?? fromFileName(f.name),
+          name: f.name,
+          href: local(f.url),
+          preview: f.contentType === "application/pdf" ? local(f.url).replace(/\.pdf$/, ".png") : local(f.url),
+        };
+      }),
   };
 }
 

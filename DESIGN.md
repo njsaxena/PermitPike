@@ -291,11 +291,15 @@ The electrician's side (`/apply`).
   badges: risk is for the city's reviewers, not the electrician.
 - **File a permit** opens on the three kinds of job (`StartPermit`), each with how many
   documents it needs. Below them, in a sunken panel, "Example permits to start from":
-  small cards that say only the request ("Heat pump at 64 Ashfield St", neighborhood,
+  small cards that say only the request ("Heat pump at 64 Kittredge St", neighborhood,
   number of documents). Never what PermitPike found or what the official decided: that
-  is found out by filing it. Each card has two buttons: "Use this example" (gold) opens
-  the filled-in form; "View documents" opens them to look through first (one tab per
-  document, "Open original"), with "Start from this example".
+  is found out by filing it. Each card has two quiet (white) buttons, so the library
+  never outshouts "Your own job": "Use this example" opens the filled-in form; "View
+  details" opens a dialog whose first tab, Location, shows the address on the live parcel
+  map (the same lookup the filing form runs), then one tab per document ("Open
+  original"). The footer, with "Use this example", stays in view while the body scrolls. Tab names are short ("Spec sheet",
+  "Panel photo") so they fit on one row; documents follow the form's order, and an
+  "Other" file is named by what it is ("Load manager spec") and comes last.
 - **Filing is always real.** Both paths open the same form (`/apply/new?job=<jobType>` or
   `?example=<slug>`, filled in with the example's documents attached). Filing uploads the
   documents and creates the permit, which PermitPike checks and officials then review in
@@ -340,7 +344,7 @@ The electrician's side (`/apply`).
 | `LoadCalcPanel`, `ServiceMeter` | The worked load calculation and the flat service meter (80% and 100% marks; fits / tight / needs upgrade) |
 | `ChangeStatus` | "Change status" button and menu (status now, approve, return; recommended first) and the approve and return dialogs; override needs a reason |
 | `StartPermit` | First screen of "File a permit": one card per job type, then `ExamplePermits`. Cards hover with an ink edge and the wash |
-| `ExamplePermits` | Example permits in a sunken panel: small cards with the request only, and two buttons: "Use this example" (to the filled-in form) and "View documents" (a dialog with the documents in tabs and "Start from this example") |
+| `ExamplePermits` | Example permits in a sunken panel: small cards with the request only, and two secondary buttons: "Use this example" (to the filled-in form) and "View details" (a dialog with a Location tab on the live parcel map, the documents in tabs, and "Use this example" in a footer that stays in view) |
 | `PermitForm` | The filing form without the saving: job, address, ZIP, cost, description, one `DocumentSlot` per document. Starts filled in from `exampleInitial()` (`web/lib/example-filing.ts`) or empty; `FilePermitForm` wraps it to upload and file |
 | `ApplicantPermitView` | One permit as the electrician sees it: tracking code, trail, status line, decision, then what PermitPike found. `justFiled` leads with the tracking code |
 | `DiffView` | Before/after values; "Not set" and "Removed" for missing values |

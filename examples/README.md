@@ -9,10 +9,10 @@ person, company, product and document is fictional, and each document says so.
 | # | Slug | Request |
 | - | ---- | ------- |
 | 1 | `ev-garage-clean` | EV charger at 112 Corey St, West Roxbury |
-| 2 | `heat-pump-service-upgrade` | Heat pump and a new 200 A service at 64 Ashfield St, Roslindale |
+| 2 | `heat-pump-service-upgrade` | Heat pump and a new 200 A service at 64 Kittredge St, Roslindale |
 | 3 | `heat-pump-setback-resubmit` | Heat pump at 48 Brookside Ave, Jamaica Plain |
-| 4 | `ev-triple-decker-load-management` | EV charger with a load manager at 29 Westville St, Dorchester |
-| 5 | `battery-solar-busbar` | Home battery with existing solar at 18 Metropolitan Ave, Hyde Park |
+| 4 | `ev-triple-decker-load-management` | EV charger with a load manager at 29 Wheatland Ave, Dorchester |
+| 5 | `battery-solar-busbar` | Home battery with existing solar at 18 Williams Ave, Hyde Park |
 
 ## Files
 

@@ -638,7 +638,7 @@ function example2(work: string): LibraryExample {
   const slug = "heat-pump-service-upgrade";
   const id = "ex_hp_upgrade";
   const submittedAt = "2026-11-20T15:30:00.000Z";
-  const address: Address = { street: "64 Ashfield St", unit: null, neighborhood: "Roslindale", city: "Boston", state: "MA", zip: "02131" };
+  const address: Address = { street: "64 Kittredge St", unit: null, neighborhood: "Roslindale", city: "Boston", state: "MA", zip: "02131" };
   const applicant: Applicant = { name: "Marcus Bell (example)", company: "Bell & Sons Electric (example)", licenseNumber: "EX-A-2002" };
   const house: House = {
     squareFeet: 1800,
@@ -899,7 +899,7 @@ function example4(work: string): LibraryExample {
   const slug = "ev-triple-decker-load-management";
   const id = "ex_ev_tight";
   const submittedAt = "2026-11-17T19:10:00.000Z";
-  const address: Address = { street: "29 Westville St", unit: "2", neighborhood: "Dorchester", city: "Boston", state: "MA", zip: "02124" };
+  const address: Address = { street: "29 Wheatland Ave", unit: "2", neighborhood: "Dorchester", city: "Boston", state: "MA", zip: "02124" };
   const applicant: Applicant = { name: "Priya Raman (example)", company: "Raman Electrical Services (example)", licenseNumber: "EX-A-2004" };
   const house: House = {
     squareFeet: 1150,
@@ -1043,7 +1043,7 @@ function example5(work: string): LibraryExample {
   const slug = "battery-solar-busbar";
   const id = "ex_battery_busbar";
   const submittedAt = "2026-11-21T08:20:00.000Z";
-  const address: Address = { street: "18 Metropolitan Ave", unit: null, neighborhood: "Hyde Park", city: "Boston", state: "MA", zip: "02136" };
+  const address: Address = { street: "18 Williams Ave", unit: null, neighborhood: "Hyde Park", city: "Boston", state: "MA", zip: "02136" };
   const applicant: Applicant = { name: "Theo Nguyen (example)", company: "Harbor Solar & Electric (example)", licenseNumber: "EX-A-2005" };
   const house: House = {
     squareFeet: 1900,

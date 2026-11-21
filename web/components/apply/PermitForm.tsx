@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { JOB_DESCRIPTION_MAX, JOB_TYPE_LABELS, JobType, type Address, type FileKind } from "@permitpike/contract";
 import { Button, DocumentSlot, Input, Select, Textarea, type FileChipData } from "@/components/ui";
 import { DOCUMENTS } from "@/lib/documents";
@@ -155,7 +155,7 @@ export function PermitForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={submit} onKeyDown={noEnterSubmit} noValidate className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <h1 className="text-title text-ink">{heading}</h1>
         {intro}
@@ -282,4 +282,17 @@ export function PermitForm({
       </div>
     </form>
   );
+}
+
+/**
+ * Enter in a text field would file the permit (the browser's implicit submit). Filing
+ * uploads documents and starts a review, so it only happens from the File button itself.
+ * Enter still works in text areas, on buttons and links, and in pickers that use it.
+ */
+function noEnterSubmit(e: KeyboardEvent<HTMLFormElement>) {
+  if (e.key !== "Enter") return;
+  const t = e.target as HTMLElement;
+  if (t instanceof HTMLInputElement && !["button", "submit", "checkbox", "radio", "file"].includes(t.type)) {
+    e.preventDefault();
+  }
 }
