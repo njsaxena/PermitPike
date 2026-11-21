@@ -31,7 +31,7 @@ export function ApplicantEntry({ onEntered }: { onEntered: (applicantId: string)
 
   return (
     <form onSubmit={submit} noValidate className="flex max-w-md flex-col gap-6">
-      <h1 className="text-title text-ink">File a permit</h1>
+      <h1 className="text-title text-ink">Log in to file a permit</h1>
       <Input
         label="Your name"
         autoComplete="name"
