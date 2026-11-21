@@ -34,7 +34,7 @@ export function Header() {
       role={role}
       homeHref={applicant ? "/apply" : reviewer ? "/review" : "/"}
       // One permit open for review uses the wider workspace.
-      wide={/^\/(review|design\/portal)\/[^/]+/.test(path)}
+      wide={/^\/(review|design\/portal)\/[^/]+/.test(path) && path !== "/review/archive"}
       action={
         role && (
           <span className="flex items-center gap-3">
@@ -46,6 +46,18 @@ export function Header() {
                   className="pp-link text-sm"
                 >
                   Account
+                </Link>
+                <span aria-hidden className="h-5 w-px bg-border" />
+              </>
+            )}
+            {reviewer && (
+              <>
+                <Link
+                  href="/review/archive"
+                  aria-current={path === "/review/archive" ? "page" : undefined}
+                  className="pp-link text-sm"
+                >
+                  Archive
                 </Link>
                 <span aria-hidden className="h-5 w-px bg-border" />
               </>

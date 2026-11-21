@@ -8,9 +8,11 @@
     "build": "mastra build",
     "start": "node .mastra/output/index.mjs",
     "typecheck": "tsc --noEmit",
+    "score": "node --import tsx extract/scripts/score.ts",
     "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "@mastra/core": "^1.85.0",
     "@permitpike/compliance": "workspace:*",
     "@permitpike/contract": "workspace:*",
@@ -21,7 +23,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "mastra": "^1.40.0",
-    "typescript": "^5.9.0",
-    "tsx": "^4.23.15"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0"
   }
 }

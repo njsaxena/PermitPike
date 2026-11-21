@@ -15,6 +15,7 @@ dist/
 .vercel/
 *.tsbuildinfo
 next-env.d.ts
+agent/extract/.cache/
 
 # data files (large CSVs live outside git; see data/README.md)
 data/*.csv

@@ -6,7 +6,6 @@ const MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 /**
  * Writes the human-readable summary of a review. It does NOT decide the outcome:
  * the decision comes from rule pack checks, and a licensed official makes the final call.
- * TODO(agent owner): tighten instructions, add extraction tools for Gemini vision.
  */
 export const PERMIT_REVIEWER_MODEL_ID = `google/${MODEL}`;
 

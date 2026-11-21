@@ -58,6 +58,7 @@ export interface ReviewWorkspaceProps {
   /** The same load on the existing service, when the job upgrades it. */
   loadCalcBefore?: LoadCalcResult | null;
   backHref: string;
+  archiveHref?: string;
   /** Shown under the heading, e.g. "This permit was updated". */
   notice?: ReactNode;
   /** One line under the applicant, e.g. that this is an example. */
@@ -76,6 +77,7 @@ export function ReviewWorkspace({
   previews = {},
   loadCalcBefore,
   backHref,
+  archiveHref,
   notice,
   note,
   actions,
@@ -123,10 +125,18 @@ export function ReviewWorkspace({
     // Wider than the reading width: documents and evidence side by side need the room.
     <div className="relative left-1/2 flex w-[calc(min(100vw,var(--pp-workspace-width))-2rem)] -translate-x-1/2 flex-col gap-8 sm:w-[calc(min(100vw,var(--pp-workspace-width))-3rem)]">
       <div className="flex flex-col gap-4">
-        <Link href={backHref} className="pp-link inline-flex items-center gap-1.5 self-start text-sm">
-          <ArrowLeft aria-hidden className="size-4" strokeWidth={1.75} />
-          Queue
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link href={backHref} className="pp-link inline-flex items-center gap-1.5 text-sm">
+            <ArrowLeft aria-hidden className="size-4" strokeWidth={1.75} />
+            Queue
+          </Link>
+          {archiveHref && (
+            <Link href={archiveHref} className="pp-link inline-flex items-center gap-1.5 text-sm">
+              <FileSearch aria-hidden className="size-4" strokeWidth={1.75} />
+              Search permit archive
+            </Link>
+          )}
+        </div>
         <PermitHeading
           app={app}
           viewer="official"

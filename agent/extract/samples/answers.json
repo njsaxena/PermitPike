@@ -1,0 +1,233 @@
+[
+  {
+    "file": "hp_cedarterm_ct-h18.pdf",
+    "jobType": "heat_pump",
+    "clean": true,
+    "expected": {
+      "heatPump.manufacturer": "CedarTerm",
+      "heatPump.model": "CT-H18",
+      "heatPump.voltage": 230,
+      "heatPump.coolingBTU": 18000,
+      "heatPump.heatingBTU": 20000,
+      "heatPump.mcaAmps": 15,
+      "heatPump.mocpAmps": 25,
+      "proposedBreakerAmps": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "hp_harborstorm_hbs-24.pdf",
+    "jobType": "heat_pump",
+    "clean": true,
+    "expected": {
+      "heatPump.manufacturer": "HarborStorm",
+      "heatPump.model": "HBS-24",
+      "heatPump.voltage": 230,
+      "heatPump.coolingBTU": 24000,
+      "heatPump.heatingBTU": 27000,
+      "heatPump.mcaAmps": 18,
+      "heatPump.mocpAmps": 30,
+      "proposedBreakerAmps": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "hp_ironwood_iv-12.pdf",
+    "jobType": "heat_pump",
+    "clean": true,
+    "expected": {
+      "heatPump.manufacturer": "Ironwood Climate",
+      "heatPump.model": "IV-12",
+      "heatPump.voltage": 115,
+      "heatPump.coolingBTU": 12000,
+      "heatPump.heatingBTU": 13500,
+      "heatPump.mcaAmps": 10.2,
+      "heatPump.mocpAmps": null,
+      "proposedBreakerAmps": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "hp_sprucetherm_two_models.pdf",
+    "jobType": "heat_pump",
+    "clean": true,
+    "expected": {
+      "heatPump.manufacturer": "SpruceTherm",
+      "heatPump.model": "ST-36",
+      "heatPump.voltage": 208,
+      "heatPump.coolingBTU": 36000,
+      "heatPump.heatingBTU": 40000,
+      "heatPump.mcaAmps": 24,
+      "heatPump.mocpAmps": 40,
+      "proposedBreakerAmps": null,
+      "mainBreakerAmps": null
+    },
+    "modelNumber": "ST-36"
+  },
+  {
+    "file": "ev_amperebay_ab-40.pdf",
+    "jobType": "ev_charger",
+    "clean": true,
+    "expected": {
+      "charger.manufacturer": "AmpereBay",
+      "charger.model": "AB-40",
+      "charger.outputAmps": 40,
+      "charger.voltage": 240,
+      "charger.connection": "hardwired",
+      "proposedBreakerAmps": 50,
+      "hasLoadManagement": true,
+      "serviceVoltage": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "ev_meadowcharge_mc-e32.pdf",
+    "jobType": "ev_charger",
+    "clean": true,
+    "expected": {
+      "charger.manufacturer": "MeadowCharge",
+      "charger.model": "MC-E32",
+      "charger.outputAmps": 32,
+      "charger.voltage": 208,
+      "charger.connection": "receptacle",
+      "proposedBreakerAmps": 40,
+      "hasLoadManagement": false,
+      "serviceVoltage": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "ev_copperfield_ccf-24.pdf",
+    "jobType": "ev_charger",
+    "clean": true,
+    "expected": {
+      "charger.manufacturer": "Copperfield Charge",
+      "charger.model": "CCF-24",
+      "charger.outputAmps": 24,
+      "charger.voltage": 240,
+      "charger.connection": "hardwired",
+      "proposedBreakerAmps": 30,
+      "hasLoadManagement": null,
+      "serviceVoltage": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "battery_emberstack_es-55.pdf",
+    "jobType": "home_battery",
+    "clean": true,
+    "expected": {
+      "battery.manufacturer": "EmberStack",
+      "battery.model": "ES-55",
+      "battery.capacityKWh": 13.5,
+      "battery.continuousOutputW": 5800,
+      "backfeedBreakerAmps": 30,
+      "battery.ul9540Listed": true,
+      "serviceVoltage": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "battery_ridgecell_rc-96.pdf",
+    "jobType": "home_battery",
+    "clean": true,
+    "expected": {
+      "battery.manufacturer": "RidgeCell",
+      "battery.model": "RC-96",
+      "battery.capacityKWh": 9.6,
+      "battery.continuousOutputW": 3600,
+      "backfeedBreakerAmps": null,
+      "battery.ul9540Listed": null,
+      "serviceVoltage": null,
+      "mainBreakerAmps": null
+    }
+  },
+  {
+    "file": "panel_northline_nl-150.jpg",
+    "jobType": "panel",
+    "clean": true,
+    "expected": {
+      "mainBreakerAmps": 150,
+      "existingPanelRatingAmps": 200,
+      "existingServiceAmps": 150,
+      "serviceVoltage": 240,
+      "availableBreakerSpaces": 2
+    }
+  },
+  {
+    "file": "panel_eastfield_ef-100.png",
+    "jobType": "panel",
+    "clean": true,
+    "expected": {
+      "mainBreakerAmps": 100,
+      "existingPanelRatingAmps": 125,
+      "existingServiceAmps": 100,
+      "serviceVoltage": 120,
+      "availableBreakerSpaces": 0
+    }
+  },
+  {
+    "file": "panel_summitbay_sb-175.jpg",
+    "jobType": "panel",
+    "clean": true,
+    "expected": {
+      "mainBreakerAmps": 175,
+      "existingPanelRatingAmps": 225,
+      "existingServiceAmps": 200,
+      "serviceVoltage": 240,
+      "availableBreakerSpaces": 6
+    }
+  },
+  {
+    "file": "heat_pump_intake_worksheet.pdf",
+    "jobType": "heat_pump_panel",
+    "clean": true,
+    "expected": {
+      "serviceVoltage": 240,
+      "existingServiceAmps": 150,
+      "existingPanelRatingAmps": 200,
+      "mainBreakerAmps": 150,
+      "availableBreakerSpaces": 2,
+      "existingLoad.dwellingSqFt": 1700,
+      "existingLoad.smallApplianceCircuits": 2,
+      "existingLoad.hasLaundryCircuit": true,
+      "existingLoad.fixedAppliancesVA": 4500,
+      "existingLoad.existingHvacVA": 2300,
+      "existingLoad.measuredPeakDemandKW": null,
+      "heatPump.manufacturer": "CedarTerm",
+      "heatPump.model": "CT-H18",
+      "heatPump.voltage": 230,
+      "heatPump.coolingBTU": 18000,
+      "heatPump.heatingBTU": 20000,
+      "heatPump.mcaAmps": 15,
+      "heatPump.mocpAmps": 25,
+      "proposedBreakerAmps": 20,
+      "panelUpgrade.proposedPanelRatingAmps": null,
+      "panelUpgrade.proposedServiceAmps": null
+    }
+  },
+  {
+    "file": "bad_panel_blurred_rotated.jpg",
+    "jobType": "panel",
+    "clean": false,
+    "expected": {
+      "mainBreakerAmps": null,
+      "existingPanelRatingAmps": null,
+      "existingServiceAmps": null,
+      "serviceVoltage": null,
+      "availableBreakerSpaces": null
+    }
+  },
+  {
+    "file": "bad_ev_shipping_inventory.pdf",
+    "jobType": "ev_charger",
+    "clean": false,
+    "expected": {
+      "charger.model": null,
+      "charger.outputAmps": null,
+      "charger.voltage": null,
+      "proposedBreakerAmps": null,
+      "charger.connection": null
+    }
+  }
+]
