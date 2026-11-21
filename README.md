@@ -1,4 +1,6 @@
-# PermitPike
+<h1>
+  <img src="docs/readme-banner.png" alt="PermitPike, built at BostonHacks 2026" width="100%">
+</h1>
 
 AI permit desk for residential electrical permits in Boston (heat pumps, panel
 upgrades, EV chargers, home batteries). An electrician uploads specs; the agent
