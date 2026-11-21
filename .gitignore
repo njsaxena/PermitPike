@@ -1,0 +1,23 @@
+node_modules/
+.pnpm-store/
+
+# env: only .env.example is committed
+.env
+.env.*
+!.env.example
+
+# build output
+.next/
+out/
+dist/
+.mastra/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# data files (large CSVs live outside git; see data/README.md)
+data/*.csv
+data/*.parquet
+
+.DS_Store
+*.log

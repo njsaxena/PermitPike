@@ -1,0 +1,18 @@
+import { resolve } from "node:path";
+import { loadEnvConfig } from "@next/env";
+import type { NextConfig } from "next";
+
+// Local dev reads the single .env at the repo root. On Vercel, env comes from the dashboard.
+loadEnvConfig(resolve(process.cwd(), ".."));
+
+const nextConfig: NextConfig = {
+  // Workspace packages ship TypeScript source; let Next compile them.
+  transpilePackages: [
+    "@permitpike/contract",
+    "@permitpike/db",
+    "@permitpike/loadcalc",
+    "@permitpike/packs",
+  ],
+};
+
+export default nextConfig;

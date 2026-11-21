@@ -1,0 +1,21 @@
+{
+  "name": "permitpike",
+  "private": true,
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @permitpike/web dev",
+    "dev:agent": "pnpm --filter @permitpike/agent dev",
+    "build": "pnpm --filter @permitpike/web build",
+    "typecheck": "pnpm -r typecheck",
+    "check": "pnpm typecheck && pnpm build",
+    "db:generate": "pnpm --filter @permitpike/db generate",
+    "db:migrate": "pnpm --filter @permitpike/db migrate",
+    "evals": "pnpm --filter @permitpike/evals run evals"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}

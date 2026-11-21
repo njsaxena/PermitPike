@@ -1,0 +1,24 @@
+{
+  "name": "@permitpike/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "mastra dev --env ../.env",
+    "build": "mastra build",
+    "start": "node .mastra/output/index.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.85.0",
+    "@permitpike/contract": "workspace:*",
+    "@permitpike/loadcalc": "workspace:*",
+    "@permitpike/packs": "workspace:*",
+    "zod": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "mastra": "^1.40.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "hp_setback_fail",
+  "description": "Heat pump outdoor unit 3 ft from the property line; everything else passes.",
+  "fields": {
+    "jobType": "heat_pump_panel",
+    "serviceVoltage": 240,
+    "existingServiceAmps": 100,
+    "existingPanelRatingAmps": 100,
+    "mainBreakerAmps": 100,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1400,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "heatPump": {
+      "manufacturer": "Example HVAC Co.",
+      "model": "EX-24H",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25
+    },
+    "proposedBreakerAmps": 25,
+    "conductorAWG": "10",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 3,
+    "panelUpgrade": null
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": ["heat_pump_panel.outdoor_setback"],
+  "expectUtilityFlag": false
+}
