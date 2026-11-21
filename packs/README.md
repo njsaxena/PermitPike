@@ -17,7 +17,7 @@ interface RulePack<J extends JobType> {
   version: string;                         // bump when rules change
   extraction: { schema; hints: string[] }; // contract Zod schema + Gemini prompt hints
   rules: Rule<J>[];                        // pure functions -> CheckResult
-  addedLoad(fields): number;               // VA added to the dwelling
+  addedLoads(fields): NewLoad[];           // loads added, connected VA (a heat pump with backup strips is two)
   serviceRatingAmps(fields): number;       // existing or proposed service rating
   utilityFlag(fields): UtilityFlag | null; // Eversource follow-up, if any
   cleanEnergyTip(fields): CleanEnergyTip | null;
@@ -43,12 +43,14 @@ interface Rule<J> {
 ## Citations
 
 Every citation is a claim the reviewer will read. Anything marked `VERIFY` in a pack
-has not been checked against NEC 2023 with Massachusetts amendments (527 CMR 12) or
-the Boston Zoning Code. Clear every `VERIFY` before the demo.
+has not been checked against NEC 2026 with Massachusetts amendments (527 CMR 12.00,
+effective April 24, 2026) or the Boston Zoning Code. NEC 2026 moved Article 220 to
+Article 120 (220.83 is now 120.83); other articles kept their numbers. Clear every `VERIFY` before the demo.
 
 ## Who runs packs
 
 The agent (`/agent`) calls `getPack(jobType)`, runs every rule plus
-`runLoadCalc(...)`, and turns the results into a `Recommendation`. The decision
+`calculateLoad(...)` from `packages/loadcalc`, and turns the results into a `Recommendation`.
+The load calc's `check` is one of the checks. The decision
 (approve / approve with conditions / return) comes from the check results; the LLM
 writes the summary and never overrides a failing check.

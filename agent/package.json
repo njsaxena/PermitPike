@@ -13,6 +13,7 @@
   "dependencies": {
     "@google/genai": "^3.6.1",
     "@mastra/core": "^1.85.0",
+    "@permitpike/compliance": "workspace:*",
     "@permitpike/contract": "workspace:*",
     "@permitpike/loadcalc": "workspace:*",
     "@permitpike/packs": "workspace:*",

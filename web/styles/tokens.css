@@ -1,0 +1,82 @@
+/*
+ * PermitPike design tokens.
+ *
+ * Raw values live here as --pp-* custom properties. globals.css maps them into the
+ * Tailwind theme, so components use classes like `bg-surface` or `text-critical`
+ * instead of hex values.
+ *
+ * Contrast (WCAG 2.1):
+ *   ink on limestone 16.3:1, ink on dome gold 12.2:1, muted on limestone 5.4:1,
+ *   critical 5.6+:1, brass 4.8+:1, positive 5.5+:1 on their tints and limestone,
+ *   border-strong 3.1+:1 (control edges).
+ * Dome gold is a fill, never text: it is 1.3:1 on limestone, so every gold fill
+ * carries a 1px ink edge and only ink text sits on it.
+ */
+
+:root {
+  /* Neutrals: limestone and Quincy granite */
+  --pp-ink: #15191f;
+  --pp-muted: #5e6670;
+  --pp-border: #d6d9dc;
+  --pp-border-strong: #848c95; /* control edges: 3:1 on limestone (WCAG 1.4.11) */
+  --pp-background: #f7f6f3;
+  --pp-surface: #ffffff;
+  --pp-sunken: #efeee9;
+  /* Hover on anything clickable: a faint ink wash that shows on white, limestone, sunken, gold and brick alike.
+     Transparent controls take it as their background; filled ones get it laid over their fill (the `wash` utility). */
+  --pp-hover: color-mix(in srgb, var(--pp-ink) 10%, transparent);
+
+  /* Single accent: State House dome gold, in full sun. Fill only. */
+  --pp-accent: #ffd21f;
+  --pp-accent-tint: #fff4bf;
+
+  /* Status: Back Bay brick, Freedom Trail brass, Boston Common green */
+  --pp-critical: #a23b2a;
+  --pp-critical-tint: #f7ece9;
+  /* Logo only: the two lighter brick steps in the PermitPike mark. Not for UI. */
+  --pp-brick-step-2: #dda89b;
+  --pp-brick-step-3: #efd9d3;
+  --pp-warning: #8c6210; /* brass: text and icons for warnings */
+  --pp-warning-tint: #f8f1e2;
+  --pp-positive: #2f6b3f;
+  --pp-positive-tint: #eaf2ec;
+
+  /* Map only: Boston Harbor navy for parcel outlines and its pale fill. Not for UI text or controls. */
+  --pp-harbor: #1f3a5f; /* 11.6:1 on white, 3:1+ on the light basemap */
+  --pp-harbor-tint: rgba(31, 58, 95, 0.12);
+
+  /* Type: Red Hat Text for all UI text (SIL OFL). No monospace.
+     Headings are regular weight; only the wordmark is bold. */
+  --pp-font-sans: var(--font-red-hat-text), "Red Hat Text", system-ui, sans-serif;
+  /* Values (permit numbers, citations, amps) use Red Hat Text too, with even-width figures
+     (tabular-nums is on <html>). `font-mono` is kept as the name for "a value". */
+  --pp-font-mono: var(--pp-font-sans);
+  /* "PermitPike" is set in Public Sans Bold, as drawn in the logo. */
+  --pp-font-wordmark: var(--font-public-sans), "Public Sans", system-ui, sans-serif;
+  --pp-text-label: 12px; /* uppercase, letter-spaced section labels */
+  --pp-text-sm: 13px;
+  --pp-text-base: 15px;
+  --pp-text-lg: 18px;
+  --pp-text-title: 26px;
+  --pp-text-display: 40px;
+  --pp-leading-body: 1.5;
+  --pp-tracking-label: 0.08em;
+
+  /* Shape and space */
+  --pp-space: 4px; /* every gap is a multiple of 4; prefer multiples of 8 */
+  --pp-radius: 0; /* square corners everywhere; no rounded corners */
+  --pp-border-width: 1px;
+  --pp-card-padding: 24px;
+  --pp-page-width: 1100px;
+  --pp-workspace-width: 1400px; /* the review workspace: documents beside the evidence */
+
+  /* Focus: one ink line drawn over the element's own 1px border. */
+  --pp-focus-width: 2px;
+  --pp-focus-offset: -1px;
+
+  /* Motion: exponential ease-out; nothing loops; all of it off for reduced motion. */
+  --pp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pp-duration-fast: 120ms;
+  --pp-duration-base: 320ms;
+  --pp-duration-slow: 640ms;
+}

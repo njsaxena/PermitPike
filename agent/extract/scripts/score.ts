@@ -20,6 +20,7 @@ const AnswerKey = z.array(z.strictObject({
 const relativeToleranceFields = new Set([
   "heatPump.coolingBTU",
   "heatPump.heatingBTU",
+  "heatPump.backupHeatKW",
   "existingLoad.measuredPeakDemandKW",
   "battery.continuousOutputW",
 ]);

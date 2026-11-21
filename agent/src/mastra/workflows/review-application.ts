@@ -29,7 +29,8 @@ const checksStep = createStep({
   inputSchema: z.object({ request: AgentReviewRequest, extraction: Extraction }),
   outputSchema: ChecksOutput,
   execute: async () => {
-    // TODO: getPack(jobType).rules.map(r => r.check(fields)) + runLoadCalc(fields, pack.addedLoad(fields), pack.serviceRatingAmps(fields)).
+    // TODO: getPack(jobType).rules.map(r => r.check(fields)) + calculateLoad({ service, home, newLoads: pack.addedLoads(fields) })
+    // from @permitpike/loadcalc; push loadCalc.check into checks.
     throw new Error("run-checks step not implemented");
   },
 });

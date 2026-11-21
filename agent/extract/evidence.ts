@@ -71,10 +71,12 @@ const unitBySuffix: ReadonlyArray<readonly [RegExp, Unit]> = [
 ];
 
 function leafSchemas(schema: z.ZodType, path: string): Array<readonly [string, z.ZodType]> {
-  const base = schema instanceof z.ZodNullable ? schema.unwrap() as z.ZodType : schema;
-  if (!(base instanceof z.ZodObject)) return [[path, base]];
+  if (schema instanceof z.ZodOptional || schema instanceof z.ZodNullable) {
+    return leafSchemas(schema.unwrap() as z.ZodType, path);
+  }
+  if (!(schema instanceof z.ZodObject)) return [[path, schema]];
 
-  const entries = Object.entries<z.ZodType>(base.shape);
+  const entries = Object.entries<z.ZodType>(schema.shape);
   return entries.flatMap(([key, child]) => {
     if (key === "jobType") return [];
     return leafSchemas(child, path ? `${path}.${key}` : key);

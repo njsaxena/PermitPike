@@ -14,6 +14,6 @@ export function getDb(): Db {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
   // prepare: false keeps us compatible with Tiger Data's connection pooler.
-  db = drizzle(postgres(url, { prepare: false }), { schema });
+  db = drizzle(postgres(url, { prepare: false, max: 5, idle_timeout: 20 }), { schema });
   return db;
 }

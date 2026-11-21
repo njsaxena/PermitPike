@@ -1,0 +1,38 @@
+{
+  "id": "ev_garage_clean",
+  "description": "48 A hardwired charger in an attached garage, 60 A breaker, 6 AWG copper. Everything passes.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 200,
+    "existingPanelRatingAmps": 200,
+    "mainBreakerAmps": 200,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1600,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 7000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "ev_charger",
+    "charger": {
+      "manufacturer": "Example EV Co.",
+      "model": "L2-48",
+      "outputAmps": 48,
+      "voltage": 240,
+      "connection": "hardwired"
+    },
+    "proposedBreakerAmps": 60,
+    "conductorAWG": "6 AWG Cu",
+    "installLocation": "garage",
+    "gfciProtected": null,
+    "outdoorRated": null,
+    "hasLoadManagement": false,
+    "setbackFt": null
+  },
+  "expectedDecision": "approve",
+  "expectedFailingRuleIds": [],
+  "expectUtilityFlag": false
+}

@@ -1,11 +1,14 @@
 /**
- * Mock applications that match the contract. Served by every API route when USE_MOCKS=true.
+ * Demo applications that match the contract. `pnpm seed` inserts them into Tiger Data so the
+ * reviewer queue is never empty on stage, and the review stub borrows their recommendations
+ * as placeholders when no agent is connected. ids, permit numbers and applicant ids here are
+ * replaced by the database on insert.
  *
  * 1. app_hp_setback   heat pump: fails the outdoor setback on v1, passes on resubmit (v2)
  * 2. app_ev_clean     EV charger: clean pass, already approved by an official
  * 3. app_battery_util home battery + solar: triggers the Eversource utility flag
  *
- * Load calc numbers are hand-computed with the NEC 220.83 method in packages/loadcalc.
+ * Load calcs are computed by calculateLoad (NEC 2026 120.83) from packages/loadcalc.
  * Rule ids for ev_charger / home_battery are placeholders until those packs exist.
  * Citations follow the packs and carry the same VERIFY caveat (see packs/README.md).
  */
@@ -16,9 +19,21 @@ import type {
   FileRef,
   HeatPumpPanelFields,
   Recommendation,
+  LoadCalcInput,
+  NewLoad,
 } from "@permitpike/contract";
+import { Parcel } from "@permitpike/contract";
+import { calculateLoad } from "@permitpike/loadcalc";
+import demoParcels from "../lib/parcel/demo-parcels.json";
 
 const MODEL = "gemini-2.5-flash";
+
+/** Cached city lookups for the three demo addresses (web/scripts/cache-parcels.ts). */
+function demoParcel(parcelId: string): Parcel {
+  const found = demoParcels.find((p) => p.parcelId === parcelId);
+  if (!found) throw new Error(`no cached parcel ${parcelId}; run pnpm --filter @permitpike/web cache:parcels`);
+  return Parcel.parse(found);
+}
 const BLOB = "https://mock.public.blob.vercel-storage.com/mocks";
 
 function file(id: string, kind: FileRef["kind"], name: string, uploadedAt: string): FileRef {
@@ -33,15 +48,25 @@ function file(id: string, kind: FileRef["kind"], name: string, uploadedAt: strin
   };
 }
 
-function serviceCapacity(totalAmps: number, ratingAmps: number): CheckResult {
-  return {
-    ruleId: "shared.service_capacity",
-    title: "Service capacity after the new load",
-    status: "pass",
-    citation: "NEC 220.83",
-    message: `Calculated load is ${totalAmps} A on a ${ratingAmps} A service.`,
-    suggestedFix: null,
+/** Load calc input from the mock's extracted existing-load fields. */
+function mockLoadCalc(
+  ratingAmps: number,
+  existing: { dwellingSqFt: number; smallApplianceCircuits: number; hasLaundryCircuit: boolean; fixedAppliancesVA: number },
+  newLoads: NewLoad[],
+): Recommendation["loadCalc"] {
+  const input: LoadCalcInput = {
+    service: { ratingAmps, voltage: 240 },
+    home: {
+      squareFeet: existing.dwellingSqFt,
+      smallApplianceCircuits: existing.smallApplianceCircuits,
+      laundryCircuits: existing.hasLaundryCircuit ? 1 : 0,
+      existingAppliances: [
+        { name: "Fixed appliances (nameplate total)", watts: existing.fixedAppliancesVA, isHeatingOrCooling: false },
+      ],
+    },
+    newLoads,
   };
+  return calculateLoad(input);
 }
 
 // ---------------------------------------------------------------------------
@@ -84,18 +109,10 @@ const hpFieldsV1: HeatPumpPanelFields = {
 
 const hpFieldsV2: HeatPumpPanelFields = { ...hpFieldsV1, outdoorUnitSetbackFt: 6 };
 
-// existing 10,680 VA + heat pump 18 A x 240 V = 4,320 VA -> 15,000 VA / 240 V = 62.5 A
-const hpLoadCalc: Recommendation["loadCalc"] = {
-  method: "nec_220_83",
-  existingLoadVA: 10680,
-  addedLoadVA: 4320,
-  totalLoadVA: 15000,
-  totalAmps: 62.5,
-  serviceRatingAmps: 100,
-  utilization: 0.625,
-  headroomAmps: 37.5,
-  passes: true,
-};
+// 13,300 VA existing -> 10,120 VA calculated; heat pump 18 A x 240 V = 4,320 VA x 50% -> 51.2 A on 100 A
+const hpLoadCalc = mockLoadCalc(100, hpFieldsV1.existingLoad, [
+  { source: "heat_pump_panel", name: "Heat pump", va: 18 * 240, kind: "other", isHeatingOrCooling: true, hvacMode: "both" },
+]);
 
 const hpBreakerCheck: CheckResult = {
   ruleId: "heat_pump_panel.breaker_sizing",
@@ -139,7 +156,7 @@ export const hpVersion1: ApplicationVersion = {
     decision: "return_for_fixes",
     confidence: 0.9,
     checks: [
-      serviceCapacity(62.5, 100),
+      hpLoadCalc.check,
       hpBreakerCheck,
       {
         ruleId: "heat_pump_panel.outdoor_setback",
@@ -185,7 +202,7 @@ export const hpVersion2: ApplicationVersion = {
     decision: "approve",
     confidence: 0.92,
     checks: [
-      serviceCapacity(62.5, 100),
+      hpLoadCalc.check,
       hpBreakerCheck,
       {
         ruleId: "heat_pump_panel.outdoor_setback",
@@ -213,8 +230,12 @@ export const hpVersion2: ApplicationVersion = {
 const hpDetail: ApplicationDetail = {
   application: {
     id: HP_ID,
+    permitNumber: "EL-2026-00001",
+    trackingCode: "PP-7K3Q-9M2X",
+    applicantId: "seed",
     jobType: "heat_pump_panel",
-    address: { street: "48 Brookside Ave", unit: null, neighborhood: "Jamaica Plain", city: "Boston", state: "MA", zip: "02130" },
+    address: { street: "28 Brookside Ave", unit: null, neighborhood: "Jamaica Plain", city: "Boston", state: "MA", zip: "02130" },
+    parcel: demoParcel("1102073000"),
     applicant: { name: "Dana Ortiz (mock)", company: "Ortiz Electric (mock)", licenseNumber: "MOCK-A-1001" },
     status: "returned",
     submittedAt: hpVersion1.submittedAt,
@@ -222,6 +243,9 @@ const hpDetail: ApplicationDetail = {
     files: hpVersion1.files,
     extraction: hpVersion1.extraction,
     recommendation: hpVersion1.recommendation,
+    closureRisk: null,
+    estimatedProjectCost: 14500,
+    jobDescription: "Replace the gas boiler with a ducted heat pump and upgrade the panel to 200 A.",
     version: 1,
   },
   versions: [hpVersion1],
@@ -244,6 +268,12 @@ const hpDetail: ApplicationDetail = {
 // ---------------------------------------------------------------------------
 
 const EV_ID = "app_ev_clean";
+
+const evLoadCalc = mockLoadCalc(
+  200,
+  { dwellingSqFt: 2000, smallApplianceCircuits: 2, hasLaundryCircuit: true, fixedAppliancesVA: 9500 },
+  [{ source: "ev_charger", name: "EV charger", va: 50 * 0.8 * 240, kind: "evse", isHeatingOrCooling: false }],
+);
 
 const evVersion1: ApplicationVersion = {
   applicationId: EV_ID,
@@ -287,7 +317,7 @@ const evVersion1: ApplicationVersion = {
     decision: "approve",
     confidence: 0.95,
     checks: [
-      serviceCapacity(93.3, 200),
+      evLoadCalc.check,
       {
         ruleId: "ev_charger.breaker_125_percent",
         title: "Branch circuit sized for continuous load",
@@ -306,18 +336,8 @@ const evVersion1: ApplicationVersion = {
       },
     ],
     conditions: [],
-    // existing 12,800 VA + 40 A x 240 V = 9,600 VA -> 22,400 VA / 240 V = 93.3 A
-    loadCalc: {
-      method: "nec_220_83",
-      existingLoadVA: 12800,
-      addedLoadVA: 9600,
-      totalLoadVA: 22400,
-      totalAmps: 93.3,
-      serviceRatingAmps: 200,
-      utilization: 0.467,
-      headroomAmps: 106.7,
-      passes: true,
-    },
+    // 18,000 VA existing -> 12,000 VA calculated; 50 A breaker x 0.8 x 240 V = 9,600 VA x 80% -> 82 A on 200 A
+    loadCalc: evLoadCalc,
     utilityFlag: null,
     cleanEnergyTip: {
       message: "Ask the homeowner about scheduling charging off-peak to lower bills.",
@@ -341,8 +361,12 @@ const evVersion1: ApplicationVersion = {
 const evDetail: ApplicationDetail = {
   application: {
     id: EV_ID,
+    permitNumber: "EL-2026-00002",
+    trackingCode: "PP-4HWN-T8RD",
+    applicantId: "seed",
     jobType: "ev_charger",
     address: { street: "210 Dorchester St", unit: "2", neighborhood: "South Boston", city: "Boston", state: "MA", zip: "02127" },
+    parcel: demoParcel("0701151000"),
     applicant: { name: "Sam Patel (mock)", company: null, licenseNumber: "MOCK-A-1002" },
     status: "approved",
     submittedAt: evVersion1.submittedAt,
@@ -350,6 +374,9 @@ const evDetail: ApplicationDetail = {
     files: evVersion1.files,
     extraction: evVersion1.extraction,
     recommendation: evVersion1.recommendation,
+    closureRisk: null,
+    estimatedProjectCost: 2200,
+    jobDescription: "Install a 40 A Level 2 EV charger on the garage wall.",
     version: 1,
   },
   versions: [evVersion1],
@@ -372,6 +399,12 @@ const evDetail: ApplicationDetail = {
 // ---------------------------------------------------------------------------
 
 const BAT_ID = "app_battery_util";
+
+const batteryLoadCalc = mockLoadCalc(
+  200,
+  { dwellingSqFt: 1800, smallApplianceCircuits: 2, hasLaundryCircuit: true, fixedAppliancesVA: 7000 },
+  [{ source: "home_battery", name: "Home battery", va: 0, kind: "other", isHeatingOrCooling: false }],
+);
 
 const batVersion1: ApplicationVersion = {
   applicationId: BAT_ID,
@@ -420,7 +453,7 @@ const batVersion1: ApplicationVersion = {
     decision: "approve_with_conditions",
     confidence: 0.84,
     checks: [
-      serviceCapacity(69, 200),
+      batteryLoadCalc.check,
       {
         ruleId: "home_battery.busbar_120_percent",
         title: "Busbar 120% rule for backfed breaker",
@@ -447,18 +480,8 @@ const batVersion1: ApplicationVersion = {
       },
     ],
     conditions: ["Eversource interconnection approval must be on file before final inspection."],
-    // existing 11,560 VA + 5,000 VA charging -> 16,560 VA / 240 V = 69 A
-    loadCalc: {
-      method: "nec_220_83",
-      existingLoadVA: 11560,
-      addedLoadVA: 5000,
-      totalLoadVA: 16560,
-      totalAmps: 69,
-      serviceRatingAmps: 200,
-      utilization: 0.345,
-      headroomAmps: 131,
-      passes: true,
-    },
+    // 15,100 VA existing -> 10,840 VA calculated; the battery adds no continuous load -> 45.2 A on 200 A
+    loadCalc: batteryLoadCalc,
     utilityFlag: {
       utility: "Eversource",
       kind: "interconnection",
@@ -489,8 +512,12 @@ const batVersion1: ApplicationVersion = {
 const batDetail: ApplicationDetail = {
   application: {
     id: BAT_ID,
+    permitNumber: "EL-2026-00003",
+    trackingCode: "PP-C6PZ-3VKE",
+    applicantId: "seed",
     jobType: "home_battery",
-    address: { street: "15 Pleasant St", unit: null, neighborhood: "Dorchester", city: "Boston", state: "MA", zip: "02125" },
+    address: { street: "17 Pleasant St", unit: null, neighborhood: "Dorchester", city: "Boston", state: "MA", zip: "02125" },
+    parcel: demoParcel("1301893000"),
     applicant: { name: "Jordan Kim (mock)", company: "Bright Volt Electric (mock)", licenseNumber: "MOCK-A-1003" },
     status: "awaiting_official",
     submittedAt: batVersion1.submittedAt,
@@ -498,6 +525,9 @@ const batDetail: ApplicationDetail = {
     files: batVersion1.files,
     extraction: batVersion1.extraction,
     recommendation: batVersion1.recommendation,
+    closureRisk: null,
+    estimatedProjectCost: 18000,
+    jobDescription: "Add a 13.5 kWh home battery alongside the existing rooftop solar.",
     version: 1,
   },
   versions: [batVersion1],
@@ -508,7 +538,7 @@ export const MOCK_APPLICATIONS: ApplicationDetail[] = [hpDetail, evDetail, batDe
 
 /**
  * Scripted agent output for resubmits, keyed by application id then version.
- * Used by the mock store so the heat pump demo flips from fail to pass.
+ * The seed and review stub use these so the heat pump demo flips from fail to pass.
  */
 export const MOCK_RESUBMISSIONS: Record<string, Record<number, ApplicationVersion>> = {
   [HP_ID]: { 2: hpVersion2 },

@@ -1,10 +1,14 @@
 import type { ListEvalsResponse } from "@permitpike/contract";
-import { mocksEnabled } from "@/lib/env";
-import { notImplemented, ok } from "@/lib/http";
-import { MOCK_EVAL_RUNS } from "@/mocks/evals";
+import { handleError, ok } from "@/lib/http";
+import { listEvalRuns } from "@/lib/server/repo";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/evals
 export async function GET() {
-  if (!mocksEnabled()) return notImplemented(); // TODO: read eval_runs from db
-  return ok<ListEvalsResponse>({ runs: MOCK_EVAL_RUNS });
+  try {
+    return ok<ListEvalsResponse>({ runs: await listEvalRuns() });
+  } catch (err) {
+    return handleError(err);
+  }
 }

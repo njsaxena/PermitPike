@@ -4,9 +4,11 @@
  * JSON columns are typed with contract types; validate with the contract Zod
  * schemas when reading anything you did not just write.
  *
- * boston_permits becomes a TimescaleDB hypertable on issued_date in a raw SQL
- * migration (migrations/0001_boston_permits_hypertable.sql).
+ * boston_permits is created as a TimescaleDB hypertable by a raw SQL migration
+ * (migrations/0001_boston_permits_hypertable.sql), together with the permits_weekly
+ * continuous aggregate. Drizzle only knows its columns so it can query it.
  */
+import { sql } from "drizzle-orm";
 import {
   doublePrecision,
   index,
@@ -16,6 +18,7 @@ import {
   pgEnum,
   pgTable,
   primaryKey,
+  serial,
   text,
   timestamp,
   unique,
@@ -27,10 +30,12 @@ import type {
   EvalCaseResult,
   Extraction,
   FileRef,
+  Parcel,
+  PermitRiskScoreResponse,
   Recommendation,
 } from "@permitpike/contract";
 
-const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "string" });
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
 export const jobTypeEnum = pgEnum("job_type", ["heat_pump_panel", "ev_charger", "home_battery"]);
 
@@ -44,21 +49,59 @@ export const applicationStatusEnum = pgEnum("application_status", [
 
 export const reviewerActionTypeEnum = pgEnum("reviewer_action_type", ["approve", "return", "override"]);
 
+/** Electricians. No password: the license number identifies them. */
+export const applicants = pgTable("applicants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  company: text("company"),
+  licenseNumber: text("license_number").notNull().unique(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+});
+
 /** Current state of each application. Per-submission data lives in application_versions. */
 export const applications = pgTable(
   "applications",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    /** Feeds the human permit number, e.g. EL-2026-00042. */
+    permitSeq: serial("permit_seq").notNull().unique(),
+    /**
+     * Public /track code, e.g. PP-7K3Q-9M2X. The web generates it (web/lib/server/tracking-code.ts);
+     * the database default (pp_tracking_code(), migration 0004) covers older writers and backfill.
+     */
+    trackingCode: text("tracking_code").notNull().unique().default(sql`pp_tracking_code()`),
+    applicantId: uuid("applicant_id")
+      .notNull()
+      .references(() => applicants.id),
     jobType: jobTypeEnum("job_type").notNull(),
     address: jsonb("address").$type<Address>().notNull(),
     applicant: jsonb("applicant").$type<Applicant>().notNull(),
+    /** Boston parcel id from the assessor, when known. */
+    parcelId: text("parcel_id"),
+    /** Parcel outline, pin and zoning saved at filing, so the map never re-queries the city. */
+    parcel: jsonb("parcel").$type<Parcel>(),
     status: applicationStatusEnum("status").notNull().default("submitted"),
-    currentVersion: integer("current_version").notNull().default(1),
+    /** Current version number; matches application_versions.version. */
+    version: integer("version").notNull().default(1),
+    /** Copies of the current version's agent output, so the queue reads one row. */
+    extraction: jsonb("extraction").$type<Extraction>(),
+    recommendation: jsonb("recommendation").$type<Recommendation>(),
+    closureRisk: jsonb("closure_risk").$type<PermitRiskScoreResponse>(),
+    /** Applicant's estimate in USD. Null on rows filed before the field existed. */
+    estimatedProjectCost: numeric("estimated_project_cost", { mode: "number" }),
+    jobDescription: text("job_description"),
+    /** When the current version entered the review queue (submitted -> ai_review). */
+    queuedAt: timestamptz("queued_at"),
+    /** Queue risk derived from recommendation (web/lib/risk.ts). Null until reviewed. */
+    risk: jsonb("risk").$type<{ level: "high" | "med" | "low" }>(),
     submittedAt: timestamptz("submitted_at").notNull().defaultNow(),
     decidedAt: timestamptz("decided_at"),
     updatedAt: timestamptz("updated_at").notNull().defaultNow(),
   },
-  (t) => [index("applications_status_idx").on(t.status)],
+  (t) => [
+    index("applications_status_idx").on(t.status, t.submittedAt),
+    index("applications_applicant_idx").on(t.applicantId, t.submittedAt),
+  ],
 );
 
 /** One row per submission (v1 = original, v2+ = resubmits). Never updated after the agent writes recommendation. */
@@ -115,30 +158,55 @@ export const evalRuns = pgTable("eval_runs", {
 
 /**
  * Historical Boston permits (Analyze Boston "Approved Building Permits").
- * Hypertable on issued_date; TimescaleDB requires the partition column in the primary key.
+ * Column names follow the CSV. Hypertable on issued_date, segmented by worktype;
+ * TimescaleDB requires the partition column in the primary key.
  */
 export const bostonPermits = pgTable(
   "boston_permits",
   {
-    permitNumber: text("permit_number").notNull(),
-    issuedDate: timestamptz("issued_date").notNull(),
-    expirationDate: timestamptz("expiration_date"),
-    workType: text("work_type"),
-    permitTypeDescr: text("permit_type_descr"),
+    permitNumber: text("permitnumber").notNull(),
+    workType: text("worktype"),
+    permitTypeDescr: text("permittypedescr"),
     description: text("description"),
     comments: text("comments"),
-    status: text("status"),
+    applicant: text("applicant"),
     declaredValuation: numeric("declared_valuation"),
     totalFees: numeric("total_fees"),
-    address: text("address"),
+    issuedDate: timestamptz("issued_date").notNull(),
+    expirationDate: timestamptz("expiration_date"),
+    status: text("status"),
+    occupancyType: text("occupancytype"),
+    sqFeet: numeric("sq_feet"),
     zip: text("zip"),
-    propertyId: text("property_id"),
-    parcelId: text("parcel_id"),
     latitude: doublePrecision("latitude"),
     longitude: doublePrecision("longitude"),
+    propertyId: text("property_id"),
   },
   (t) => [
     primaryKey({ columns: [t.permitNumber, t.issuedDate] }),
-    index("boston_permits_work_type_idx").on(t.workType, t.issuedDate),
+    index("boston_permits_worktype_issued_idx").on(t.workType, t.issuedDate),
+    index("boston_permits_status_idx").on(t.status),
   ],
 );
+
+/**
+ * Fixed one-minute windows for public /track lookups. key is a SHA-256 of the client IP,
+ * never the IP itself. Old windows are deleted as new ones are written.
+ */
+export const trackRateLimits = pgTable(
+  "track_rate_limits",
+  {
+    key: text("key").notNull(),
+    windowStart: timestamptz("window_start").notNull(),
+    count: integer("count").notNull(),
+  },
+  (t) => [primaryKey({ name: "track_rate_limits_pk", columns: [t.key, t.windowStart] })],
+);
+
+/** Private lookup keyed by normalized Analyze Boston applicant; never exposed in API responses. */
+export const contractorStats = pgTable("contractor_stats", {
+  normalizedApplicant: text("normalized_applicant").primaryKey(),
+  permitCount: integer("permit_count").notNull(),
+  priorClosureRate: doublePrecision("prior_closure_rate").notNull(),
+  asOfDate: timestamptz("as_of_date").notNull(),
+});

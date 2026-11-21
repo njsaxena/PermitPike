@@ -1,0 +1,30 @@
+{
+  "name": "@permitpike/compliance",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./tools.ts",
+    "./parcel-zoning": "./parcel-zoning.ts",
+    "./catalog": "./catalog.ts",
+    "./zoning-code-links": "./zoning-code-links.ts"
+  },
+  "scripts": {
+    "start": "node --import tsx server.ts",
+    "test": "node --import tsx parcel-zoning.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.85.0",
+    "@mastra/mcp": "~1.18.0",
+    "@permitpike/contract": "workspace:*",
+    "cheerio": "1.0.0",
+    "unpdf": "~1.4.0",
+    "zod": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Public_Sans } from "next/font/google";
+import { Public_Sans, Red_Hat_Text } from "next/font/google";
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
-import { RoleProvider } from "@/lib/role";
+import { MotionObserver } from "@/components/ui/MotionObserver";
+// Before globals.css, so the PermitPike overrides of Leaflet win.
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
-const publicSans = Public_Sans({
+// Red Hat Text (SIL OFL) for all UI text. Variable font, weights 300 to 700.
+const redHatText = Red_Hat_Text({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-public-sans",
+  variable: "--font-red-hat-text",
   display: "swap",
 });
 
-const plexMono = IBM_Plex_Mono({
+// The logo's wordmark only: "PermitPike" in Public Sans Bold (SIL OFL), as drawn.
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-mono",
+  weight: "700",
+  variable: "--font-public-sans",
   display: "swap",
 });
 
@@ -26,12 +29,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${publicSans.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${redHatText.variable} ${publicSans.variable}`}>
       <body className="min-h-screen bg-background font-sans text-base text-ink antialiased">
-        <RoleProvider>
-          <Header />
-          <main className="mx-auto max-w-page px-6 py-8">{children}</main>
-        </RoleProvider>
+        <Header />
+        <main className="mx-auto max-w-page px-4 py-8 sm:px-6">{children}</main>
+        <MotionObserver />
       </body>
     </html>
   );

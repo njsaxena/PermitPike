@@ -1,1 +1,332 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
+
+/*
+ * Tailwind theme. Defaults are cleared first so only PermitPike tokens exist:
+ * no stock palette (no purple), no shadows, no blur, no rounded corners.
+ */
+@theme {
+  --color-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --radius-*: initial;
+  --text-*: initial;
+  --font-*: initial;
+}
+
+@theme inline {
+  --color-ink: var(--pp-ink);
+  --color-muted: var(--pp-muted);
+  --color-border: var(--pp-border);
+  --color-border-strong: var(--pp-border-strong);
+  --color-background: var(--pp-background);
+  --color-surface: var(--pp-surface);
+  --color-sunken: var(--pp-sunken);
+  --color-hover: var(--pp-hover);
+  --color-accent: var(--pp-accent);
+  --color-accent-tint: var(--pp-accent-tint);
+  --color-critical: var(--pp-critical);
+  --color-critical-tint: var(--pp-critical-tint);
+  --color-warning: var(--pp-warning);
+  --color-warning-tint: var(--pp-warning-tint);
+  --color-positive: var(--pp-positive);
+  --color-positive-tint: var(--pp-positive-tint);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-sans: var(--pp-font-sans);
+  --font-mono: var(--pp-font-mono);
+
+  --text-label: var(--pp-text-label);
+  --text-label--line-height: 16px;
+  --text-sm: var(--pp-text-sm);
+  --text-sm--line-height: 20px;
+  --text-base: var(--pp-text-base);
+  --text-base--line-height: var(--pp-leading-body);
+  --text-lg: var(--pp-text-lg);
+  --text-lg--line-height: 28px;
+  --text-title: var(--pp-text-title);
+  --text-title--line-height: 32px;
+  --text-display: var(--pp-text-display);
+  --text-display--line-height: 48px;
+
+  --tracking-label: var(--pp-tracking-label);
+
+  --spacing: var(--pp-space);
+  --spacing-card: var(--pp-card-padding);
+  --container-page: var(--pp-page-width);
+
+  --ease-out: var(--pp-ease-out);
+}
+
+/* Hover that also applies to static `data-demo="hover"` samples on /design. */
+@custom-variant hov {
+  &:hover:not(:disabled):not([aria-disabled="true"]) {
+    @slot;
+  }
+  &[data-demo~="hover"] {
+    @slot;
+  }
+}
+
+/* Hover wash: the same faint ink tint (--pp-hover) laid over a filled control,
+   so gold, white and brick buttons darken a touch instead of swapping colour. */
+@utility wash {
+  box-shadow: inset 0 0 0 9999px var(--pp-hover);
+}
+
+@layer base {
+  html {
+    background: var(--pp-background);
+    color: var(--pp-ink);
+    font-family: var(--pp-font-sans);
+    font-size: var(--pp-text-base);
+    line-height: var(--pp-leading-body);
+    caret-color: var(--pp-ink);
+    scrollbar-color: var(--pp-border-strong) var(--pp-background);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Borders default to granite, not currentColor. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--pp-border);
+  }
+
+  /* One focus ring everywhere: a single 2px ink line over the element's own border. */
+  :focus-visible,
+  [data-demo~="focus"] {
+    outline: var(--pp-focus-width) solid var(--pp-ink);
+    outline-offset: var(--pp-focus-offset);
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Headings: Red Hat Text at regular weight. Size carries the hierarchy, not boldness. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-weight: 400;
+  }
+
+  /* Modal layer: flat ink at 55%. No blur. */
+  dialog::backdrop {
+    background: color-mix(in srgb, var(--pp-ink) 55%, transparent);
+  }
+}
+
+@layer components {
+  /* 12px uppercase, letter-spaced, ink. Only where it IS the heading (see DESIGN.md). */
+  .pp-label {
+    font-size: var(--pp-text-label);
+    line-height: 16px;
+    letter-spacing: var(--pp-tracking-label);
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--pp-ink);
+  }
+
+  /* Links: ink, semibold, no underline. A dome-gold fill on hover and focus. */
+  .pp-link {
+    color: var(--pp-ink);
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0 2px;
+    margin: 0 -2px;
+    transition: background-color var(--pp-duration-fast) var(--pp-ease-out);
+  }
+  .pp-link:hover,
+  .pp-link:focus-visible {
+    background-color: var(--pp-hover);
+  }
+  .pp-link:focus-visible {
+    outline-offset: 0;
+  }
+
+}
+
+/*
+ * Motion. <MotionObserver> adds `pp-motion` to <html> and `data-motion-in` to each
+ * [data-motion] element as it scrolls into view. Without JS, or with reduced
+ * motion, everything renders in its final state.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  /* The authored moment: the Freedom Trail lays itself, stop by stop. */
+  .pp-motion [data-motion="trail"] [data-trail-seg] {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  .pp-motion [data-motion="trail"] [data-trail-seg="v"] {
+    transform: scaleY(0);
+    transform-origin: center top;
+  }
+  .pp-motion [data-motion="trail"] [data-trail-marker] {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  .pp-motion [data-motion="trail"][data-motion-in] [data-trail-seg] {
+    animation: pp-lay var(--pp-duration-slow) var(--pp-ease-out) forwards;
+    animation-delay: calc(var(--i, 0) * 260ms + 120ms);
+  }
+  .pp-motion [data-motion="trail"][data-motion-in] [data-trail-marker] {
+    animation: pp-pop var(--pp-duration-base) var(--pp-ease-out) forwards;
+    animation-delay: calc(var(--i, 0) * 260ms);
+  }
+
+  /* Supporting motion: checks settle in order; the confidence meter fills. */
+  .pp-motion [data-motion="rows"] > * {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .pp-motion [data-motion="rows"][data-motion-in] > * {
+    animation: pp-rise var(--pp-duration-base) var(--pp-ease-out) forwards;
+  }
+  .pp-motion [data-motion="rows"][data-motion-in] > :nth-child(2) { animation-delay: 70ms; }
+  .pp-motion [data-motion="rows"][data-motion-in] > :nth-child(3) { animation-delay: 140ms; }
+  .pp-motion [data-motion="rows"][data-motion-in] > :nth-child(4) { animation-delay: 210ms; }
+  .pp-motion [data-motion="rows"][data-motion-in] > :nth-child(n + 5) { animation-delay: 280ms; }
+
+  .pp-motion [data-motion="meter"] [data-meter-fill] {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  .pp-motion [data-motion="meter"][data-motion-in] [data-meter-fill] {
+    animation: pp-lay var(--pp-duration-slow) var(--pp-ease-out) 150ms forwards;
+  }
+
+  /* A check that is still running: the mark blinks slowly, like a work light. */
+  [data-running] {
+    animation: pp-blink 1.2s steps(2, jump-none) infinite;
+  }
+
+  /* Dialogs rise into place. */
+  dialog[open] {
+    animation: pp-rise var(--pp-duration-base) var(--pp-ease-out);
+  }
+  dialog[open]::backdrop {
+    animation: pp-fade var(--pp-duration-base) var(--pp-ease-out);
+  }
+
+  /* Drop zone: the arrow lifts while a file hovers over it. */
+  [data-drop-icon] {
+    transition: transform var(--pp-duration-base) var(--pp-ease-out);
+  }
+  [data-dragging] [data-drop-icon] {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pp-lay {
+  to {
+    transform: none;
+  }
+}
+@keyframes pp-pop {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pp-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pp-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/*
+ * Leaflet (property maps). Square, flat, 1px edges to match the system: Leaflet's
+ * default rounded controls and shadows are removed. Parcel paths take the map-only
+ * harbor tokens through their class, so components never hold hex values.
+ */
+.leaflet-container {
+  font-family: var(--pp-font-sans);
+  background: var(--pp-sunken);
+}
+.leaflet-container:focus-visible {
+  outline: var(--pp-focus-width) solid var(--pp-ink);
+  outline-offset: var(--pp-focus-offset);
+}
+/* Quiet basemap: OSM tiles without their color, so only PermitPike's overlays carry color. */
+.leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.9) brightness(1.06);
+}
+.leaflet-bar,
+.leaflet-touch .leaflet-bar {
+  border: 1px solid var(--pp-ink);
+  border-radius: 0;
+  box-shadow: none;
+}
+.leaflet-bar a,
+.leaflet-bar a:first-child,
+.leaflet-bar a:last-child {
+  border-radius: 0;
+  color: var(--pp-ink);
+  border-bottom-color: var(--pp-border);
+}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus-visible {
+  box-shadow: inset 0 0 0 9999px var(--pp-hover);
+  color: var(--pp-ink);
+}
+.leaflet-bar a:focus-visible {
+  outline: var(--pp-focus-width) solid var(--pp-ink);
+  outline-offset: var(--pp-focus-offset);
+}
+.leaflet-control-attribution {
+  font-size: var(--pp-text-label);
+  color: var(--pp-ink);
+}
+.leaflet-control-attribution a {
+  color: var(--pp-ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid var(--pp-ink);
+}
+.leaflet-popup-content {
+  margin: 12px 16px;
+  font-size: var(--pp-text-sm);
+  line-height: var(--pp-leading-body);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--pp-ink);
+}
+path.pp-parcel {
+  stroke: var(--pp-harbor);
+  stroke-width: 2px;
+  fill: var(--pp-harbor-tint);
+  fill-opacity: 1;
+}
+.pp-pin {
+  background: none;
+  border: none;
+}
+.pp-pin:focus-visible {
+  outline: var(--pp-focus-width) solid var(--pp-ink);
+  outline-offset: 2px;
+}

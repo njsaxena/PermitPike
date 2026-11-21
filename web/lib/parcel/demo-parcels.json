@@ -1,0 +1,212 @@
+[
+  {
+    "parcelId": "1102073000",
+    "assessorAddress": "28 BROOKSIDE AV, JAMAICA PLAIN MA 02130",
+    "lat": 42.31373926298841,
+    "lng": -71.10276137721036,
+    "outline": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -71.10262360131911,
+            42.313813499056096
+          ],
+          [
+            -71.1028396821711,
+            42.313884381852226
+          ],
+          [
+            -71.10296986941225,
+            42.31373764840136
+          ],
+          [
+            -71.10273640619788,
+            42.313628324290285
+          ],
+          [
+            -71.10275318108519,
+            42.31360879000751
+          ],
+          [
+            -71.10266020160884,
+            42.31356576657798
+          ],
+          [
+            -71.10259089528287,
+            42.313645862258845
+          ],
+          [
+            -71.10268191557869,
+            42.31368795526526
+          ],
+          [
+            -71.10266356613444,
+            42.31370903800659
+          ],
+          [
+            -71.10258389729086,
+            42.31380045870416
+          ],
+          [
+            -71.10262360131911,
+            42.313813499056096
+          ]
+        ]
+      ]
+    },
+    "match": "matched",
+    "districts": [
+      {
+        "district": "Jamaica Plain Neighborhood",
+        "subdistrict": "3F-4000",
+        "article": "55",
+        "mapNumber": "9A-9C",
+        "articleUrl": "https://library.municode.com/ma/boston/codes/redevelopment_authority?nodeId=ART55JAPLNEDI",
+        "tablesUrl": "https://library.municode.com/ma/boston/codes/redevelopment_authority?nodeId=ART55TA"
+      }
+    ],
+    "overlays": [],
+    "retrievedAt": "2026-11-21T18:26:36.125Z"
+  },
+  {
+    "parcelId": "0701151000",
+    "assessorAddress": "210 DORCHESTER ST, SOUTH BOSTON MA 02127",
+    "lat": 42.333111147135256,
+    "lng": -71.05017720138606,
+    "outline": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -71.05013652439753,
+            42.33312316989489
+          ],
+          [
+            -71.05015712560622,
+            42.33317811186296
+          ],
+          [
+            -71.05020142950563,
+            42.33322910604017
+          ],
+          [
+            -71.05027358272555,
+            42.333195672235206
+          ],
+          [
+            -71.05021733181134,
+            42.333131515827326
+          ],
+          [
+            -71.05021374474472,
+            42.333133773240164
+          ],
+          [
+            -71.05020468944797,
+            42.33310658937695
+          ],
+          [
+            -71.05019138097128,
+            42.333066635274356
+          ],
+          [
+            -71.05019209201669,
+            42.333000908326206
+          ],
+          [
+            -71.05009865153683,
+            42.33300186431283
+          ],
+          [
+            -71.05013652439753,
+            42.33312316989489
+          ]
+        ]
+      ]
+    },
+    "match": "matched",
+    "districts": [
+      {
+        "district": "South Boston Neighborhood",
+        "subdistrict": "MFR",
+        "article": "68",
+        "mapNumber": "4F",
+        "articleUrl": "https://library.municode.com/ma/boston/codes/redevelopment_authority?nodeId=ART68SOBONEDI",
+        "tablesUrl": "https://library.municode.com/ma/boston/codes/redevelopment_authority?nodeId=ART68TA"
+      }
+    ],
+    "overlays": [
+      {
+        "name": "Restricted Parking District",
+        "featureName": null,
+        "layerUrl": "https://gis.bostonplans.org/hosting/rest/services/Zoning_Viewer_Overlays/MapServer/11",
+        "codeUrl": null
+      },
+      {
+        "name": "Restricted Roof District",
+        "featureName": "South Boston Neighborhood",
+        "layerUrl": "https://gis.bostonplans.org/hosting/rest/services/Zoning_Viewer_Overlays/MapServer/12",
+        "codeUrl": null
+      }
+    ],
+    "retrievedAt": "2026-11-21T18:26:36.871Z"
+  },
+  {
+    "parcelId": "1301893000",
+    "assessorAddress": "17 Pleasant ST, DORCHESTER MA 02125",
+    "lat": 42.3175281859047,
+    "lng": -71.05944886476487,
+    "outline": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -71.05945620160537,
+            42.31758898980459
+          ],
+          [
+            -71.05960517045358,
+            42.31761558835907
+          ],
+          [
+            -71.05964293706127,
+            42.317503043577965
+          ],
+          [
+            -71.05929273966085,
+            42.31744081856015
+          ],
+          [
+            -71.05925476158589,
+            42.31755350916764
+          ],
+          [
+            -71.05945620160537,
+            42.31758898980459
+          ]
+        ]
+      ]
+    },
+    "match": "matched",
+    "districts": [
+      {
+        "district": "Dorchester Neighborhood",
+        "subdistrict": "3F-5000",
+        "article": "65",
+        "mapNumber": "5A-5E",
+        "articleUrl": "https://library.municode.com/ma/boston/codes/redevelopment_authority?nodeId=ART65DONEDI",
+        "tablesUrl": "https://library.municode.com/ma/boston/codes/redevelopment_authority?nodeId=ART65TA"
+      }
+    ],
+    "overlays": [
+      {
+        "name": "Neighborhood Design Overlay District",
+        "featureName": "Pleasant Street North",
+        "layerUrl": "https://gis.bostonplans.org/hosting/rest/services/Zoning_Viewer_Overlays/MapServer/4",
+        "codeUrl": null
+      }
+    ],
+    "retrievedAt": "2026-11-21T18:26:37.566Z"
+  }
+]
