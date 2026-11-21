@@ -49,8 +49,7 @@ and saves the result; the application shows up in the reviewer queue with it.
 
 Note: new filings send `extraction: null`, so until `src/extract` is connected the agent
 returns the "extraction not connected" error for them. To check the agent on its own,
-POST a request that carries an extraction (for example a heat pump version from
-`web/public/examples/library.json`) with the `x-permitpike-secret` header.
+POST a request that carries an extraction with the `x-permitpike-secret` header.
 
 ## Tests
 

@@ -8,9 +8,8 @@ import { neighborhoodForZip } from "@/lib/boston-zips";
 import { PropertyConfirm, confirmedParcelId, type PropertyState } from "./PropertyConfirm";
 
 /*
- * The filing form, without the saving. FilePermitForm (the real one) uploads and files;
- * the applicant demo on /design/applicant just moves on. Either can start it filled in,
- * e.g. from an example permit.
+ * The filing form, without the saving: FilePermitForm uploads the documents and files it.
+ * It can start filled in, e.g. from an example permit.
  */
 
 const JOB_OPTIONS = JobType.options.map((value) => ({ value, label: JOB_TYPE_LABELS[value] }));
@@ -56,7 +55,6 @@ export function PermitForm({
   intro,
   lookupProperty = true,
   onFile,
-  demoNext,
 }: {
   initial?: PermitFormInitial;
   heading?: string;
@@ -66,8 +64,6 @@ export function PermitForm({
   lookupProperty?: boolean;
   /** Saves the permit. Report progress with `progress`; throw to show an error. */
   onFile: (permit: FiledPermit, progress: (label: string) => void) => Promise<void>;
-  /** Static copies of the demo: where the form goes when filed. */
-  demoNext?: string;
 }) {
   const [jobType, setJobType] = useState<JobType>(initial.jobType ?? "heat_pump_panel");
   const [street, setStreet] = useState(initial.street ?? "");
@@ -135,13 +131,7 @@ export function PermitForm({
   }
 
   return (
-    <form
-      onSubmit={submit}
-      noValidate
-      className="flex flex-col gap-5"
-      data-demo-form={demoNext !== undefined ? "" : undefined}
-      data-next={demoNext || undefined}
-    >
+    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <h1 className="text-title text-ink">{heading}</h1>
         {intro}
@@ -158,7 +148,6 @@ export function PermitForm({
             onChange={(e) => setStreet(e.target.value)}
             error={errors.street}
             required
-            data-required="Enter the street address."
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Unit" autoComplete="address-line2" value={unit} onChange={(e) => setUnit(e.target.value)} />
@@ -175,8 +164,6 @@ export function PermitForm({
               }}
               error={errors.zip}
               required
-              data-required="Enter a 5-digit ZIP code."
-              data-pattern="^\d{5}$"
             />
           </div>
           {lookupProperty && (
@@ -204,7 +191,6 @@ export function PermitForm({
             onChange={(e) => setCost(e.target.value)}
             error={errors.cost}
             required
-            data-required="Enter the estimated cost in dollars, for example 12,500."
           />
           <div className="flex flex-col gap-1">
             <Textarea
@@ -231,7 +217,7 @@ export function PermitForm({
             </div>
             <ul className="flex flex-col gap-2">
               {DOCUMENTS[jobType].map((ask) => (
-                <li key={ask.kind} data-doc-kind={ask.kind} data-doc-required={ask.required ? "" : undefined}>
+                <li key={ask.kind}>
                   <DocumentSlot
                     title={ask.title}
                     hint={ask.hint}

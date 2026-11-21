@@ -223,8 +223,7 @@ lucide-react only, 1.75 stroke, 16 or 20px. One icon per meaning (see `/design` 
 
 ## Review workspace
 
-One permit, open for a building official (`/review/[id]`; the demo with the example
-library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/review/`.
+One permit, open for a building official (`/review/[id]`). Built from `ReviewWorkspace` in `web/components/review/`.
 
 - **Layout.** A "Queue" link, then the heading (address, status, permit number, job,
   neighborhood, filed date in words) and who filed it, with "Change status" at the top
@@ -254,8 +253,8 @@ library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/re
   any of them with "Edit record". Each row shows where its value came from: the document
   and confidence, or "Edited by you". Inputs, options and limits come from the contract's
   Zod schemas (`web/lib/record-edit.ts`). When an edited value fed a check, a warning says
-  the checks ran on the earlier value. Editing is on in the demo; the live page shows the
-  record read-only until the API can save edits (needs a contract change).
+  the checks ran on the earlier value. The live page shows the record
+  read-only until the API can save edits (needs a contract change).
 - **The decision.** "Change status" (gold, top right) opens a menu with the two moves:
   approve and return for fixes, each with one line on what happens, and "PermitPike
   recommends this" on the recommended one, which is listed first. Each opens its own
@@ -269,6 +268,33 @@ library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/re
   explaining, fix the UI.
 - **Dates in words** everywhere in the workspace ("November 20th", "10:30 AM"); the
   numeric stamp appears only in `SignatureBlock`.
+
+## Applicant portal
+
+The electrician's side (`/apply`).
+
+- **Home.** "Welcome back, [first name]." and how many permits are waiting on the city,
+  "File a permit" (gold) at the top right, then "Your permits" as `PermitCard`s. No risk
+  badges: risk is for the city's reviewers, not the electrician.
+- **File a permit** opens on the three kinds of job (`StartPermit`), each with how many
+  documents it needs. Below them, in a sunken panel, "Example permits to start from":
+  small cards that say only the request ("Heat pump at 64 Ashfield St", neighborhood,
+  number of documents). Never what PermitPike found or what the official decided: that
+  is found out by filing it. A card opens its documents to look through (one tab per
+  document, "Open original"), with "Start from this example".
+- **Filing is always real.** Both paths open the same form (`/apply/new?job=<jobType>` or
+  `?example=<slug>`, filled in with the example's documents attached). Filing uploads the
+  documents and creates the permit, which PermitPike checks and officials then review in
+  the queue. There is no pretend filing anywhere. Not signed in yet: name and license
+  first, then straight back to the form that was picked.
+- **One form.** `PermitForm` is the form without the saving; `FilePermitForm` uploads and
+  files. Validation: street, 5-digit ZIP, cost in dollars, each required document.
+- **After filing** the page leads with the tracking code, then the permit as it stands.
+- **One permit** (`ApplicantPermitView`): heading, tracking code, trail, a one-line status
+  ("Waiting for a building official. PermitPike found 1 problem they will look at."),
+  the official's decision, the resubmit form when it came back, then "What PermitPike
+  found" (checks, failures first, with fixes; the utility flag; the load on the service)
+  and programs for the job.
 
 ## Components
 
@@ -298,6 +324,10 @@ library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/re
 | `DocumentViewer`, `FieldLine` | Document tabs (one per file kind), zoom toolbar, image or PDF; the values to check against each document with confidence and check marks |
 | `LoadCalcPanel`, `ServiceMeter` | The worked load calculation and the flat service meter (80% and 100% marks; fits / tight / needs upgrade) |
 | `ChangeStatus` | "Change status" button and menu (status now, approve, return; recommended first) and the approve and return dialogs; override needs a reason |
+| `StartPermit` | First screen of "File a permit": one card per job type, then `ExamplePermits`. Cards hover with an ink edge and the wash |
+| `ExamplePermits` | Example permits in a sunken panel: small cards with the request only; each opens a dialog with its documents in tabs and "Start from this example" |
+| `PermitForm` | The filing form without the saving: job, address, ZIP, cost, description, one `DocumentSlot` per document. Starts filled in from `exampleInitial()` (`web/lib/example-filing.ts`) or empty; `FilePermitForm` wraps it to upload and file |
+| `ApplicantPermitView` | One permit as the electrician sees it: tracking code, trail, status line, decision, then what PermitPike found. `justFiled` leads with the tracking code |
 | `DiffView` | Before/after values; "Not set" and "Removed" for missing values |
 | `Table` | Horizontal rules only |
 | `Callout` | info, warning, utility; full box with an icon tile |

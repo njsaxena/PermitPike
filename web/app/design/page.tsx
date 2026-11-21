@@ -311,17 +311,17 @@ export default function DesignPage() {
         <div className="flex flex-col gap-6">
           <PermitPikeLogo size="md" on="background" />
           <h1 className="text-display tracking-tight text-ink">Design system</h1>
-          {/* The two sides of PermitPike, built from this system with the example permits. */}
+          {/* The two sides of PermitPike, live: file a permit, then review it. */}
           <div className="flex flex-wrap gap-3">
             <ButtonLink
-              href="/design/applicant"
+              href="/apply"
               variant="secondary"
               icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}
             >
               The applicant portal
             </ButtonLink>
             <ButtonLink
-              href="/design/portal"
+              href="/review"
               variant="secondary"
               icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}
             >

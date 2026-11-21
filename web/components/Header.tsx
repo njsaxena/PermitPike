@@ -10,10 +10,8 @@ import { HeaderShell } from "@/components/ui";
  */
 export function Header() {
   const path = usePathname();
-  // The portal demo on /design/portal is the reviewer side too.
-  const reviewer = path.startsWith("/review") || path.startsWith("/design/portal");
-  // …and the applicant demo on /design/applicant is the applicant side.
-  const applicant = path.startsWith("/apply") || path.startsWith("/design/applicant");
+  const reviewer = path.startsWith("/review");
+  const applicant = path.startsWith("/apply");
   const role = applicant ? "applicant" : reviewer ? "reviewer" : null;
   return (
     <HeaderShell

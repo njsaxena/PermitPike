@@ -12,7 +12,7 @@ import { trailSteps } from "@/lib/trail";
 /*
  * One permit as the electrician who filed it sees it: where it is, what PermitPike found
  * (so they can fix things before an official gets to it), and the official's decision.
- * Used by /apply/[id] (live) and the applicant demo on /design/applicant.
+ * Used by /apply/[id] and the example permits on /design/applicant.
  */
 
 const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, pass: 2 };
