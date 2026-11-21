@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node --import tsx server.ts",
+    "test": "node --import tsx parcel-zoning.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -2,6 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { JobType } from "@permitpike/contract";
 import { z } from "zod";
 import { complianceSources, sourceCatalogReviewedOn, type ComplianceSource } from "./catalog";
+import { resolveParcelZoning } from "./parcel-zoning";
 import { retrieveComplianceSource } from "./retrieve";
 
 function sourceMetadata(source: ComplianceSource) {
@@ -65,4 +66,5 @@ const getComplianceSource = createTool({
 export const complianceTools = {
   search_compliance_sources: searchComplianceSources,
   get_compliance_source: getComplianceSource,
+  resolve_parcel_zoning: resolveParcelZoning,
 };
