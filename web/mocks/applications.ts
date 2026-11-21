@@ -26,7 +26,7 @@ import { Parcel } from "@permitpike/contract";
 import { calculateLoad } from "@permitpike/loadcalc";
 import demoParcels from "../lib/parcel/demo-parcels.json";
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.8-flash";
 
 /** Cached city lookups for the three demo addresses (web/scripts/cache-parcels.ts). */
 function demoParcel(parcelId: string): Parcel {

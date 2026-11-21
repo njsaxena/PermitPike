@@ -7,7 +7,10 @@
     },
     "web": {
       "root": "web",
-      "framework": "nextjs"
+      "framework": "nextjs",
+      "bindings": [
+        { "type": "service", "service": "agent", "format": "url", "env": "INTERNAL_AGENT_URL" }
+      ]
     }
   },
   "rewrites": [

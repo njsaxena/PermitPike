@@ -13,8 +13,8 @@ import { scoreAndSaveClosureRisk } from "./closure-risk";
 /*
  * Runs after the response is sent (next/server `after`), so filing returns fast.
  *   submitted -> ai_review -> awaiting_official ("recommended")
- * With AGENT_URL set it calls the Mastra agent. Without it, a stub waits 2 seconds
- * and writes a placeholder recommendation, clearly labeled as sample results.
+ * Use the Vercel agent service binding or the standalone AGENT_URL. Without an
+ * agent URL, write a labeled placeholder recommendation after 2 seconds.
  */
 
 const STUB_DELAY_MS = 2000;
@@ -23,7 +23,7 @@ const AGENT_TIMEOUT_MS = 55_000;
 export async function runReview(applicationId: string, version: number): Promise<void> {
   try {
     if (!(await markInReview(applicationId, version))) return; // resubmitted or already handled
-    const agentUrl = process.env.AGENT_URL;
+    const agentUrl = process.env.INTERNAL_AGENT_URL || process.env.AGENT_URL;
     const result = agentUrl
       ? await callAgent(agentUrl, applicationId, version)
       : await stubReview(applicationId, version);
