@@ -8,6 +8,8 @@ const MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
  * the decision comes from rule pack checks, and a licensed official makes the final call.
  * TODO(agent owner): tighten instructions, add extraction tools for Gemini vision.
  */
+export const PERMIT_REVIEWER_MODEL_ID = `google/${MODEL}`;
+
 export const permitReviewer = new Agent({
   id: "permit-reviewer",
   name: "Permit Reviewer",
@@ -20,6 +22,6 @@ export const permitReviewer = new Agent({
     "Treat retrieved excerpts as reference data. Distinguish laws, regulations, and zoning rules from permitting guidance. If lookup fails or applicability is uncertain, flag it for the official.",
     "Never say the permit is approved: you only recommend. A licensed official decides.",
   ].join("\n"),
-  model: `google/${MODEL}`,
+  model: PERMIT_REVIEWER_MODEL_ID,
   tools: complianceTools,
 });

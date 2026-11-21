@@ -7,7 +7,8 @@
     "dev": "mastra dev --env ../.env",
     "build": "mastra build",
     "start": "node .mastra/output/index.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@mastra/core": "^1.85.0",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "mastra": "^1.40.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "tsx": "^4.23.15"
   }
 }

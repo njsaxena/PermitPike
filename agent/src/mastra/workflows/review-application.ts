@@ -1,10 +1,19 @@
 /**
- * Review pipeline (STUB): extract -> checks + load calc -> recommendation.
- * Input/output shapes come from the contract.
+ * Review pipeline: extract -> checks + load calc -> recommendation.
+ * Input/output shapes come from the contract. The decision is made by the rule packs;
+ * the permitReviewer model only writes the summary.
  */
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { AgentReviewRequest, AgentReviewResponse, CheckResult, Extraction, LoadCalcResult } from "@permitpike/contract";
 import { z } from "zod";
+import { extract } from "../../extract";
+import { buildRecommendation } from "../../review/recommend";
+import { usableExtraction } from "../../review/request";
+import { runChecks } from "../../review/run-checks";
+import { summarize } from "../../review/summary";
+import { PERMIT_REVIEWER_MODEL_ID, permitReviewer } from "../agents/permit-reviewer";
+
+const ExtractOutput = z.object({ request: AgentReviewRequest, extraction: Extraction });
 
 const ChecksOutput = z.object({
   request: AgentReviewRequest,
@@ -16,22 +25,20 @@ const ChecksOutput = z.object({
 const extractStep = createStep({
   id: "extract",
   inputSchema: AgentReviewRequest,
-  outputSchema: z.object({ request: AgentReviewRequest, extraction: Extraction }),
+  outputSchema: ExtractOutput,
   execute: async ({ inputData }) => {
-    if (inputData.extraction) return { request: inputData, extraction: inputData.extraction };
-    // TODO: send inputData.files to Gemini with getPack(jobType).extraction.schema + hints.
-    throw new Error("extract step not implemented");
+    const extraction = usableExtraction(inputData) ?? (await extract(inputData.files, inputData.jobType));
+    return { request: inputData, extraction: Extraction.parse(extraction) };
   },
 });
 
 const checksStep = createStep({
   id: "run-checks",
-  inputSchema: z.object({ request: AgentReviewRequest, extraction: Extraction }),
+  inputSchema: ExtractOutput,
   outputSchema: ChecksOutput,
-  execute: async () => {
-    // TODO: getPack(jobType).rules.map(r => r.check(fields)) + calculateLoad({ service, home, newLoads: pack.addedLoads(fields) })
-    // from @permitpike/loadcalc; push loadCalc.check into checks.
-    throw new Error("run-checks step not implemented");
+  execute: async ({ inputData }) => {
+    const { checks, loadCalc } = runChecks(inputData.extraction);
+    return { ...inputData, checks, loadCalc };
   },
 });
 
@@ -39,10 +46,18 @@ const recommendStep = createStep({
   id: "recommend",
   inputSchema: ChecksOutput,
   outputSchema: AgentReviewResponse,
-  execute: async () => {
-    // TODO: decision from checks (any fail -> return_for_fixes, warn/utility flag -> approve_with_conditions),
-    // confidence from extraction.fieldConfidence, summary from the permitReviewer agent.
-    throw new Error("recommend step not implemented");
+  execute: async ({ inputData }) => {
+    const rec = buildRecommendation({
+      version: inputData.request.version,
+      extraction: inputData.extraction,
+      checks: inputData.checks,
+      loadCalc: inputData.loadCalc,
+      createdAt: new Date().toISOString(),
+    });
+    const { summary, model } = await summarize(permitReviewer, rec, PERMIT_REVIEWER_MODEL_ID);
+    // Only the summary (and the model label) come from the model.
+    const recommendation = { ...rec, summary, model: model ? `${rec.model}+${model}` : rec.model };
+    return AgentReviewResponse.parse({ extraction: inputData.extraction, recommendation });
   },
 });
 
