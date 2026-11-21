@@ -22,7 +22,8 @@ export function ReviewDetail({ id }: { id: string }) {
   const { data, error, mutate } = useSWR(["application", id], () => api.getApplication(id), {
     refreshInterval: POLL_MS,
   });
-  const [pinned, setPinned] = useState<number | null>(null);
+  // Pinned on the first render when the server sent the permit with the page.
+  const [pinned, setPinned] = useState<number | null>(data?.application.version ?? null);
   const [stale, setStale] = useState(false);
 
   useEffect(() => {

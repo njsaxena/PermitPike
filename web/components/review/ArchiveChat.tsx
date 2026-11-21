@@ -177,9 +177,10 @@ export function ArchiveChat({ portalUrl }: { portalUrl: string }) {
   }
 
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_15rem]">
-      <div className="flex min-w-0 flex-col border border-border bg-surface">
-        <section className="min-h-64 max-h-[58vh] overflow-y-auto" aria-label="Archive search conversation">
+    // On wide screens the chat fills the space under the title and scrolls inside itself; the page doesn't.
+    <div className="grid items-start gap-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_15rem] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch">
+      <div className="flex min-w-0 flex-col border border-border bg-surface lg:min-h-0">
+        <section className="min-h-64 max-h-[58vh] overflow-y-auto lg:min-h-0 lg:max-h-none lg:flex-1" aria-label="Archive search conversation">
           {turns.length === 0 ? (
             <div className="p-card">
               <div className="mb-4 inline-flex size-9 items-center justify-center border border-ink bg-accent-tint">
@@ -246,7 +247,7 @@ export function ArchiveChat({ portalUrl }: { portalUrl: string }) {
         </form>
       </div>
 
-      <aside aria-label="Archive controls and sources" className="flex flex-col gap-4 border border-border bg-surface p-4">
+      <aside aria-label="Archive controls and sources" className="flex flex-col gap-4 border border-border bg-surface p-4 lg:max-h-full lg:min-h-0 lg:self-start lg:overflow-y-auto">
         <Button variant="secondary" size="sm" className="self-start" onClick={clearSearch} icon={<History aria-hidden className="size-4" strokeWidth={1.75} />}>
           New search
         </Button>

@@ -1,32 +1,21 @@
-"use client";
+import { ListApplicationsResponse } from "@permitpike/contract";
+import { ApplyHome } from "@/components/apply/ApplyHome";
+import { Prefetched } from "@/components/data/Prefetched";
+import { getApplicantCookie } from "@/lib/server/applicant-cookie";
+import { prefetch } from "@/lib/server/prefetch";
+import { listApplications } from "@/lib/server/repo";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { ApplicantEntry } from "@/components/apply/ApplicantEntry";
-import { MyPermits } from "@/components/apply/MyPermits";
-import { useApplicantId } from "@/lib/applicant";
+export const dynamic = "force-dynamic";
 
-function Apply() {
-  const router = useRouter();
-  // Where to go after signing in, e.g. the filing form someone started before signing in.
-  const next = useSearchParams().get("next");
-  const { id, ready, save } = useApplicantId();
-  if (!ready) return null;
-  if (id) return <MyPermits applicantId={id} />;
+export default async function ApplyPage() {
+  // The cookie mirrors the id in localStorage; MyPermits keys on that id, so a mismatch just fetches.
+  const applicantId = await getApplicantCookie();
+  const mine = applicantId
+    ? await prefetch(ListApplicationsResponse, async () => ({ applications: await listApplications({ applicantId }) }))
+    : undefined;
   return (
-    <ApplicantEntry
-      onEntered={(applicantId) => {
-        save(applicantId);
-        if (next?.startsWith("/apply/new")) router.push(next);
-      }}
-    />
-  );
-}
-
-export default function ApplyPage() {
-  return (
-    <Suspense>
-      <Apply />
-    </Suspense>
+    <Prefetched entries={applicantId ? [{ key: ["my-permits", applicantId], data: mine }] : []}>
+      <ApplyHome />
+    </Prefetched>
   );
 }

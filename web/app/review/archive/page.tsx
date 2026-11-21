@@ -21,7 +21,9 @@ export default async function ArchivePage({
   const returnHref = permitId ? `/review/${encodeURIComponent(permitId)}` : "/review";
 
   return (
-    <div className="flex flex-col gap-5">
+    // One screen on wide windows: 100dvh less the header (65px) and main's padding (2 x 32px).
+    // The min height lets a very short window scroll instead of crushing the chat.
+    <div className="flex flex-col gap-5 lg:h-[calc(100dvh-129px)] lg:min-h-[32rem]">
       <Link href={returnHref} className="pp-link inline-flex items-center gap-1.5 self-start text-sm">
         <ArrowLeft aria-hidden className="size-4" strokeWidth={1.75} />
         {permitId ? "Back to permit" : "Back to queue"}
