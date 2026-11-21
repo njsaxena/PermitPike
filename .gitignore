@@ -19,6 +19,12 @@ next-env.d.ts
 # data files (large CSVs live outside git; see data/README.md)
 data/*.csv
 data/*.parquet
+ml/data/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
 
 .DS_Store
 *.log

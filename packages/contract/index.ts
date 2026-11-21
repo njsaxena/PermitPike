@@ -775,3 +775,40 @@ export const AgentReviewResponse = z.object({
   recommendation: Recommendation,
 });
 export type AgentReviewResponse = z.infer<typeof AgentReviewResponse>;
+
+// ---------------------------------------------------------------------------
+// Permit closure-risk scoring API
+// ---------------------------------------------------------------------------
+
+export const PermitRiskBand = z.enum(["low", "medium", "high"]);
+export type PermitRiskBand = z.infer<typeof PermitRiskBand>;
+
+export const PermitRiskScoreRequest = z.object({
+  workType: z.string().nullable(),
+  permitTypeDescr: z.string().nullable(),
+  occupancyType: z.string().nullable(),
+  zip: z.string().nullable(),
+  declaredValuation: z.number().nonnegative().nullable(),
+  sqFeet: z.number().nonnegative().nullable(),
+  totalFees: z.number().nonnegative().nullable(),
+  issuedDate: IsoDateTime,
+  expirationDate: IsoDateTime.nullable(),
+  description: z.string(),
+  /** Computed from this applicant's permits issued strictly before this one. */
+  applicantPriorClosureRate: z.number().min(0).max(1),
+});
+export type PermitRiskScoreRequest = z.infer<typeof PermitRiskScoreRequest>;
+
+export const PermitRiskScoreResponse = z.object({
+  riskScore: z.number().min(0).max(1),
+  band: PermitRiskBand,
+  reasons: z.array(z.string()).max(3),
+  modelVersion: z.string(),
+});
+export type PermitRiskScoreResponse = z.infer<typeof PermitRiskScoreResponse>;
+
+export const PermitRiskHealthResponse = z.object({
+  status: z.literal("ok"),
+  modelVersion: z.string(),
+});
+export type PermitRiskHealthResponse = z.infer<typeof PermitRiskHealthResponse>;
