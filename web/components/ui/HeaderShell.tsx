@@ -40,7 +40,7 @@ export function HeaderShell({
         <div className="flex min-w-0 items-center gap-4">
           <PermitPikeLogo size="sm" />
           <span aria-hidden className="hidden h-6 w-px bg-border lg:block" />
-          <span className="hidden text-sm whitespace-nowrap text-muted lg:block">Boston, MA</span>
+          <span className="hidden text-sm whitespace-nowrap text-muted lg:block">Boston&apos;s Fast Lane for Electrical Permits</span>
         </div>
 
         {r && (

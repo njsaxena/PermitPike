@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
 export interface TabItem {
@@ -42,10 +42,31 @@ export function Tabs({
   const enabled = items.filter((t) => !t.disabled);
   const [own, setOwn] = useState(defaultTab ?? enabled[0]?.id ?? "");
   const active = value ?? own;
+  const listRef = useRef<HTMLDivElement>(null);
+  const panelsRef = useRef<HTMLDivElement>(null);
+  // Where the tab bar sat on screen when a tab was clicked, so it can stay there.
+  const anchor = useRef<{ top: number; bottom: number } | null>(null);
+
   function setActive(id: string) {
+    if (id !== active && listRef.current) {
+      const r = listRef.current.getBoundingClientRect();
+      anchor.current = { top: r.top, bottom: r.bottom };
+    }
     setOwn(id);
     onChange?.(id);
   }
+
+  // Switching to a shorter tab would shrink the page and make the browser jump up. Before
+  // anything is measured, give the panel area at least the screen height below the tab bar,
+  // then scroll back by however far the tab bar moved, so the view stays put.
+  useLayoutEffect(() => {
+    const was = anchor.current;
+    anchor.current = null;
+    if (!was || !listRef.current || !panelsRef.current) return;
+    panelsRef.current.style.minHeight = `${Math.max(0, Math.round(window.innerHeight - was.bottom))}px`;
+    const shift = listRef.current.getBoundingClientRect().top - was.top;
+    if (Math.abs(shift) > 1) window.scrollBy(0, shift);
+  }, [active]);
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   function move(e: KeyboardEvent<HTMLDivElement>) {
@@ -64,6 +85,7 @@ export function Tabs({
   return (
     <div>
       <div
+        ref={listRef}
         role="tablist"
         aria-label={label}
         onKeyDown={move}
@@ -117,19 +139,21 @@ export function Tabs({
           );
         })}
       </div>
-      {items.map((t) => (
-        <div
-          key={t.id}
-          role="tabpanel"
-          id={`${baseId}-panel-${t.id}`}
-          aria-labelledby={`${baseId}-tab-${t.id}`}
-          hidden={t.id !== active}
-          tabIndex={0}
-          className={panelClassName}
-        >
-          {t.content}
-        </div>
-      ))}
+      <div ref={panelsRef}>
+        {items.map((t) => (
+          <div
+            key={t.id}
+            role="tabpanel"
+            id={`${baseId}-panel-${t.id}`}
+            aria-labelledby={`${baseId}-tab-${t.id}`}
+            hidden={t.id !== active}
+            tabIndex={0}
+            className={panelClassName}
+          >
+            {t.content}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

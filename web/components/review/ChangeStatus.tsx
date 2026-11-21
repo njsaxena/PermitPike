@@ -63,14 +63,6 @@ export function ChangeStatus({
     };
   }, [menu]);
 
-  const approveLabel = isOverride ? "Approve anyway" : conditions.length > 0 ? "Approve with conditions" : "Approve";
-  const approveDetail = isOverride
-    ? failing.length > 0
-      ? `Goes against ${failing.length} failing ${failing.length === 1 ? "check" : "checks"}. You give the reason.`
-      : "Goes against PermitPike's recommendation. You give the reason."
-    : conditions.length > 0
-      ? `Sign it with ${conditions.length} ${conditions.length === 1 ? "condition" : "conditions"}. The electrician sees it right away.`
-      : "Sign the permit. The electrician sees it right away.";
   const menuId = `status-menu-${app.id}`;
 
   function choose(which: "approve" | "return") {
@@ -148,7 +140,6 @@ export function ChangeStatus({
                 icon={CornerUpLeft}
                 iconClass="text-ink"
                 title="Return for fixes"
-                detail="Send it back to the electrician with what to fix. They can resubmit."
                 recommended
                 onClick={() => choose("return")}
                 dialog={`return-${app.id}`}
@@ -156,8 +147,7 @@ export function ChangeStatus({
               <StatusOption
                 icon={isOverride ? TriangleAlert : CircleCheck}
                 iconClass={isOverride ? "text-warning" : "text-positive"}
-                title={approveLabel}
-                detail={approveDetail}
+                title="Approve"
                 recommended={!isOverride && !!rec}
                 onClick={() => choose("approve")}
                 dialog={`approve-${app.id}`}
@@ -168,8 +158,7 @@ export function ChangeStatus({
               <StatusOption
                 icon={isOverride ? TriangleAlert : CircleCheck}
                 iconClass={isOverride ? "text-warning" : "text-positive"}
-                title={approveLabel}
-                detail={approveDetail}
+                title="Approve"
                 recommended={!isOverride && !!rec}
                 onClick={() => choose("approve")}
                 dialog={`approve-${app.id}`}
@@ -178,7 +167,6 @@ export function ChangeStatus({
                 icon={CornerUpLeft}
                 iconClass="text-ink"
                 title="Return for fixes"
-                detail="Send it back to the electrician with what to fix. They can resubmit."
                 recommended={false}
                 onClick={() => choose("return")}
                 dialog={`return-${app.id}`}
@@ -271,7 +259,6 @@ function StatusOption({
   icon: Icon,
   iconClass,
   title,
-  detail,
   recommended,
   onClick,
   dialog,
@@ -279,7 +266,6 @@ function StatusOption({
   icon: typeof CircleCheck;
   iconClass: string;
   title: string;
-  detail: string;
   recommended: boolean;
   onClick: () => void;
   /** The dialog this option opens (static copies wire it by this id). */
@@ -296,7 +282,6 @@ function StatusOption({
         <Icon aria-hidden className={cx("mt-0.5 size-5", iconClass)} strokeWidth={1.75} />
         <span className="flex flex-col gap-0.5">
           <span className="font-semibold text-ink">{title}</span>
-          <span className="text-sm text-muted">{detail}</span>
           {recommended && <span className="text-sm font-semibold text-positive">PermitPike recommends this</span>}
         </span>
       </button>

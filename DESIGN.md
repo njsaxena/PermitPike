@@ -125,6 +125,8 @@ motion on hover beyond color.
   cells form a blocky "P". One knockout line, the Mass Pike, crosses the bottom right.
 - Wordmark: "PermitPike" in Public Sans Bold, -0.02em, ink. All other text is Red Hat
   Text, at regular weight for headings.
+- In the site header the logo is followed, from `lg` up, by the slogan "Boston's Fast Lane
+  for Electrical Permits" in small muted text.
 - Cut the Pike line in the color behind the mark (`on="surface"` or `"background"`).
 - Never recolor it, outline it, add effects, or put the brick steps anywhere else in the UI.
 
@@ -232,7 +234,8 @@ One permit, open for a building official (`/review/[id]`). Built from `ReviewWor
   `lg` the columns stack and "Change status" sits under the heading.
 - **Documents first.** The official reads the applicant's files, not a summary of them.
   `DocumentViewer` shows one document at a time, large, with zoom (fit, 50 to 300%) and
-  "Open original". Under each document: the values to check against it.
+  "Open original". The document box is a fixed height; zooming scrolls inside it and
+  never resizes it. Under each document: the values to check against it.
 - **Confidence is shown, never hidden.** A value read with under 85% confidence, or not
   found, gets a brass tint and a sentence telling the official to read it from the
   document. Never fill a missing value with a guess.
@@ -256,8 +259,9 @@ One permit, open for a building official (`/review/[id]`). Built from `ReviewWor
   the checks ran on the earlier value. The live page shows the record
   read-only until the API can save edits (needs a contract change).
 - **The decision.** "Change status" (gold, top right) opens a menu with the two moves:
-  approve and return for fixes, each with one line on what happens, and "PermitPike
-  recommends this" on the recommended one, which is listed first. Each opens its own
+  "Approve" and "Return for fixes", titles only, with "PermitPike recommends this" on the
+  recommended one, which is listed first. Approving against the recommendation shows a
+  warning icon instead of a check. Each opens its own
   confirmation. Approving past a failing check is "Approve anyway" and needs a written
   reason; approving needs the attestation tick; returning pre-fills the requested fixes
   from the checks. Only these change the permit. After a decision the control goes away
@@ -332,7 +336,7 @@ The electrician's side (`/apply`).
 | `Table` | Horizontal rules only |
 | `Callout` | info, warning, utility; full box with an icon tile |
 | `Card` | Optional header label, actions, footer; `selected` |
-| `Tabs` | WAI-ARIA tabs drawn as a row of square buttons; the selected one is filled ink with a gold count chip. Optional `value`/`onChange` to control it (a check opening its document). `icon` plus `iconOnly` draws a square icon button with the label as its accessible name and tooltip |
+| `Tabs` | WAI-ARIA tabs drawn as a row of square buttons; the selected one is filled ink with a gold count chip. Optional `value`/`onChange` to control it (a check opening its document). Switching tabs keeps the tab bar where it was on screen, so a shorter panel never makes the page jump. `icon` plus `iconOnly` draws a square icon button with the label as its accessible name and tooltip |
 | `HeaderShell` | Logo plus the role you entered as and a "Leave" link back to the entry screen. No role toggle. `wide` matches the review workspace |
 | `RoleChoiceCard` | One label with an icon or a Boston drawing; the entry screen uses two |
 | `PermitPikeLogo`, `PermitPikeMark` | The logo (see Logo) |
