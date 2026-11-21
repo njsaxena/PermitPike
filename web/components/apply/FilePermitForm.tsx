@@ -6,11 +6,13 @@ import { JOB_TYPE_LABELS, JobType, type FileKind } from "@permitpike/contract";
 import { Button, DocumentSlot, Input, Select, type FileChipData } from "@/components/ui";
 import { api } from "@/lib/api-client";
 import { DOCUMENTS } from "@/lib/documents";
+import { neighborhoodForZip } from "@/lib/boston-zips";
 import { uploadFiles } from "@/lib/upload";
 import { PropertyConfirm, confirmedParcelId, type PropertyState } from "./PropertyConfirm";
 
 const JOB_OPTIONS = JobType.options.map((value) => ({ value, label: JOB_TYPE_LABELS[value] }));
-export const ACCEPT = ".pdf,.jpg,.jpeg,.png,.heic";
+// Matches ALLOWED in app/api/blob/route.ts.
+export const ACCEPT = ".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp";
 
 type Errors = Partial<Record<"street" | "zip" | "property" | "form", string>> & { docs?: Partial<Record<FileKind, string>> };
 
@@ -19,7 +21,8 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
   const [jobType, setJobType] = useState<JobType>("heat_pump_panel");
   const [street, setStreet] = useState("");
   const [unit, setUnit] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
+  // Not asked for: comes from the picked parcel, else from the ZIP.
+  const [parcelNeighborhood, setParcelNeighborhood] = useState<string | null>(null);
   const [zip, setZip] = useState("");
   const [property, setProperty] = useState<PropertyState>({ kind: "idle" });
   // Kept by kind, so switching the job keeps what was already attached.
@@ -61,7 +64,7 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
         address: {
           street: street.trim(),
           unit: unit.trim() || null,
-          neighborhood: neighborhood.trim() || null,
+          neighborhood: parcelNeighborhood ?? neighborhoodForZip(zip),
           city: "Boston",
           state: "MA",
           zip: zip.trim(),
@@ -93,9 +96,8 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
         error={errors.street}
         required
       />
-      <div className="grid gap-6 sm:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2">
         <Input label="Unit" autoComplete="address-line2" value={unit} onChange={(e) => setUnit(e.target.value)} />
-        <Input label="Neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
         <Input
           label="ZIP code"
           mono
@@ -103,7 +105,10 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
           autoComplete="postal-code"
           maxLength={5}
           value={zip}
-          onChange={(e) => setZip(e.target.value)}
+          onChange={(e) => {
+            setZip(e.target.value);
+            setParcelNeighborhood(null);
+          }}
           error={errors.zip}
           required
         />
@@ -118,7 +123,7 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
         }}
         onPlace={(place) => {
           setZip(place.zip);
-          if (!neighborhood.trim() && place.neighborhood) setNeighborhood(place.neighborhood);
+          setParcelNeighborhood(place.neighborhood);
         }}
         error={errors.property}
       />
@@ -128,7 +133,7 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
             Documents
           </h2>
           <p className="text-sm text-muted">
-            PDFs or photos, one row per document. Phone photos are fine if the text is readable.
+            Accepted file types: PDF, JPG, PNG, HEIC and WebP, up to 25 MB each.
           </p>
         </div>
         <ul className="flex flex-col gap-2">

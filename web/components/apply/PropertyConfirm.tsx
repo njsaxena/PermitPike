@@ -205,7 +205,7 @@ export function PropertyConfirm({
           <MapUnavailable address={typed} />
           {state.kind === "not_found" && (
             <p className="text-sm text-ink">
-              No Boston parcel matches this address. Check the street number, or file anyway.
+              No Boston parcel matches this address. Please check the street number.
             </p>
           )}
         </>
