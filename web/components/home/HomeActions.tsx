@@ -4,13 +4,19 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type M
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ArrowRight, FilePlus, Landmark, Search, X } from "lucide-react";
-import { Button, ButtonLink, Input } from "@/components/ui";
+import Link from "next/link";
+import { cx } from "@/lib/cx";
 import { normalizeTrackingCode } from "@/lib/tracking-code";
 
 type Phase = "closed" | "opening" | "open" | "closing";
 
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const FULL = "inset(0px 0px 0px 0px)";
+
+/* Borderless, straight on the map: gold for the main way in, white for the other two. */
+const ACTION =
+  "flex items-center justify-center gap-2.5 px-4 font-semibold sm:px-6 whitespace-nowrap text-ink no-underline transition-[box-shadow] duration-150 ease-out motion-reduce:transition-none hov:wash";
+const HALF = "min-h-14 min-w-0 flex-1 basis-0 bg-surface text-[18px] leading-6";
 
 /**
  * The three ways in. "Check status" grows out of its own button into a panel the size of
@@ -170,67 +176,85 @@ export function HomeActions() {
   }
 
   return (
-    <nav aria-label="Get started" className="relative flex max-w-xl flex-col gap-3">
-      <ButtonLink href="/apply" size="lg" inert={expanded} icon={<FilePlus aria-hidden className="size-5" />}>
+    <nav aria-label="Get started" className="relative z-[2] flex flex-col gap-3">
+      <Link href="/apply" inert={expanded} className={cx(ACTION, "min-h-[68px] bg-accent text-[20px] leading-[26px]")}>
+        <FilePlus aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
         Apply for a permit
-      </ButtonLink>
-      <div className="grid grid-cols-2 gap-3" inert={expanded}>
-        <ButtonLink href="/review" variant="secondary" size="lg" icon={<Landmark aria-hidden className="size-5" />}>
+      </Link>
+      <div className="flex gap-3" inert={expanded}>
+        <Link href="/review" className={cx(ACTION, HALF)}>
+          <Landmark aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
           Staff portal
-        </ButtonLink>
-        <ButtonLink
+        </Link>
+        <Link
           ref={openRef}
           href="/track"
-          variant="secondary"
-          size="lg"
           aria-expanded={expanded}
           aria-controls="track-panel"
           onClick={show}
-          icon={<Search aria-hidden className="size-5" />}
+          className={cx(ACTION, HALF)}
         >
+          <Search aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
           Check status
-        </ButtonLink>
+        </Link>
       </div>
 
       <div
         ref={panelRef}
         id="track-panel"
         onKeyDown={onKeyDown}
-        className="absolute inset-x-0 top-0 flex min-h-full flex-col justify-center border border-border-strong bg-surface px-5 py-4"
+        className="absolute inset-x-0 top-0 flex min-h-full flex-col justify-center bg-surface px-5 py-[18px]"
         style={{ visibility: expanded ? "visible" : "hidden", pointerEvents: expanded ? "auto" : "none" }}
       >
-        <form ref={contentRef} onSubmit={submit} noValidate className="relative" style={{ opacity: 0 }}>
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <Input
-                ref={inputRef}
-                label="Enter your tracking code"
-                mono
-                placeholder="PP-7K3Q-9M2X"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                value={code}
-                onChange={(e) => {
-                  setCode(e.target.value);
-                  if (error) setError(undefined);
-                }}
-                error={error}
-              />
-            </div>
-            {/* Label (20px) plus its gap (6px), so the button lines up with the box. */}
-            <Button type="submit" className="mt-[26px]" icon={<ArrowRight aria-hidden className="size-4" />}>
-              Open
-            </Button>
+        <form ref={contentRef} onSubmit={submit} noValidate className="flex flex-col gap-2.5" style={{ opacity: 0 }}>
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="track-code" className="text-[18px] leading-6 font-semibold text-ink">
+              Enter your tracking code
+            </label>
+            <button
+              type="button"
+              onClick={hide}
+              aria-label="Close"
+              className="-my-1 -mr-1.5 flex size-8 items-center justify-center text-ink transition-[box-shadow] duration-150 ease-out hov:wash"
+            >
+              <X aria-hidden className="size-5" strokeWidth={1.75} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={hide}
-            aria-label="Close"
-            className="absolute -top-1.5 -right-2 flex size-8 items-center justify-center text-ink transition-[background-color] duration-100 ease-out hov:bg-hover"
-          >
-            <X aria-hidden className="size-4" />
-          </button>
+          <div className="flex gap-3">
+            <input
+              ref={inputRef}
+              id="track-code"
+              name="code"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              placeholder="PP-7K3Q-9M2X"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                if (error) setError(undefined);
+              }}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "track-code-error" : undefined}
+              className={cx(
+                "h-[52px] min-w-0 flex-auto border bg-surface px-3.5 text-[18px] leading-6 font-semibold tracking-[0.04em] text-ink",
+                "placeholder:font-normal placeholder:text-border-strong",
+                error ? "border-critical" : "border-border-strong",
+              )}
+            />
+            <button
+              type="submit"
+              className="flex h-[52px] shrink-0 items-center gap-2 bg-accent px-[22px] text-[18px] leading-6 font-semibold text-ink transition-[box-shadow] duration-150 ease-out hov:wash"
+            >
+              Open
+              <ArrowRight aria-hidden className="size-5" strokeWidth={1.75} />
+            </button>
+          </div>
+          {error && (
+            <p id="track-code-error" role="alert" className="text-[13px] leading-[18px] text-critical">
+              {error}
+            </p>
+          )}
         </form>
       </div>
     </nav>

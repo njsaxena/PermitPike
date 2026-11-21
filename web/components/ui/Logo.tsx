@@ -18,7 +18,11 @@ const CELLS = [
   [DARK, MID, LIGHT, MID],
 ] as const;
 
-export type LogoKnockout = "surface" | "background";
+/** What the Pike line is cut in. "transparent" cuts it out, for the mark over a picture. */
+/** The Mass Pike line, corner to corner across the bottom right. */
+const PIKE = { x1: 16.8, y1: 104.2, x2: 111.2, y2: 68.8 };
+
+export type LogoKnockout = "surface" | "background" | "transparent";
 
 export interface PermitPikeMarkProps {
   /** Pixel size of the square mark. */
@@ -41,19 +45,27 @@ export function PermitPikeMark({ size = 32, on = "surface", title, className }: 
       aria-hidden={title ? undefined : true}
       className={cx("block shrink-0 overflow-hidden", className)}
     >
-      {CELLS.map((row, r) =>
-        row.map((fill, c) => (
-          <rect key={`${r}-${c}`} x={c * 26} y={r * 26} width={22} height={22} fill={fill} />
-        )),
+      {on === "transparent" && (
+        // One transparent mark per page, so a fixed id is safe.
+        <mask id="pp-pike-knockout">
+          <rect width={100} height={100} fill="#fff" />
+          <line {...PIKE} stroke="#000" strokeWidth={4} />
+        </mask>
       )}
-      <line
-        x1={16.8}
-        y1={104.2}
-        x2={111.2}
-        y2={68.8}
-        stroke={on === "surface" ? "var(--pp-surface)" : "var(--pp-background)"}
-        strokeWidth={4}
-      />
+      <g mask={on === "transparent" ? "url(#pp-pike-knockout)" : undefined}>
+        {CELLS.map((row, r) =>
+          row.map((fill, c) => (
+            <rect key={`${r}-${c}`} x={c * 26} y={r * 26} width={22} height={22} fill={fill} />
+          )),
+        )}
+      </g>
+      {on !== "transparent" && (
+        <line
+          {...PIKE}
+          stroke={on === "surface" ? "var(--pp-surface)" : "var(--pp-background)"}
+          strokeWidth={4}
+        />
+      )}
     </svg>
   );
 }
