@@ -36,50 +36,39 @@ export function Header() {
       // One permit open for review uses the wider workspace.
       wide={/^\/(review|design\/portal)\/[^/]+/.test(path) && path !== "/review/evals" && path !== "/review/archive"}
       action={
-        role && (
-          <span className="flex items-center gap-3">
-            {applicant && applicantId && (
-              <>
-                <Link
-                  href="/apply/account"
-                  aria-current={path === "/apply/account" ? "page" : undefined}
-                  className="pp-link text-sm"
-                >
-                  Account
+        <nav aria-label="Main" className="flex items-center gap-2.5 text-sm whitespace-nowrap max-[359px]:gap-2 max-[359px]:text-xs sm:gap-3">
+          <Link
+            href={reviewer ? "/archive?from=review" : "/archive"}
+            aria-current={path === "/archive" ? "page" : undefined}
+            className="pp-link underline-offset-4 aria-[current=page]:underline"
+          >
+            Archive
+          </Link>
+          {applicant && applicantId && (
+            <Link href="/apply/account" aria-current={path === "/apply/account" ? "page" : undefined} className="pp-link">
+              Account
+            </Link>
+          )}
+          {reviewer && (
+            <Link href="/review/evals" aria-current={path === "/review/evals" ? "page" : undefined} className="pp-link">
+              Evals
+            </Link>
+          )}
+          {role && (
+            <>
+              <span aria-hidden className="hidden h-5 w-px bg-border sm:block" />
+              {signedIn ? (
+                <button type="button" onClick={() => void signOut()} className="pp-link">
+                  Sign out
+                </button>
+              ) : (
+                <Link href="/" className="pp-link">
+                  Leave
                 </Link>
-                <span aria-hidden className="h-5 w-px bg-border" />
-              </>
-            )}
-            {reviewer && (
-              <>
-                <Link
-                  href="/review/archive"
-                  aria-current={path === "/review/archive" ? "page" : undefined}
-                  className="pp-link text-sm"
-                >
-                  Archive
-                </Link>
-                <Link
-                  href="/review/evals"
-                  aria-current={path === "/review/evals" ? "page" : undefined}
-                  className="pp-link text-sm"
-                >
-                  Evals
-                </Link>
-                <span aria-hidden className="h-5 w-px bg-border" />
-              </>
-            )}
-            {signedIn ? (
-              <button type="button" onClick={() => void signOut()} className="pp-link text-sm">
-                Sign out
-              </button>
-            ) : (
-              <Link href="/" className="pp-link text-sm">
-                Leave
-              </Link>
-            )}
-          </span>
-        )
+              )}
+            </>
+          )}
+        </nav>
       }
     />
   );

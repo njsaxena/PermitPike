@@ -135,14 +135,14 @@ export function ArchiveChat({ portalUrl }: { portalUrl: string }) {
     setRecent(previous => [trimmed, ...previous.filter(item => item !== trimmed)].slice(0, 6));
 
     try {
-      const response = await fetch("/api/reviewer/archive", {
+      const response = await fetch("/api/archive", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
         signal: request.signal,
       });
-      if (response.status === 401) {
-        throw new Error("The reviewer session ended. Return to the queue to sign in.");
+      if (response.status === 429) {
+        throw new Error("The archive received too many searches. Wait a minute and try again.");
       }
       if (!response.ok) throw new Error("The archive search could not finish. Try again in a moment.");
       const result = await response.json() as ArchiveChatResponse;

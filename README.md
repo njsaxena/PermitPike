@@ -129,9 +129,11 @@ writes each run to `eval_runs` in Tiger Data for the eval dashboard at `/review/
 
 ### Boston permit archive
 
-Open **Archive** from the reviewer header or **Search permit archive** from a permit.
+Open **Archive** from the homepage or app header. Anyone can use `/archive` without
+signing in. Reviewers can also open **Search permit archive** from a permit and
+return to that permit when finished.
 The chat searches public Analyze Boston permit records by address, neighborhood, type
-of work, year, or permit number. Reviewers can compare records, download summaries,
+of work, year, or permit number. Visitors can compare records, download summaries,
 open official reference PDFs, and look up original scans in the City’s ScerIS archive.
 On the web host, `GOOGLE_GENERATIVE_AI_API_KEY` enables optional Gemini assistance
 when the shared database rate limiter is available. Searches use the same public
