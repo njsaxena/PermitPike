@@ -9,7 +9,7 @@ import { api } from "@/lib/api-client";
 import type { ExampleSummary } from "@/lib/example-filing";
 
 /*
- * Example permits to start from, below "Your own job" on the first screen of "File a
+ * The fictional permit library, below "Your own job" on the first screen of "File a
  * permit". Each shows only the request and its documents: what happens to it is found
  * out by filing it. "Use this example" opens the filled-in form; "View details" shows where
  * the property is on the live parcel map, then each document, to look through first; its
@@ -28,12 +28,9 @@ export function ExamplePermits({ examples }: { examples: (ExampleSummary & { hre
   if (examples.length === 0) return null;
   return (
     <section aria-labelledby="examples" className="flex flex-col gap-4 border border-border bg-sunken p-5 sm:p-6">
-      <div className="flex flex-col gap-1">
-        <h2 id="examples" className="text-lg text-ink">
-          Example permits to start from
-        </h2>
-        <p className="text-sm text-muted">Every person, company and document in them is fictional.</p>
-      </div>
+      <h2 id="examples" className="text-lg text-ink">
+        Fictional permit library
+      </h2>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {examples.map((e) => (
           <li key={e.slug}>

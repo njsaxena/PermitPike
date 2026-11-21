@@ -290,7 +290,7 @@ The electrician's side (`/apply`).
   "File a permit" (gold) at the top right, then "Your permits" as `PermitCard`s. No risk
   badges: risk is for the city's reviewers, not the electrician.
 - **File a permit** opens on the three kinds of job (`StartPermit`), each with how many
-  documents it needs. Below them, in a sunken panel, "Example permits to start from":
+  documents it needs. Below them, in a sunken panel, "Fictional permit library":
   small cards that say only the request ("Heat pump at 64 Kittredge St", neighborhood,
   number of documents). Never what PermitPike found or what the official decided: that
   is found out by filing it. Each card has two quiet (white) buttons, so the library
