@@ -1,7 +1,6 @@
-import { APPROVAL_VALID_DAYS, type ApplicationDetail, type ReviewerAction } from "@permitpike/contract";
-import { isExpired } from "@/lib/expiry";
+import type { ApplicationDetail, ReviewerAction } from "@permitpike/contract";
 import { Callout, SignatureBlock } from "@/components/ui";
-import { longDate, stamp } from "@/lib/format";
+import { stamp } from "@/lib/format";
 import { isStep0Text, parseStep0Text, splitStep0 } from "@/lib/step0";
 import { Step0DraftCard } from "./Step0Draft";
 
@@ -38,16 +37,6 @@ export function Decision({ detail }: { detail: ApplicationDetail }) {
         )}
         <SignatureBlock name={action.actor.name} signedAt={stamp(action.timestamp)} permitNumber={app.permitNumber} />
         {draft && <Step0DraftCard draft={parseStep0Text(draft)} id="step0-sent" />}
-        {app.expiresAt &&
-          (isExpired(app) ? (
-            <Callout title={`This approval expired on ${longDate(app.expiresAt)}.`}>
-              Approvals are valid for {APPROVAL_VALID_DAYS} days. File a new permit to do this work.
-            </Callout>
-          ) : (
-            <p className="text-sm text-muted">
-              Valid until {longDate(app.expiresAt)}. Approvals are valid for {APPROVAL_VALID_DAYS} days.
-            </p>
-          ))}
       </section>
     );
   }

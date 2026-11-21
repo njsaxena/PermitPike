@@ -1,16 +1,19 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { copyText } from "@/lib/clipboard";
 import { cx } from "@/lib/cx";
 
 /** The tracking code as a value, with a Copy button that says when it worked. */
 export function TrackingCodeCopy({
   code,
+  action,
   className,
 }: {
   code: string;
+  /** Another button in the same row, e.g. the public status page. */
+  action?: ReactNode;
   className?: string;
 }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
@@ -23,7 +26,7 @@ export function TrackingCodeCopy({
 
   return (
     <div className={cx("flex flex-col gap-2", className)}>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="select-all whitespace-nowrap border border-border-strong bg-surface px-3 py-2 font-mono text-lg tracking-wide text-ink">
           {code}
         </span>
@@ -39,6 +42,7 @@ export function TrackingCodeCopy({
           )}
           {state === "copied" ? "Copied" : "Copy"}
         </button>
+        {action}
       </div>
       <span role="status" className="sr-only">
         {state === "copied"

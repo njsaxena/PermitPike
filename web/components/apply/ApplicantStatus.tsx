@@ -31,7 +31,7 @@ export function ApplicantStatus({ id, justFiled = false }: { id: string; justFil
       detail={data}
       justFiled={justFiled}
       trackHref={`/track/${app.trackingCode}`}
-      footer={<DeletePermit detail={data} />}
+      footer={<RevokeApplication detail={data} />}
     >
       {app.status === "returned" && (
         <ResubmitForm id={id} applicantId={app.applicantId} onDone={() => void mutate()} />
@@ -89,10 +89,12 @@ function ResubmitForm({ id, applicantId, onDone }: { id: string; applicantId: st
 }
 
 /**
- * Last thing on the page, for the electrician who filed it. A permit can be deleted until a
- * building official acts on it; after that the audit log keeps it, and this says so instead.
+ * Last thing on the page, for the electrician who filed it: revoking the application. It can
+ * be revoked until a building official acts on it; after that the audit log keeps it, and this
+ * says so instead. (Revoking still removes the application: a kept "revoked" status needs a
+ * contract change.)
  */
-function DeletePermit({ detail }: { detail: ApplicationDetail }) {
+function RevokeApplication({ detail }: { detail: ApplicationDetail }) {
   const app = detail.application;
   const router = useRouter();
   const { mutate } = useSWRConfig();
@@ -113,40 +115,40 @@ function DeletePermit({ detail }: { detail: ApplicationDetail }) {
       await mutate(["my-permits", app.applicantId]);
       router.push("/apply");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete the permit. Try again.");
+      setError(err instanceof Error ? err.message : "Could not revoke the application. Try again.");
       setBusy(false);
       setOpen(false);
     }
   }
 
   return (
-    <section aria-labelledby="delete-permit" className="flex max-w-2xl flex-col gap-3 border-t border-border pt-8">
-      <h2 id="delete-permit" className="text-lg text-ink">
-        Delete this permit
+    <section aria-labelledby="revoke-permit" className="flex max-w-2xl flex-col gap-3 border-t border-border pt-8">
+      <h2 id="revoke-permit" className="text-lg text-ink">
+        Revoke this application
       </h2>
       {onRecord ? (
         <p className="text-muted">
           A building official has acted on this permit, so it stays on the city&apos;s record and can&apos;t be
-          deleted.
+          revoked here.
         </p>
       ) : (
         <>
           <p className="text-muted">
-            Withdraws the application and removes its documents. The tracking code stops working. This can&apos;t
-            be undone.
+            Withdraws the application and its documents. The tracking code stops working. This can&apos;t be
+            undone.
           </p>
           {error && <p className="text-sm text-critical">{error}</p>}
           <div>
             <Button variant="secondary" onClick={() => setOpen(true)}>
-              Delete permit
+              Revoke application
             </Button>
           </div>
           <ConfirmDialog
             open={open}
             onClose={() => !busy && setOpen(false)}
             onConfirm={() => void remove()}
-            title="Delete this permit?"
-            confirmLabel={busy ? "Deleting" : "Delete permit"}
+            title="Revoke this application?"
+            confirmLabel={busy ? "Revoking" : "Revoke application"}
             confirmVariant="destructive"
           >
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
@@ -159,7 +161,7 @@ function DeletePermit({ detail }: { detail: ApplicationDetail }) {
                 {longDate(app.submittedAt)} at {clockTime(app.submittedAt)}
               </dd>
             </dl>
-            <p>The application, its documents and its tracking code are deleted. This can&apos;t be undone.</p>
+            <p>The application, its documents and its tracking code are withdrawn. This can&apos;t be undone.</p>
           </ConfirmDialog>
         </>
       )}
