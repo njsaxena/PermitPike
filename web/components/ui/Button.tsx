@@ -1,10 +1,10 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import Link from "next/link";
 import { Loader } from "lucide-react";
 import { cx } from "@/lib/cx";
 
 export type ButtonVariant = "primary" | "secondary" | "quiet" | "destructive";
-export type ButtonSize = "md" | "sm";
+export type ButtonSize = "lg" | "md" | "sm";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -26,6 +26,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
 };
 
 const SIZES: Record<ButtonSize, string> = {
+  lg: "h-14 px-5 text-lg gap-2.5",
   md: "h-10 px-4 text-base gap-2",
   sm: "h-8 px-3 text-sm gap-1.5",
 };
@@ -75,6 +76,15 @@ export function Button({
   );
 }
 
+export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  href: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  icon?: ReactNode;
+  ref?: Ref<HTMLAnchorElement>;
+  children: ReactNode;
+}
+
 /** A link that looks like a Button, for navigation ("File a permit"). */
 export function ButtonLink({
   href,
@@ -83,20 +93,15 @@ export function ButtonLink({
   icon,
   className,
   children,
-}: {
-  href: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  icon?: ReactNode;
-  className?: string;
-  children: ReactNode;
-}) {
+  ...rest
+}: ButtonLinkProps) {
   return (
     <Link
       href={href}
+      {...rest}
       className={cx(
         "inline-flex items-center justify-center border font-semibold whitespace-nowrap",
-        "transition-[background-color,border-color,color] duration-100 ease-out",
+        "transition-[background-color,border-color,color,box-shadow] duration-100 ease-out",
         SIZES[size],
         VARIANTS[variant],
         className,
