@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import type { Extraction } from "@permitpike/contract";
+import { GoogleGenAI, type Part } from "@google/genai";
+import type { Extraction, JobType } from "@permitpike/contract";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { extname } from "node:path";
@@ -13,6 +13,7 @@ import {
   toExtraction,
   type Evidence,
 } from "./evidence";
+import { prompts } from "./prompts";
 
 export type { Evidence, ExtractionJob, FieldReading } from "./evidence";
 
@@ -30,14 +31,6 @@ const DEFAULT_MODEL = "gemini-3.8-flash";
 const MAX_FILE_BYTES = 14 * 1024 * 1024;
 const rootEnv = new URL("../../.env", import.meta.url);
 const cacheDir = new URL("./.cache/", import.meta.url);
-
-const promptNames: Record<ExtractionJob, string> = {
-  heat_pump: "heat_pump",
-  heat_pump_panel: "heat_pump",
-  panel: "panel",
-  ev_charger: "ev_charger",
-  home_battery: "home_battery",
-};
 
 const instructions = [
   "Extract only values explicitly shown for the requested job and model.",
@@ -78,8 +71,8 @@ export type ExtractionResult = {
 export class IncompleteExtractionError extends Error {
   constructor(readonly result: ExtractionResult) {
     super(result.needsModelNumber
-      ? "The document lists several models. Ask for the model number and pass it as options.modelNumber."
-      : "The document does not provide enough fields for a complete application extraction. Inspect result.fields for the available evidence.");
+      ? "The documents do not identify a single equipment model."
+      : "The documents do not provide enough evidence for a complete application extraction.");
     this.name = "IncompleteExtractionError";
   }
 }
@@ -105,6 +98,73 @@ function decodeResponse(job: ExtractionJob, model: string, response: CachedRespo
     extraction: body.needsModelNumber ? null : toExtraction(job, fields, model, response.extractedAt),
     model,
   };
+}
+
+function responseSchema(job: ExtractionJob) {
+  const schema = ResponseBody.extend({ fields: evidenceSchema(job) });
+  const { $schema, ...responseJsonSchema } = z.toJSONSchema(schema, { reused: "ref" });
+  return responseJsonSchema;
+}
+
+function jobPrompt(job: ExtractionJob) {
+  return prompts[job === "heat_pump_panel" ? "heat_pump" : job];
+}
+
+async function generateExtraction({
+  apiKey, model, parts, responseJsonSchema, abortSignal,
+}: {
+  apiKey: string;
+  model: string;
+  parts: Part[];
+  responseJsonSchema: ReturnType<typeof responseSchema>;
+  abortSignal?: AbortSignal;
+}): Promise<CachedResponse> {
+  const client = new GoogleGenAI({ apiKey, vertexai: false });
+  const response = await client.models.generateContent({
+    model,
+    contents: [{ role: "user", parts }],
+    config: {
+      systemInstruction: instructions,
+      responseMimeType: "application/json",
+      responseJsonSchema,
+      abortSignal,
+    },
+  }).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message.replaceAll(apiKey, "[redacted]") : "Request failed.";
+    throw new Error(`Gemini request failed: ${message}`);
+  });
+  if (!response.text) throw new Error("Gemini returned no structured extraction.");
+  return { text: response.text, extractedAt: new Date().toISOString() };
+}
+
+/** Extract from one application's uploads together. Uploaded documents bypass the scoring cache. */
+export async function extractApplicationDocuments(
+  documents: Part[],
+  job: JobType,
+  abortSignal: AbortSignal,
+): Promise<Extraction> {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) throw new Error("Set GOOGLE_GENERATIVE_AI_API_KEY or GEMINI_API_KEY for permit document extraction.");
+  const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+  const prompt = [
+    jobPrompt(job),
+    prompts.panel,
+    "Read the attached permit documents together. Document types are labels only. Use a model number explicitly identified for this application to select the corresponding equipment ratings.",
+    "Read site and installation details only when they are documented for this application. Treat contradictory readings as missing.",
+  ].join("\n");
+  const response = await generateExtraction({
+    apiKey,
+    model,
+    parts: [{ text: prompt }, ...documents],
+    responseJsonSchema: responseSchema(job),
+    abortSignal,
+  });
+  const result = decodeResponse(job, model, response);
+  const hasUnconfirmedReading = Object.values(result.fields).some(
+    ({ value, confidence }) => value !== null && confidence < CONFIRM_BELOW,
+  );
+  if (!result.extraction || hasUnconfirmedReading) throw new IncompleteExtractionError(result);
+  return result.extraction;
 }
 
 async function readCachedResponse(cacheFile: URL, job: ExtractionJob, model: string) {
@@ -154,12 +214,9 @@ export async function extractWithEvidence(
 
   const localEnv = parseEnv((await readIfPresent(rootEnv)) ?? "");
   const model = process.env.GEMINI_MODEL?.trim() || localEnv.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
-  const promptFile = new URL(`./prompts/${promptNames[job]}.md`, import.meta.url);
-  const jobPrompt = await readFile(promptFile, "utf8");
   const modelNumber = options.modelNumber?.trim();
-  const prompt = modelNumber ? `${jobPrompt}\nTarget model identifier: ${JSON.stringify(modelNumber)}` : jobPrompt;
-  const providerSchema = ResponseBody.extend({ fields: evidenceSchema(job) });
-  const { $schema, ...responseJsonSchema } = z.toJSONSchema(providerSchema, { reused: "ref" });
+  const prompt = modelNumber ? `${jobPrompt(job)}\nTarget model identifier: ${JSON.stringify(modelNumber)}` : jobPrompt(job);
+  const responseJsonSchema = responseSchema(job);
 
   const key = createHash("sha256")
     .update(JSON.stringify([job, model, mimeType, instructions, prompt, responseJsonSchema]))
@@ -175,24 +232,14 @@ export async function extractWithEvidence(
   if (!apiKey) {
     throw new Error("Set GOOGLE_GENERATIVE_AI_API_KEY or GEMINI_API_KEY in the repository root .env for uncached Gemini calls.");
   }
-  const client = new GoogleGenAI({ apiKey, vertexai: false });
-  const response = await client.models.generateContent({
+  const response = await generateExtraction({
+    apiKey,
     model,
-    contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType, data: data.toString("base64") } }] }],
-    config: {
-      systemInstruction: instructions,
-      responseMimeType: "application/json",
-      responseJsonSchema,
-    },
-  }).catch((error: unknown) => {
-    const message = error instanceof Error ? error.message.replaceAll(apiKey, "[redacted]") : "Request failed.";
-    throw new Error(`Gemini request failed: ${message}`);
+    parts: [{ text: prompt }, { inlineData: { mimeType, data: data.toString("base64") } }],
+    responseJsonSchema,
   });
-  if (!response.text) throw new Error("Gemini returned no structured extraction.");
-
-  const responseToCache = { text: response.text, extractedAt: new Date().toISOString() };
-  const result = decodeResponse(job, model, responseToCache);
-  await cacheResponse(cacheFile, responseToCache);
+  const result = decodeResponse(job, model, response);
+  await cacheResponse(cacheFile, response);
   return result;
 }
 
