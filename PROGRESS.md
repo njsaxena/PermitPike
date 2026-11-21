@@ -4,3 +4,4 @@
 # PROGRESS
 
 12:39 | Allegra | Tiger DB live: app tables, boston_permits hypertable + permits_weekly cagg, 3 demo apps seeded, pnpm db:check | load Boston permits CSV, add DATABASE_URL in Vercel
+15:34 | Allegra | EV charger (5 rules) + home battery (4 rules) packs registered; RulePack.addedLoads, loadcalc 120.87 + backup heat; 25 pack tests, 7/7 evals | clear NEC/NFPA 855 VERIFY items, move examples/build.ts onto the new packs

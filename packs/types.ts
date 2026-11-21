@@ -9,6 +9,7 @@ import type {
   CleanEnergyTip,
   FieldsFor,
   JobType,
+  NewLoad,
   UtilityFlag,
 } from "@permitpike/contract";
 
@@ -32,8 +33,11 @@ export interface RulePack<J extends JobType> {
     hints: string[];
   };
   rules: Rule<J>[];
-  /** VA this job adds to the dwelling, fed to @permitpike/loadcalc. */
-  addedLoad(fields: FieldsFor<J>): number;
+  /**
+   * Loads this job adds, fed to calculateLoad in @permitpike/loadcalc. Connected VA
+   * (before demand factors), one entry per load: a heat pump with backup strips is two.
+   */
+  addedLoads(fields: FieldsFor<J>): NewLoad[];
   /** Service rating to compare against. Differs from existing for service upgrades. */
   serviceRatingAmps(fields: FieldsFor<J>): number;
   utilityFlag(fields: FieldsFor<J>): UtilityFlag | null;

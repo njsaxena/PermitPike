@@ -239,6 +239,12 @@ export const HeatPumpPanelFields = ServiceFields.extend({
     mcaAmps: z.number().positive(),
     /** Maximum overcurrent protection from the nameplate. */
     mocpAmps: z.number().positive(),
+    /**
+     * Backup (supplemental) electric resistance heat in the air handler, in kW, e.g. a
+     * "10 kW heat strip". Null or missing when there is none (ductless mini-splits).
+     * Counted as new central electric resistance space heating (NEC 2026 Table 120.83, 80%).
+     */
+    backupHeatKW: z.number().positive().nullable().optional(),
   }),
   proposedBreakerAmps: z.number().positive(),
   conductorAWG: z.string().nullable(),
@@ -336,8 +342,9 @@ export const CheckResult = z.object({
 });
 export type CheckResult = z.infer<typeof CheckResult>;
 
-// Load calc (packages/loadcalc). Method: existing dwelling optional calculation,
-// NEC 2026 120.83, as adopted by 527 CMR 12.00 (effective April 24, 2026).
+// Load calc (packages/loadcalc). Methods: existing dwelling optional calculation
+// (NEC 2026 120.83) or measured existing load (NEC 2026 120.87), as adopted by
+// 527 CMR 12.00 (effective April 24, 2026).
 
 /**
  * Which season a heating/cooling load runs in. Heating-only and cooling-only loads
@@ -369,7 +376,7 @@ export type ExistingAppliance = z.infer<typeof ExistingAppliance>;
 export const NewLoadKind = z.enum(["evse", "central_resistance_heat", "other"]);
 export type NewLoadKind = z.infer<typeof NewLoadKind>;
 
-/** A load the job adds. va comes from the rule pack's addedLoad(fields). */
+/** A load the job adds. Rule packs return these from addedLoads(fields). */
 export const NewLoad = z.object({
   /** Rule pack that produced this load. */
   source: JobType,
@@ -387,6 +394,45 @@ export const NewLoad = z.object({
 });
 export type NewLoad = z.infer<typeof NewLoad>;
 
+/**
+ * Which method produced the result.
+ * nec_120_83: existing dwelling calculation from floor area and nameplates.
+ * nec_120_87: existing load from measured maximum demand (utility data or a recording).
+ */
+export const LoadCalcMethod = z.enum(["nec_120_83", "nec_120_87"]);
+export type LoadCalcMethod = z.infer<typeof LoadCalcMethod>;
+
+/**
+ * Measured maximum demand of the existing service (NEC 2026 120.87). When present,
+ * calculateLoad uses 120.87 instead of 120.83.
+ */
+export const MeasuredDemand = z.object({
+  /** Highest demand in kW: the utility's 12-month peak, or the highest 15-minute average of a recording. */
+  peakKW: z.number().positive(),
+  /** utility_12_months: 120.87(1). recording_30_days: the 120.87(1) exception (minimum 30 days, 15-minute intervals). */
+  source: z.enum(["utility_12_months", "recording_30_days"]),
+  /**
+   * For a 30-day recording: whether it covered the heating or cooling season. If not,
+   * the larger of the existing heating or cooling load is added by calculation.
+   */
+  includesPeakSeason: z.boolean().optional(),
+  /** Solar, wind or other power source on the service. A 30-day recording can't be used then. */
+  hasRenewableSource: z.boolean().optional(),
+  /**
+   * Any form of peak load shaving on the service (a battery or controller that cuts the
+   * peak the meter sees). A 30-day recording can't be used then either.
+   */
+  hasPeakLoadShaving: z.boolean().optional(),
+});
+export type MeasuredDemand = z.infer<typeof MeasuredDemand>;
+
+/** An existing load the job takes out (120.87 only), e.g. the AC a heat pump replaces. */
+export const RemovedLoad = z.object({
+  name: z.string().min(1),
+  va: z.number().nonnegative(),
+});
+export type RemovedLoad = z.infer<typeof RemovedLoad>;
+
 export const LoadCalcInput = z.object({
   service: z.object({
     ratingAmps: z.number().positive(),
@@ -394,15 +440,22 @@ export const LoadCalcInput = z.object({
     voltage: z.number().positive().optional(),
   }),
   home: z.object({
-    /** Null when the documents don't show it. calculateLoad throws on null. */
+    /** Null when the documents don't show it. 120.83 needs it; 120.87 doesn't. */
     squareFeet: z.number().positive().nullable(),
     /** 20 A small-appliance circuits. Defaults to the code minimum of 2. */
     smallApplianceCircuits: z.number().int().nonnegative().optional(),
     /** Laundry circuits. Defaults to the code minimum of 1. */
     laundryCircuits: z.number().int().nonnegative().optional(),
     existingAppliances: z.array(ExistingAppliance),
+    /** Measured peak demand. When present, the 120.87 method is used. */
+    measuredDemand: MeasuredDemand.optional(),
   }),
   newLoads: z.array(NewLoad),
+  /**
+   * Existing loads the job removes. Only for 120.87, where they are inside the
+   * measured peak. For 120.83, leave them out of existingAppliances instead.
+   */
+  removedLoads: z.array(RemovedLoad).optional(),
 });
 export type LoadCalcInput = z.infer<typeof LoadCalcInput>;
 
@@ -419,7 +472,9 @@ export const LoadCalcStep = z.object({
 export type LoadCalcStep = z.infer<typeof LoadCalcStep>;
 
 export const LoadCalcResult = z.object({
-  /** Existing load after demand factors. */
+  /** Defaults to nec_120_83 so results stored before 120.87 existed still parse. */
+  method: LoadCalcMethod.default("nec_120_83"),
+  /** Existing load after demand factors (120.83), or measured peak x 125% (120.87). */
   existingVA: z.number().nonnegative(),
   /** Added load after demand factors. */
   addedVA: z.number().nonnegative(),

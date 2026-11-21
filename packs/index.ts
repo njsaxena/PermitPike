@@ -1,16 +1,19 @@
 import type { JobType } from "@permitpike/contract";
+import { evChargerPack } from "./ev_charger";
 import { heatPumpPanelPack } from "./heat_pump_panel";
+import { homeBatteryPack } from "./home_battery";
 import type { RulePack } from "./types";
 
 export * from "./types";
+export { evChargerPack } from "./ev_charger";
 export { heatPumpPanelPack } from "./heat_pump_panel";
+export { homeBatteryPack } from "./home_battery";
 
-/**
- * Registry of packs by job type.
- * TODO: add ev_charger.ts and home_battery.ts using heat_pump_panel.ts as the template.
- */
-export const PACKS: { [J in JobType]?: RulePack<J> } = {
+/** Registry of packs by job type. */
+export const PACKS: { [J in JobType]: RulePack<J> } = {
   heat_pump_panel: heatPumpPanelPack,
+  ev_charger: evChargerPack,
+  home_battery: homeBatteryPack,
 };
 
 export function getPack<J extends JobType>(jobType: J): RulePack<J> {

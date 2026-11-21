@@ -6,7 +6,7 @@
  * Code before the demo. Anything still marked VERIFY is unconfirmed.
  */
 import { HeatPumpPanelFields } from "@permitpike/contract";
-import type { FieldsFor } from "@permitpike/contract";
+import type { FieldsFor, NewLoad } from "@permitpike/contract";
 import { result, type Rule, type RulePack } from "./types";
 
 type Fields = FieldsFor<"heat_pump_panel">;
@@ -85,6 +85,7 @@ export const heatPumpPanelPack: RulePack<"heat_pump_panel"> = {
       "existingPanelRatingAmps is the bus rating on the panel label; mainBreakerAmps is printed on the main breaker handle.",
       "availableBreakerSpaces: count empty slots in the panel photo.",
       "outdoorUnitSetbackFt comes from the site plan dimension to the nearest property line.",
+      "heatPump.backupHeatKW: electric backup / supplemental / auxiliary heat or 'heat strip' / 'heat kit' kW for the air handler, from the spec sheet or the electrician's notes. Null for ductless mini-splits or when none is listed.",
     ],
   },
 
@@ -99,9 +100,33 @@ export const heatPumpPanelPack: RulePack<"heat_pump_panel"> = {
     // TODO heat_pump_panel.panel_upgrade_matches_service  NEC 230.79 / 230.90
   ],
 
-  addedLoad(f: Fields) {
-    // Connected load: MCA x voltage. loadcalc applies the NEC 2026 Table 120.83 factor (50%).
-    return f.heatPump.mcaAmps * f.heatPump.voltage;
+  addedLoads(f: Fields): NewLoad[] {
+    // Connected VA; loadcalc applies the NEC 2026 Table 120.83 percentages.
+    const loads: NewLoad[] = [
+      {
+        // MCA x voltage, "all other new loads" (50%). Heats and cools, so never omitted.
+        source: "heat_pump_panel",
+        name: "Heat pump",
+        va: f.heatPump.mcaAmps * f.heatPump.voltage,
+        kind: "other",
+        isHeatingOrCooling: true,
+        hvacMode: "both",
+      },
+    ];
+    const backupKW = f.heatPump.backupHeatKW ?? null;
+    if (backupKW !== null) {
+      // Backup strips are central electric resistance space heating (80%). They run with
+      // the heat pump in deep cold and defrost, so they are added, not swapped.
+      loads.push({
+        source: "heat_pump_panel",
+        name: `Backup heat strips (${backupKW} kW)`,
+        va: backupKW * 1000,
+        kind: "central_resistance_heat",
+        isHeatingOrCooling: true,
+        hvacMode: "heating",
+      });
+    }
+    return loads;
   },
 
   serviceRatingAmps(f: Fields) {
