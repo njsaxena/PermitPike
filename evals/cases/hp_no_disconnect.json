@@ -1,0 +1,40 @@
+{
+  "id": "hp_no_disconnect",
+  "description": "Site plan shows the disconnect inside the basement, not within sight of the outdoor unit.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 200,
+    "existingPanelRatingAmps": 200,
+    "mainBreakerAmps": 200,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1800,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-18",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25
+    },
+    "proposedBreakerAmps": 25,
+    "conductorAWG": "10 AWG Cu",
+    "disconnectWithinSight": false,
+    "outdoorUnitSetbackFt": 8,
+    "panelUpgrade": null
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.disconnect_within_sight"
+  ],
+  "expectUtilityFlag": false
+}

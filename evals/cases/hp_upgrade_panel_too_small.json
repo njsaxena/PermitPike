@@ -1,0 +1,43 @@
+{
+  "id": "hp_upgrade_panel_too_small",
+  "description": "Service goes to 200 A but the new panel is rated 150 A.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 100,
+    "existingPanelRatingAmps": 100,
+    "mainBreakerAmps": 100,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1800,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-18",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25
+    },
+    "proposedBreakerAmps": 25,
+    "conductorAWG": "10 AWG Cu",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 8,
+    "panelUpgrade": {
+      "proposedPanelRatingAmps": 150,
+      "proposedServiceAmps": 200
+    }
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.panel_upgrade_matches_service"
+  ],
+  "expectUtilityFlag": true
+}

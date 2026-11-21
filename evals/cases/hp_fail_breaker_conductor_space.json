@@ -1,0 +1,42 @@
+{
+  "id": "hp_fail_breaker_conductor_space",
+  "description": "40 A breaker over a 30 A MOCP, 12 AWG on a 28 A MCA, and no free spaces.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 200,
+    "existingPanelRatingAmps": 200,
+    "mainBreakerAmps": 200,
+    "availableBreakerSpaces": 0,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1800,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-28",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 28,
+      "mocpAmps": 30
+    },
+    "proposedBreakerAmps": 40,
+    "conductorAWG": "12",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 8,
+    "panelUpgrade": null
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.breaker_sizing",
+    "heat_pump_panel.conductor_ampacity",
+    "heat_pump_panel.breaker_space_available"
+  ],
+  "expectUtilityFlag": false
+}

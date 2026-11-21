@@ -1,0 +1,38 @@
+{
+  "id": "hp_clean_large_unit_150a",
+  "description": "60 A heat pump circuit on a 150 A service in a gas-heat home; every check passes.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 150,
+    "existingPanelRatingAmps": 150,
+    "mainBreakerAmps": 150,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1500,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6200,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-45",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 45,
+      "mocpAmps": 60
+    },
+    "proposedBreakerAmps": 60,
+    "conductorAWG": "6 AWG Cu",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 8,
+    "panelUpgrade": null
+  },
+  "expectedDecision": "approve",
+  "expectedFailingRuleIds": [],
+  "expectUtilityFlag": false
+}
