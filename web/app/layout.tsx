@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Public_Sans } from "next/font/google";
+import { Archivo, Public_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
-import { RoleProvider } from "@/lib/role";
+import { MotionObserver } from "@/components/ui/MotionObserver";
+// Before globals.css, so the PermitPike overrides of Leaflet win.
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
-const publicSans = Public_Sans({
+// Archivo (Omnibus-Type, SIL OFL), with its width axis so headings can run wide.
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-public-sans",
+  axes: ["wdth"],
+  variable: "--font-archivo",
   display: "swap",
 });
 
-const plexMono = IBM_Plex_Mono({
+// The logo's wordmark only (Public Sans Bold, SIL OFL). UI text is Archivo.
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-mono",
+  weight: "700",
+  variable: "--font-public-sans",
   display: "swap",
 });
 
@@ -26,12 +30,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${publicSans.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${archivo.variable} ${publicSans.variable}`}>
       <body className="min-h-screen bg-background font-sans text-base text-ink antialiased">
-        <RoleProvider>
-          <Header />
-          <main className="mx-auto max-w-page px-6 py-8">{children}</main>
-        </RoleProvider>
+        <Header />
+        <main className="mx-auto max-w-page px-4 py-8 sm:px-6">{children}</main>
+        <MotionObserver />
       </body>
     </html>
   );

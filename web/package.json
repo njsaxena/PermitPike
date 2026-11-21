@@ -7,27 +7,37 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed.ts",
+    "cache:parcels": "tsx scripts/cache-parcels.ts"
   },
   "dependencies": {
+    "@permitpike/compliance": "workspace:*",
     "@permitpike/contract": "workspace:*",
     "@permitpike/db": "workspace:*",
     "@permitpike/loadcalc": "workspace:*",
     "@permitpike/packs": "workspace:*",
     "@vercel/blob": "^2.0.0",
+    "drizzle-orm": "^0.45.4",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.77.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-leaflet": "^5.0.0",
+    "server-only": "^0.0.1",
+    "swr": "^2.5.1",
     "zod": "^4.3.0"
   },
   "devDependencies": {
     "@next/env": "^15.5.0",
     "@tailwindcss/postcss": "^4.1.0",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "tailwindcss": "^4.1.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.0"
   }
 }

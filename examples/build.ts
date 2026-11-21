@@ -702,7 +702,7 @@ function example3(work: string): LibraryExample {
   const returnedAt = "2026-11-18T16:40:00.000Z";
   const v2At = "2026-11-19T09:15:00.000Z";
   const approvedAt = "2026-11-19T11:05:00.000Z";
-  const address: Address = { street: "48 Brookside Ave", unit: null, neighborhood: "Jamaica Plain", city: "Boston", state: "MA", zip: "02130" };
+  const address: Address = { street: "28 Brookside Ave", unit: null, neighborhood: "Jamaica Plain", city: "Boston", state: "MA", zip: "02130" };
   const applicant: Applicant = { name: "Dana Ortiz (example)", company: "Ortiz Electric (example)", licenseNumber: "EX-A-2003" };
   const house: House = {
     squareFeet: 1400,

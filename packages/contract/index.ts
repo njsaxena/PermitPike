@@ -36,6 +36,8 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
  * Application lifecycle:
  *   submitted -> ai_review -> awaiting_official -> approved
  *                                               -> returned -> (resubmit) -> submitted
+ * In product copy: ai_review is "in review", awaiting_official is "recommended"
+ * (the agent has posted its recommendation and an official has not acted yet).
  */
 export const ApplicationStatus = z.enum([
   "submitted",
@@ -56,6 +58,69 @@ export const Address = z.object({
 });
 export type Address = z.infer<typeof Address>;
 
+// ---------------------------------------------------------------------------
+// Parcel and zoning (Boston Assessing + parcel and zoning GIS layers, via the
+// compliance package's resolve_parcel_zoning lookup). Saved on the application at
+// filing so views never query the city again.
+// ---------------------------------------------------------------------------
+
+/** 10-digit Boston parcel ID, including any leading zero. */
+export const ParcelId = z.string().regex(/^\d{10}$/);
+export type ParcelId = z.infer<typeof ParcelId>;
+
+const Position = z.tuple([z.number(), z.number()]);
+const LinearRing = z.array(Position).min(4);
+
+/** Parcel boundary as GeoJSON geometry, WGS84 longitude/latitude. */
+export const ParcelOutline = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("Polygon"), coordinates: z.array(LinearRing).min(1) }),
+  z.object({ type: z.literal("MultiPolygon"), coordinates: z.array(z.array(LinearRing).min(1)).min(1) }),
+]);
+export type ParcelOutline = z.infer<typeof ParcelOutline>;
+
+export const ZoningDistrict = z.object({
+  district: z.string().nullable(),
+  subdistrict: z.string().nullable(),
+  article: z.string().nullable(),
+  mapNumber: z.string().nullable(),
+  articleUrl: z.string().url().nullable(),
+  /** Dimensional tables for the article (setbacks, heights, lot sizes), when published. */
+  tablesUrl: z.string().url().nullable(),
+});
+export type ZoningDistrict = z.infer<typeof ZoningDistrict>;
+
+export const ZoningOverlay = z.object({
+  name: z.string(),
+  featureName: z.string().nullable(),
+  layerUrl: z.string().url(),
+  codeUrl: z.string().url().nullable(),
+});
+export type ZoningOverlay = z.infer<typeof ZoningOverlay>;
+
+export const Parcel = z.object({
+  parcelId: ParcelId,
+  /** Assessor's address for the parcel, e.g. "210 DORCHESTER ST, SOUTH BOSTON MA 02127". */
+  assessorAddress: z.string().nullable(),
+  /** Pin position: the outline's centroid. */
+  lat: z.number(),
+  lng: z.number(),
+  /** Null when the city returned no usable boundary. */
+  outline: ParcelOutline.nullable(),
+  /** "multiple_zones": the parcel spans more than one district. "partial": a layer was incomplete. */
+  match: z.enum(["matched", "multiple_zones", "partial"]),
+  districts: z.array(ZoningDistrict),
+  /** Possible overlay intersections; the official confirms against the signed maps. */
+  overlays: z.array(ZoningOverlay),
+  retrievedAt: IsoDateTime,
+});
+export type Parcel = z.infer<typeof Parcel>;
+
+export const ParcelCandidate = z.object({
+  parcelId: ParcelId,
+  addresses: z.array(z.string()),
+});
+export type ParcelCandidate = z.infer<typeof ParcelCandidate>;
+
 export const Applicant = z.object({
   name: z.string().min(1),
   company: z.string().nullable(),
@@ -63,6 +128,13 @@ export const Applicant = z.object({
   licenseNumber: z.string().min(1),
 });
 export type Applicant = z.infer<typeof Applicant>;
+
+/** A stored applicant. No password: the license number identifies them. */
+export const ApplicantRecord = Applicant.extend({
+  id: z.string(),
+  createdAt: IsoDateTime,
+});
+export type ApplicantRecord = z.infer<typeof ApplicantRecord>;
 
 // ---------------------------------------------------------------------------
 // Files (uploaded to Vercel Blob before the application is created)
@@ -102,7 +174,7 @@ export const ExistingLoadInputs = z.object({
   fixedAppliancesVA: z.number().nonnegative(),
   /** Existing heating/cooling nameplate VA that stays in service. */
   existingHvacVA: z.number().nonnegative(),
-  /** 12 months of utility peak demand, if provided. Enables NEC 220.87. */
+  /** 12 months of utility peak demand, if provided. Enables NEC 2026 120.87 (not yet in loadcalc). */
   measuredPeakDemandKW: z.number().positive().nullable(),
 });
 export type ExistingLoadInputs = z.infer<typeof ExistingLoadInputs>;
@@ -231,20 +303,105 @@ export const CheckResult = z.object({
 });
 export type CheckResult = z.infer<typeof CheckResult>;
 
-export const LoadCalcMethod = z.enum(["nec_220_83", "nec_220_87"]);
-export type LoadCalcMethod = z.infer<typeof LoadCalcMethod>;
+// Load calc (packages/loadcalc). Method: existing dwelling optional calculation,
+// NEC 2026 120.83, as adopted by 527 CMR 12.00 (effective April 24, 2026).
+
+/**
+ * Which season a heating/cooling load runs in. Heating-only and cooling-only loads
+ * are noncoincident, so only the larger side counts. "both" (a heat pump) is never omitted.
+ */
+export const HvacMode = z.enum(["heating", "cooling", "both"]);
+export type HvacMode = z.infer<typeof HvacMode>;
+
+/** One existing appliance. Give nameplate watts, or amps and volts. */
+export const ExistingAppliance = z
+  .object({
+    name: z.string().min(1),
+    watts: z.number().nonnegative().optional(),
+    amps: z.number().nonnegative().optional(),
+    volts: z.number().positive().optional(),
+    isHeatingOrCooling: z.boolean(),
+    /** Only read when isHeatingOrCooling. Defaults to "both" (never omitted). */
+    hvacMode: HvacMode.optional(),
+  })
+  .refine((a) => a.watts !== undefined || (a.amps !== undefined && a.volts !== undefined), {
+    message: "Give watts, or both amps and volts",
+  });
+export type ExistingAppliance = z.infer<typeof ExistingAppliance>;
+
+/**
+ * Demand class of an added load. NEC 2026 Table 120.83 applies a different
+ * percentage to new EVSE and new central electric resistance heat than to the rest.
+ */
+export const NewLoadKind = z.enum(["evse", "central_resistance_heat", "other"]);
+export type NewLoadKind = z.infer<typeof NewLoadKind>;
+
+/** A load the job adds. va comes from the rule pack's addedLoad(fields). */
+export const NewLoad = z.object({
+  /** Rule pack that produced this load. */
+  source: JobType,
+  name: z.string().min(1),
+  va: z.number().nonnegative(),
+  kind: NewLoadKind,
+  isHeatingOrCooling: z.boolean(),
+  /** Only read when isHeatingOrCooling. Defaults to "both" (never omitted). */
+  hvacMode: HvacMode.optional(),
+  /**
+   * Whether a load management device could cap this load. Defaults to true for
+   * EVSE and false for everything else.
+   */
+  controllable: z.boolean().optional(),
+});
+export type NewLoad = z.infer<typeof NewLoad>;
+
+export const LoadCalcInput = z.object({
+  service: z.object({
+    ratingAmps: z.number().positive(),
+    /** Defaults to 240. */
+    voltage: z.number().positive().optional(),
+  }),
+  home: z.object({
+    /** Null when the documents don't show it. calculateLoad throws on null. */
+    squareFeet: z.number().positive().nullable(),
+    /** 20 A small-appliance circuits. Defaults to the code minimum of 2. */
+    smallApplianceCircuits: z.number().int().nonnegative().optional(),
+    /** Laundry circuits. Defaults to the code minimum of 1. */
+    laundryCircuits: z.number().int().nonnegative().optional(),
+    existingAppliances: z.array(ExistingAppliance),
+  }),
+  newLoads: z.array(NewLoad),
+});
+export type LoadCalcInput = z.infer<typeof LoadCalcInput>;
+
+/** fits: under the tight threshold. tight: over it but within rating. needs_upgrade: over rating. */
+export const LoadCalcOutcome = z.enum(["fits", "tight", "needs_upgrade"]);
+export type LoadCalcOutcome = z.infer<typeof LoadCalcOutcome>;
+
+/** One line of the worked calculation, so the reviewer UI can show its work. */
+export const LoadCalcStep = z.object({
+  label: z.string(),
+  va: z.number(),
+  citation: z.string().min(1),
+});
+export type LoadCalcStep = z.infer<typeof LoadCalcStep>;
 
 export const LoadCalcResult = z.object({
-  method: LoadCalcMethod,
-  existingLoadVA: z.number().nonnegative(),
-  addedLoadVA: z.number().nonnegative(),
-  totalLoadVA: z.number().nonnegative(),
+  /** Existing load after demand factors. */
+  existingVA: z.number().nonnegative(),
+  /** Added load after demand factors. */
+  addedVA: z.number().nonnegative(),
+  totalCalculatedVA: z.number().nonnegative(),
   totalAmps: z.number().nonnegative(),
-  serviceRatingAmps: z.number().positive(),
-  /** totalAmps / serviceRatingAmps. Over 1 means the service is overloaded. */
-  utilization: z.number().nonnegative(),
-  headroomAmps: z.number(),
-  passes: z.boolean(),
+  serviceAmps: z.number().positive(),
+  /** totalAmps / serviceAmps x 100. Over 100 means the service is overloaded. */
+  percentOfRating: z.number().nonnegative(),
+  result: LoadCalcOutcome,
+  /** True when result is needs_upgrade: the utility (Eversource) will likely be involved. */
+  utilityLikely: z.boolean(),
+  /** True when tight or needs_upgrade and capping controllable loads would fit the service. */
+  loadManagementTip: z.boolean(),
+  steps: z.array(LoadCalcStep),
+  check: CheckResult,
 });
 export type LoadCalcResult = z.infer<typeof LoadCalcResult>;
 
@@ -365,8 +522,14 @@ export type ApplicationVersion = z.infer<typeof ApplicationVersion>;
 export const Application = z
   .object({
     id: z.string(),
+    /** Human-facing number, e.g. "EL-2026-00042". */
+    permitNumber: z.string(),
     jobType: JobType,
     address: Address,
+    /** Parcel and zoning saved at filing. Null when the lookup failed or found no single parcel. */
+    parcel: Parcel.nullable(),
+    applicantId: z.string(),
+    /** Snapshot of the applicant at filing time. */
     applicant: Applicant,
     status: ApplicationStatus,
     submittedAt: IsoDateTime,
@@ -432,29 +595,53 @@ export type EvalRun = z.infer<typeof EvalRun>;
 
 export const ApiError = z.object({
   error: z.object({
-    code: z.enum(["bad_request", "not_found", "conflict", "not_implemented", "internal"]),
+    code: z.enum(["bad_request", "unauthorized", "not_found", "conflict", "not_implemented", "internal"]),
     message: z.string(),
     issues: z.array(z.unknown()).optional(),
   }),
 });
 export type ApiError = z.infer<typeof ApiError>;
 
+// POST /api/applicants  (creates the applicant, or returns the one with this license number)
+export const CreateApplicantRequest = z.object({
+  name: z.string().trim().min(1),
+  licenseNumber: z.string().trim().min(1),
+});
+export type CreateApplicantRequest = z.infer<typeof CreateApplicantRequest>;
+export const CreateApplicantResponse = z.object({ applicant: ApplicantRecord });
+export type CreateApplicantResponse = z.infer<typeof CreateApplicantResponse>;
+
+// POST /api/reviewer/session  (sets an httpOnly cookie with the name)  DELETE clears it
+export const CreateReviewerSessionRequest = z.object({
+  name: z.string().trim().min(1).max(120),
+});
+export type CreateReviewerSessionRequest = z.infer<typeof CreateReviewerSessionRequest>;
+export const ReviewerSession = z.object({ name: z.string() });
+export type ReviewerSession = z.infer<typeof ReviewerSession>;
+export const CreateReviewerSessionResponse = z.object({ reviewer: ReviewerSession });
+export type CreateReviewerSessionResponse = z.infer<typeof CreateReviewerSessionResponse>;
+
 // POST /api/applications
 export const CreateApplicationRequest = z.object({
+  applicantId: z.string(),
   jobType: JobType,
   address: Address,
-  applicant: Applicant,
-  /** Already uploaded to Vercel Blob by the client. */
+  /** Parcel the applicant confirmed on the map. Omit or null when the map was unavailable. */
+  parcelId: ParcelId.nullable().optional(),
+  /** Already uploaded to Vercel Blob by the client (POST /api/blob issues upload tokens). */
   files: z.array(FileRef).min(1),
 });
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 export const CreateApplicationResponse = z.object({ application: Application });
 export type CreateApplicationResponse = z.infer<typeof CreateApplicationResponse>;
 
-// GET /api/applications?status=&jobType=
+// GET /api/applications?status=&jobType=   reviewer queue (reviewer cookie required)
+// GET /api/applications?applicantId=        "My permits"
+// Order: risk (high first) when a recommendation exists, then newest first.
 export const ListApplicationsQuery = z.object({
   status: ApplicationStatus.optional(),
   jobType: JobType.optional(),
+  applicantId: z.string().optional(),
 });
 export type ListApplicationsQuery = z.infer<typeof ListApplicationsQuery>;
 export const ListApplicationsResponse = z.object({ applications: z.array(Application) });
@@ -466,6 +653,8 @@ export type GetApplicationResponse = z.infer<typeof GetApplicationResponse>;
 
 // POST /api/applications/:id/resubmit  (only allowed when status is "returned")
 export const ResubmitApplicationRequest = z.object({
+  /** Must match the application's applicant. */
+  applicantId: z.string(),
   files: z.array(FileRef).min(1),
   note: z.string().nullable(),
 });
@@ -473,9 +662,12 @@ export type ResubmitApplicationRequest = z.infer<typeof ResubmitApplicationReque
 export const ResubmitApplicationResponse = z.object({ application: Application });
 export type ResubmitApplicationResponse = z.infer<typeof ResubmitApplicationResponse>;
 
-// POST /api/applications/:id/review  (only allowed when status is "awaiting_official")
+// POST /api/applications/:id/review  (reviewer cookie required; status must be "awaiting_official")
+// The actor comes from the reviewer session, never the body.
+// 409 conflict when the application changed since the reviewer loaded it.
 export const ReviewApplicationRequest = z.object({
-  actor: Actor,
+  /** Application version the reviewer was looking at. */
+  expectedVersion: z.number().int().positive(),
   action: ReviewerActionInput,
 });
 export type ReviewApplicationRequest = z.infer<typeof ReviewApplicationRequest>;
@@ -485,12 +677,39 @@ export const ReviewApplicationResponse = z.object({
 });
 export type ReviewApplicationResponse = z.infer<typeof ReviewApplicationResponse>;
 
+// GET /api/parcel?address=&zip=   or   GET /api/parcel?pid=
+// Never blocks filing: "unavailable" covers errors and lookups slower than 3 seconds.
+export const ParcelLookupQuery = z.union([
+  z.object({ pid: ParcelId }),
+  z.object({ address: z.string().trim().min(1).max(120), zip: z.string().regex(/^\d{5}$/).optional() }),
+]);
+export type ParcelLookupQuery = z.infer<typeof ParcelLookupQuery>;
+export const ParcelLookupResponse = z.discriminatedUnion("result", [
+  z.object({ result: z.literal("found"), parcel: Parcel }),
+  z.object({ result: z.literal("ambiguous"), candidates: z.array(ParcelCandidate) }),
+  z.object({ result: z.literal("not_found"), message: z.string() }),
+  z.object({ result: z.literal("unavailable"), message: z.string() }),
+]);
+export type ParcelLookupResponse = z.infer<typeof ParcelLookupResponse>;
+
 // GET /api/evals
 export const ListEvalsResponse = z.object({ runs: z.array(EvalRun) });
 export type ListEvalsResponse = z.infer<typeof ListEvalsResponse>;
 
 /** Route table so web clients and handlers agree on paths and shapes. */
 export const API_ROUTES = {
+  createApplicant: {
+    method: "POST",
+    path: "/api/applicants",
+    request: CreateApplicantRequest,
+    response: CreateApplicantResponse,
+  },
+  createReviewerSession: {
+    method: "POST",
+    path: "/api/reviewer/session",
+    request: CreateReviewerSessionRequest,
+    response: CreateReviewerSessionResponse,
+  },
   createApplication: {
     method: "POST",
     path: "/api/applications",
@@ -519,6 +738,12 @@ export const API_ROUTES = {
     path: "/api/applications/:id/review",
     request: ReviewApplicationRequest,
     response: ReviewApplicationResponse,
+  },
+  lookupParcel: {
+    method: "GET",
+    path: "/api/parcel",
+    query: ParcelLookupQuery,
+    response: ParcelLookupResponse,
   },
   listEvals: {
     method: "GET",

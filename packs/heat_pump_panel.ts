@@ -100,7 +100,7 @@ export const heatPumpPanelPack: RulePack<"heat_pump_panel"> = {
   ],
 
   addedLoad(f: Fields) {
-    // Heat pump at 100% of nameplate: MCA x voltage. VERIFY vs NEC 220.83(B).
+    // Connected load: MCA x voltage. loadcalc applies the NEC 2026 Table 120.83 factor (50%).
     return f.heatPump.mcaAmps * f.heatPump.voltage;
   },
 

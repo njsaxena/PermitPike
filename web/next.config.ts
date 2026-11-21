@@ -6,6 +6,8 @@ import type { NextConfig } from "next";
 loadEnvConfig(resolve(process.cwd(), ".."));
 
 const nextConfig: NextConfig = {
+  // Lets a build run beside a dev server without both writing to .next.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Workspace packages ship TypeScript source; let Next compile them.
   transpilePackages: [
     "@permitpike/contract",

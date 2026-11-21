@@ -29,6 +29,7 @@ import type {
   EvalCaseResult,
   Extraction,
   FileRef,
+  Parcel,
   Recommendation,
 } from "@permitpike/contract";
 
@@ -70,6 +71,8 @@ export const applications = pgTable(
     applicant: jsonb("applicant").$type<Applicant>().notNull(),
     /** Boston parcel id from the assessor, when known. */
     parcelId: text("parcel_id"),
+    /** Parcel outline, pin and zoning saved at filing, so the map never re-queries the city. */
+    parcel: jsonb("parcel").$type<Parcel>(),
     status: applicationStatusEnum("status").notNull().default("submitted"),
     /** Current version number; matches application_versions.version. */
     version: integer("version").notNull().default(1),
