@@ -46,7 +46,7 @@ test("the full parcel boundary is checked and both zones are reported", async ()
 
   assert.equal(result.status, "multiple_zones");
   assert.deepEqual(result.districts?.map(({ subdistrict }) => subdistrict), ["3F-5000", "2F-5000"]);
-  assert.match(result.districts?.[0]?.tablesUrl ?? "", /nodeId=ART65TA$/u);
+  assert.match(result.districts?.[0]?.tablesUrl ?? "", /nodeId=ART65DONEDI_ART65TA$/u);
   assert.match(result.possibleOverlayIntersections?.[0]?.codeUrl ?? "", /nodeId=ART25A/u);
 });
 

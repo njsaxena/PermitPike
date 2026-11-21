@@ -2,7 +2,8 @@ import "server-only";
 import type { ArchiveChatInput, ArchiveChatResponse } from "@/lib/archive";
 import { searchArchive } from "./archive-search";
 
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent";
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const clarifyInstructions = `Interpret an unclear search for Boston's public issued building permits and official guides.
 Search supports permit numbers, street addresses and names, Boston neighborhoods, ZIP codes, years, and common work types like EV charging, electrical, heating, heat pumps, solar, plumbing, and renovations.

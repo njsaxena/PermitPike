@@ -64,7 +64,7 @@ const OUT = join(ROOT, "web/public/examples");
 /** FileRef.url must be absolute. The web app serves web/public at its root. */
 const ORIGIN = (process.env.EXAMPLES_ORIGIN ?? "http://localhost:3100").replace(/\/$/, "");
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.8-flash";
 const REVIEWER = { name: "M. Okafor (example)", role: "reviewer" as const };
 
 // ---------------------------------------------------------------------------
