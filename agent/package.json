@@ -7,9 +7,11 @@
     "dev": "mastra dev --env ../.env",
     "build": "mastra build",
     "start": "node .mastra/output/index.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "score": "node --import tsx extract/scripts/score.ts"
   },
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "@mastra/core": "^1.85.0",
     "@permitpike/contract": "workspace:*",
     "@permitpike/loadcalc": "workspace:*",
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "mastra": "^1.40.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.0"
   }
 }
