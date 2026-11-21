@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./tools.ts",
-    "./parcel-zoning": "./parcel-zoning.ts"
+    "./parcel-zoning": "./parcel-zoning.ts",
+    "./catalog": "./catalog.ts",
+    "./zoning-code-links": "./zoning-code-links.ts"
   },
   "scripts": {
     "start": "node --import tsx server.ts",

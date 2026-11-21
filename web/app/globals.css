@@ -25,11 +25,10 @@
   --color-background: var(--pp-background);
   --color-surface: var(--pp-surface);
   --color-sunken: var(--pp-sunken);
+  --color-hover: var(--pp-hover);
   --color-accent: var(--pp-accent);
-  --color-accent-hover: var(--pp-accent-hover);
   --color-accent-tint: var(--pp-accent-tint);
   --color-critical: var(--pp-critical);
-  --color-critical-hover: var(--pp-critical-hover);
   --color-critical-tint: var(--pp-critical-tint);
   --color-warning: var(--pp-warning);
   --color-warning-tint: var(--pp-warning-tint);
@@ -73,6 +72,12 @@
   }
 }
 
+/* Hover wash: the same faint ink tint (--pp-hover) laid over a filled control,
+   so gold, white and brick buttons darken a touch instead of swapping colour. */
+@utility wash {
+  box-shadow: inset 0 0 0 9999px var(--pp-hover);
+}
+
 @layer base {
   html {
     background: var(--pp-background);
@@ -102,11 +107,6 @@
     outline: none;
   }
 
-  ::selection {
-    background: var(--pp-accent);
-    color: var(--pp-ink);
-  }
-
   /* Headings: Red Hat Text at regular weight. Size carries the hierarchy, not boldness. */
   h1,
   h2,
@@ -117,7 +117,7 @@
 
   /* Modal layer: flat ink at 55%. No blur. */
   dialog::backdrop {
-    background: rgb(21 25 31 / 0.55);
+    background: color-mix(in srgb, var(--pp-ink) 55%, transparent);
   }
 }
 
@@ -143,7 +143,7 @@
   }
   .pp-link:hover,
   .pp-link:focus-visible {
-    background-color: var(--pp-accent);
+    background-color: var(--pp-hover);
   }
   .pp-link:focus-visible {
     outline-offset: 0;
@@ -286,7 +286,7 @@
 }
 .leaflet-bar a:hover,
 .leaflet-bar a:focus-visible {
-  background: var(--pp-accent);
+  box-shadow: inset 0 0 0 9999px var(--pp-hover);
   color: var(--pp-ink);
 }
 .leaflet-bar a:focus-visible {
@@ -294,7 +294,7 @@
   outline-offset: var(--pp-focus-offset);
 }
 .leaflet-control-attribution {
-  font-size: 11px;
+  font-size: var(--pp-text-label);
   color: var(--pp-ink);
 }
 .leaflet-control-attribution a {

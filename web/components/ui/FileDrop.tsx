@@ -93,7 +93,7 @@ export function FileDrop({
               ? "cursor-copy border-solid border-ink bg-accent-tint"
               : error
                 ? "cursor-pointer border-critical bg-surface"
-                : "cursor-pointer border-border-strong bg-sunken hov:border-ink",
+                : "cursor-pointer border-border-strong bg-sunken hov:wash",
         )}
       >
         <span

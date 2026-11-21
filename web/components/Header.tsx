@@ -10,10 +10,16 @@ import { HeaderShell } from "@/components/ui";
  */
 export function Header() {
   const path = usePathname();
-  const role = path.startsWith("/apply") ? "applicant" : path.startsWith("/review") ? "reviewer" : null;
+  // The portal demo on /design/portal is the reviewer side too.
+  const reviewer = path.startsWith("/review") || path.startsWith("/design/portal");
+  // …and the applicant demo on /design/applicant is the applicant side.
+  const applicant = path.startsWith("/apply") || path.startsWith("/design/applicant");
+  const role = applicant ? "applicant" : reviewer ? "reviewer" : null;
   return (
     <HeaderShell
       role={role}
+      // One permit open for review uses the wider workspace.
+      wide={/^\/(review|design\/portal)\/[^/]+/.test(path)}
       action={
         role && (
           <Link href="/" className="pp-link text-sm">

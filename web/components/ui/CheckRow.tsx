@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Check, TriangleAlert, UserCheck, X } from "lucide-react";
 import type { CheckResult, CheckStatus } from "@permitpike/contract";
 import { cx } from "@/lib/cx";
@@ -28,6 +29,8 @@ export type CheckRowProps = Pick<
 > & {
   /** A building official overrode this check. The original result stays visible. */
   overridden?: { by: string; reason: string };
+  /** Extra controls under the check, e.g. "Show in site plan" and the code source. */
+  children?: ReactNode;
   className?: string;
 };
 
@@ -39,6 +42,7 @@ export function CheckRow({
   message,
   suggestedFix,
   overridden,
+  children,
   className,
 }: CheckRowProps) {
   const s = STATUS[status];
@@ -72,6 +76,7 @@ export function CheckRow({
           </span>
         </p>
       )}
+      {children && <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">{children}</div>}
     </li>
   );
 }

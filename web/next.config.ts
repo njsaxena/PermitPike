@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
   // Workspace packages ship TypeScript source; let Next compile them.
   transpilePackages: [
+    "@permitpike/compliance",
     "@permitpike/contract",
     "@permitpike/db",
     "@permitpike/loadcalc",

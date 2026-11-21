@@ -118,7 +118,7 @@ export function ExampleCard({
   );
   const classes = cx(
     "flex h-full flex-col gap-4 border border-border bg-surface p-5 text-left",
-    href && "transition-colors duration-100 ease-out hov:border-ink",
+    href && "transition-[background-color,box-shadow] duration-100 ease-out hov:wash",
     className,
   );
   return href ? (
@@ -156,7 +156,7 @@ export function CheckList({ checks, className }: { checks: CheckResult[]; classN
               )}
               <span className="text-sm text-muted">{c.citation}</span>
             </div>
-            <span className={cx("col-start-2 pt-1 text-sm font-semibold sm:col-start-3 sm:pt-1", s.text)}>{s.word}</span>
+            <span className={cx("sr-only text-sm font-semibold sm:not-sr-only sm:col-start-3 sm:pt-1", s.text)}>{s.word}</span>
           </li>
         );
       })}

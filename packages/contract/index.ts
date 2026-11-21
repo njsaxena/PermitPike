@@ -239,6 +239,12 @@ export const HeatPumpPanelFields = ServiceFields.extend({
     mcaAmps: z.number().positive(),
     /** Maximum overcurrent protection from the nameplate. */
     mocpAmps: z.number().positive(),
+    /**
+     * Backup (supplemental) electric resistance heat in the air handler, in kW, e.g. a
+     * "10 kW heat strip". Null or missing when there is none (ductless mini-splits).
+     * Counted as new central electric resistance space heating (NEC 2026 Table 120.83, 80%).
+     */
+    backupHeatKW: z.number().positive().nullable().optional(),
   }),
   proposedBreakerAmps: z.number().positive(),
   conductorAWG: z.string().nullable(),
@@ -336,8 +342,9 @@ export const CheckResult = z.object({
 });
 export type CheckResult = z.infer<typeof CheckResult>;
 
-// Load calc (packages/loadcalc). Method: existing dwelling optional calculation,
-// NEC 2026 120.83, as adopted by 527 CMR 12.00 (effective April 24, 2026).
+// Load calc (packages/loadcalc). Methods: existing dwelling optional calculation
+// (NEC 2026 120.83) or measured existing load (NEC 2026 120.87), as adopted by
+// 527 CMR 12.00 (effective April 24, 2026).
 
 /**
  * Which season a heating/cooling load runs in. Heating-only and cooling-only loads
@@ -369,7 +376,7 @@ export type ExistingAppliance = z.infer<typeof ExistingAppliance>;
 export const NewLoadKind = z.enum(["evse", "central_resistance_heat", "other"]);
 export type NewLoadKind = z.infer<typeof NewLoadKind>;
 
-/** A load the job adds. va comes from the rule pack's addedLoad(fields). */
+/** A load the job adds. Rule packs return these from addedLoads(fields). */
 export const NewLoad = z.object({
   /** Rule pack that produced this load. */
   source: JobType,
@@ -387,6 +394,45 @@ export const NewLoad = z.object({
 });
 export type NewLoad = z.infer<typeof NewLoad>;
 
+/**
+ * Which method produced the result.
+ * nec_120_83: existing dwelling calculation from floor area and nameplates.
+ * nec_120_87: existing load from measured maximum demand (utility data or a recording).
+ */
+export const LoadCalcMethod = z.enum(["nec_120_83", "nec_120_87"]);
+export type LoadCalcMethod = z.infer<typeof LoadCalcMethod>;
+
+/**
+ * Measured maximum demand of the existing service (NEC 2026 120.87). When present,
+ * calculateLoad uses 120.87 instead of 120.83.
+ */
+export const MeasuredDemand = z.object({
+  /** Highest demand in kW: the utility's 12-month peak, or the highest 15-minute average of a recording. */
+  peakKW: z.number().positive(),
+  /** utility_12_months: 120.87(1). recording_30_days: the 120.87(1) exception (minimum 30 days, 15-minute intervals). */
+  source: z.enum(["utility_12_months", "recording_30_days"]),
+  /**
+   * For a 30-day recording: whether it covered the heating or cooling season. If not,
+   * the larger of the existing heating or cooling load is added by calculation.
+   */
+  includesPeakSeason: z.boolean().optional(),
+  /** Solar, wind or other power source on the service. A 30-day recording can't be used then. */
+  hasRenewableSource: z.boolean().optional(),
+  /**
+   * Any form of peak load shaving on the service (a battery or controller that cuts the
+   * peak the meter sees). A 30-day recording can't be used then either.
+   */
+  hasPeakLoadShaving: z.boolean().optional(),
+});
+export type MeasuredDemand = z.infer<typeof MeasuredDemand>;
+
+/** An existing load the job takes out (120.87 only), e.g. the AC a heat pump replaces. */
+export const RemovedLoad = z.object({
+  name: z.string().min(1),
+  va: z.number().nonnegative(),
+});
+export type RemovedLoad = z.infer<typeof RemovedLoad>;
+
 export const LoadCalcInput = z.object({
   service: z.object({
     ratingAmps: z.number().positive(),
@@ -394,15 +440,22 @@ export const LoadCalcInput = z.object({
     voltage: z.number().positive().optional(),
   }),
   home: z.object({
-    /** Null when the documents don't show it. calculateLoad throws on null. */
+    /** Null when the documents don't show it. 120.83 needs it; 120.87 doesn't. */
     squareFeet: z.number().positive().nullable(),
     /** 20 A small-appliance circuits. Defaults to the code minimum of 2. */
     smallApplianceCircuits: z.number().int().nonnegative().optional(),
     /** Laundry circuits. Defaults to the code minimum of 1. */
     laundryCircuits: z.number().int().nonnegative().optional(),
     existingAppliances: z.array(ExistingAppliance),
+    /** Measured peak demand. When present, the 120.87 method is used. */
+    measuredDemand: MeasuredDemand.optional(),
   }),
   newLoads: z.array(NewLoad),
+  /**
+   * Existing loads the job removes. Only for 120.87, where they are inside the
+   * measured peak. For 120.83, leave them out of existingAppliances instead.
+   */
+  removedLoads: z.array(RemovedLoad).optional(),
 });
 export type LoadCalcInput = z.infer<typeof LoadCalcInput>;
 
@@ -419,7 +472,9 @@ export const LoadCalcStep = z.object({
 export type LoadCalcStep = z.infer<typeof LoadCalcStep>;
 
 export const LoadCalcResult = z.object({
-  /** Existing load after demand factors. */
+  /** Defaults to nec_120_83 so results stored before 120.87 existed still parse. */
+  method: LoadCalcMethod.default("nec_120_83"),
+  /** Existing load after demand factors (120.83), or measured peak x 125% (120.87). */
   existingVA: z.number().nonnegative(),
   /** Added load after demand factors. */
   addedVA: z.number().nonnegative(),
@@ -551,12 +606,26 @@ export const ApplicationVersion = z.object({
 });
 export type ApplicationVersion = z.infer<typeof ApplicationVersion>;
 
+/**
+ * Tracking code alphabet: uppercase letters and digits without 0, O, 1 and I, so a code
+ * read aloud or copied by hand can't be mistyped. 32 symbols, 8 per code (40 bits).
+ */
+export const TRACKING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const TrackingCode = z.string().regex(/^PP-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+export type TrackingCode = z.infer<typeof TrackingCode>;
+
+export const JOB_DESCRIPTION_MAX = 500;
+export const EstimatedProjectCost = z.number().nonnegative().max(100_000_000);
+export const JobDescription = z.string().trim().max(JOB_DESCRIPTION_MAX);
+
 /** Current state of an application: the latest version, flattened. */
 export const Application = z
   .object({
     id: z.string(),
     /** Human-facing number, e.g. "EL-2026-00042". */
     permitNumber: z.string(),
+    /** Public lookup code for /track, e.g. "PP-7K3Q-9M2X". Anyone with it sees the public status only. */
+    trackingCode: TrackingCode,
     jobType: JobType,
     address: Address,
     /** Parcel and zoning saved at filing. Null when the lookup failed or found no single parcel. */
@@ -571,6 +640,10 @@ export const Application = z
     extraction: Extraction.nullable(),
     recommendation: Recommendation.nullable(),
     closureRisk: PermitRiskScoreResponse.nullable(),
+    /** Applicant's estimate in USD. Null on applications filed before the field existed. */
+    estimatedProjectCost: EstimatedProjectCost.nullable(),
+    /** Applicant's plain description of the work. Null on older applications. */
+    jobDescription: JobDescription.nullable(),
     version: z.number().int().positive(),
   })
   .refine((a) => a.extraction === null || a.extraction.fields.jobType === a.jobType, {
@@ -629,7 +702,7 @@ export type EvalRun = z.infer<typeof EvalRun>;
 
 export const ApiError = z.object({
   error: z.object({
-    code: z.enum(["bad_request", "unauthorized", "not_found", "conflict", "not_implemented", "internal"]),
+    code: z.enum(["bad_request", "unauthorized", "not_found", "conflict", "rate_limited", "not_implemented", "internal"]),
     message: z.string(),
     issues: z.array(z.unknown()).optional(),
   }),
@@ -664,6 +737,10 @@ export const CreateApplicationRequest = z.object({
   parcelId: ParcelId.nullable().optional(),
   /** Already uploaded to Vercel Blob by the client (POST /api/blob issues upload tokens). */
   files: z.array(FileRef).min(1),
+  /** USD, required. Sent to closure-risk scoring as declaredValuation. */
+  estimatedProjectCost: EstimatedProjectCost,
+  /** Up to 500 characters. Sent to closure-risk scoring as description. Empty string allowed. */
+  jobDescription: JobDescription,
 });
 export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequest>;
 export const CreateApplicationResponse = z.object({ application: Application });
@@ -726,6 +803,53 @@ export const ParcelLookupResponse = z.discriminatedUnion("result", [
 ]);
 export type ParcelLookupResponse = z.infer<typeof ParcelLookupResponse>;
 
+// GET /api/track/:code   public, no login, 20 lookups per minute per IP.
+// Only what the applicant's customer or neighbor could safely see. Never the
+// recommendation, checks, confidence, load calc, closure risk, conditions or reviewer
+// notes; the one reviewer text is the official's return reason. Unknown code: 404 with
+// one generic message. The schema is strict so an added field fails loudly.
+export const TrackStatus = z.enum(["received", "in_queue", "changes_requested", "approved"]);
+export type TrackStatus = z.infer<typeof TrackStatus>;
+
+export const TRACK_STATUS_LABELS: Record<TrackStatus, string> = {
+  received: "Received",
+  in_queue: "In the review queue",
+  changes_requested: "Changes requested",
+  approved: "Approved, schedule your inspection",
+};
+
+export const TrackTimelineStep = z
+  .object({
+    /** "decision" is the official's step before it happens; it becomes "approved" or "changes_requested". */
+    kind: z.enum(["received", "in_queue", "changes_requested", "resubmitted", "approved", "decision"]),
+    label: z.string(),
+    /** Null for a step not reached yet. */
+    at: IsoDateTime.nullable(),
+  })
+  .strict();
+export type TrackTimelineStep = z.infer<typeof TrackTimelineStep>;
+
+export const PublicTrackView = z
+  .object({
+    code: TrackingCode,
+    jobTypeLabel: z.string(),
+    submittedAt: IsoDateTime,
+    /** Street name only, no house number or unit, e.g. "Dorchester St". */
+    streetName: z.string(),
+    status: TrackStatus,
+    statusLabel: z.string(),
+    /** The official's return reason. Only when status is "changes_requested". */
+    returnReason: z.string().nullable(),
+    timeline: z.array(TrackTimelineStep),
+    /** Open applications filed before this one. Null once a decision is made or changes are requested. */
+    aheadInQueue: z.number().int().nonnegative().nullable(),
+    nextSteps: z.array(z.string()),
+  })
+  .strict();
+export type PublicTrackView = z.infer<typeof PublicTrackView>;
+export const GetTrackResponse = PublicTrackView;
+export type GetTrackResponse = z.infer<typeof GetTrackResponse>;
+
 // GET /api/evals
 export const ListEvalsResponse = z.object({ runs: z.array(EvalRun) });
 export type ListEvalsResponse = z.infer<typeof ListEvalsResponse>;
@@ -783,6 +907,11 @@ export const API_ROUTES = {
     method: "GET",
     path: "/api/evals",
     response: ListEvalsResponse,
+  },
+  getTrack: {
+    method: "GET",
+    path: "/api/track/:code",
+    response: GetTrackResponse,
   },
 } as const;
 

@@ -115,7 +115,7 @@ export function DocumentSlot({
               "has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-1 has-[:focus-visible]:outline-ink",
               disabled
                 ? "cursor-not-allowed border-border bg-sunken text-muted"
-                : "cursor-pointer border-border-strong bg-surface text-ink hov:border-ink hov:bg-sunken",
+                : "cursor-pointer border-border-strong bg-surface text-ink hov:wash",
             )}
           >
             <Plus aria-hidden className="size-4" strokeWidth={1.75} />

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, lt, type SQL } from "drizzle-orm";
 import {
   applicants,
   applications,
@@ -26,6 +26,7 @@ import type {
   ReviewerSession,
 } from "@permitpike/contract";
 import { RISK_ORDER, riskOf } from "@/lib/risk";
+import { newTrackingCode } from "@/lib/tracking-code";
 
 /*
  * Every read and write of applications goes through here, against Tiger Data.
@@ -86,6 +87,7 @@ function toApplication(app: AppRow, v: VersionRow): Application {
   return {
     id: app.id,
     permitNumber: permitNumber(app.permitSeq, app.submittedAt),
+    trackingCode: app.trackingCode,
     jobType: app.jobType,
     address: app.address,
     parcel: app.parcel,
@@ -98,6 +100,8 @@ function toApplication(app: AppRow, v: VersionRow): Application {
     extraction: v.extraction,
     recommendation: v.recommendation,
     closureRisk: app.closureRisk,
+    estimatedProjectCost: app.estimatedProjectCost,
+    jobDescription: app.jobDescription,
     version: app.version,
   };
 }
@@ -204,9 +208,27 @@ export async function getApplicationDetail(id: string): Promise<ApplicationDetai
   };
 }
 
+/** Postgres unique_violation on the tracking code: one in a trillion, so just draw again. */
+function isTrackingCodeClash(err: unknown): boolean {
+  const e = err as { code?: string; constraint_name?: string; cause?: { code?: string; constraint_name?: string } };
+  const pg = e?.code ? e : e?.cause;
+  return pg?.code === "23505" && pg.constraint_name === "applications_tracking_code_unique";
+}
+
 /** Inserts the application as "submitted", version 1. The caller then triggers review. */
 export async function createApplication(req: CreateApplicationRequest): Promise<Application> {
   if (!isUuid(req.applicantId)) throw new RepoError("bad_request", "Unknown applicant.");
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await insertApplication(req, newTrackingCode());
+    } catch (err) {
+      if (attempt < 3 && isTrackingCodeClash(err)) continue;
+      throw err;
+    }
+  }
+}
+
+async function insertApplication(req: CreateApplicationRequest, trackingCode: string): Promise<Application> {
   return getDb().transaction(async (tx) => {
     const [applicant] = await tx.select().from(applicants).where(eq(applicants.id, req.applicantId));
     if (!applicant) throw new RepoError("bad_request", "Unknown applicant.");
@@ -215,8 +237,11 @@ export async function createApplication(req: CreateApplicationRequest): Promise<
       .insert(applications)
       .values({
         applicantId: applicant.id,
+        trackingCode,
         jobType: req.jobType,
         address: req.address,
+        estimatedProjectCost: req.estimatedProjectCost,
+        jobDescription: req.jobDescription.trim() || null,
         applicant: { name: applicant.name, company: applicant.company, licenseNumber: applicant.licenseNumber },
         status: "submitted",
         version: 1,
@@ -265,6 +290,7 @@ export async function resubmitApplication(id: string, req: ResubmitApplicationRe
         recommendation: null,
         closureRisk: null,
         risk: null,
+        queuedAt: null,
         updatedAt: new Date(),
       })
       .where(eq(applications.id, id))
@@ -333,7 +359,7 @@ export async function reviewApplication(
 export async function markInReview(id: string, version: number): Promise<boolean> {
   const rows = await getDb()
     .update(applications)
-    .set({ status: "ai_review", updatedAt: new Date() })
+    .set({ status: "ai_review", queuedAt: new Date(), updatedAt: new Date() })
     .where(and(eq(applications.id, id), eq(applications.version, version), eq(applications.status, "submitted")))
     .returning({ id: applications.id });
   return rows.length > 0;
@@ -408,4 +434,33 @@ export async function listEvalRuns(): Promise<EvalRun[]> {
     passedCases: r.passedCases,
     results: r.results,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Public tracking (web/lib/track.ts turns these into the public view)
+// ---------------------------------------------------------------------------
+
+/** Statuses that are still waiting on someone at the city. */
+const OPEN_STATUSES = ["submitted", "ai_review", "awaiting_official"] as const;
+
+/** The application behind a tracking code, plus when its current version joined the queue. */
+export async function getTrackRecord(
+  code: string,
+): Promise<{ detail: ApplicationDetail; queuedAt: string | null } | null> {
+  const [row] = await getDb()
+    .select({ id: applications.id, queuedAt: applications.queuedAt })
+    .from(applications)
+    .where(eq(applications.trackingCode, code));
+  if (!row) return null;
+  const detail = await getApplicationDetail(row.id);
+  return detail ? { detail, queuedAt: row.queuedAt ? iso(row.queuedAt) : null } : null;
+}
+
+/** Open applications filed before this one: everyone ahead of it in line. */
+export async function countAheadInQueue(app: Pick<Application, "id" | "submittedAt">): Promise<number> {
+  const [row] = await getDb()
+    .select({ n: count() })
+    .from(applications)
+    .where(and(inArray(applications.status, [...OPEN_STATUSES]), lt(applications.submittedAt, new Date(app.submittedAt))));
+  return row?.n ?? 0;
 }

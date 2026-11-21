@@ -106,7 +106,7 @@ export function PropertyConfirm({
     void run({ pid: c.parcelId }, nextKey);
   }
 
-  const typed = [street.trim(), "Boston MA", /^\d{5}$/.test(z) ? z : ""].filter(Boolean).join(", ");
+  const typed = `${street.trim()}, Boston MA${/^\d{5}$/.test(z) ? ` ${z}` : ""}`;
 
   return (
     <section aria-labelledby="property" aria-busy={state.kind === "loading"} className="flex flex-col gap-3">
@@ -206,7 +206,7 @@ export function PropertyConfirm({
           <MapUnavailable address={typed} />
           {state.kind === "not_found" && (
             <p className="text-sm text-ink">
-              No Boston parcel matches this address. Please check the street number.
+              No Boston parcel matches this address. Check the street number.
             </p>
           )}
         </>

@@ -25,6 +25,10 @@ export interface ConfirmDialogProps {
   cancelLabel?: string;
   /** Render in place, always open, without the modal layer. For /design only. */
   inline?: boolean;
+  /** Keep the content in the page while closed, so a static copy (the design artifact) can open it. */
+  keepMounted?: boolean;
+  /** Set on the <dialog>, so a static copy can find it. */
+  id?: string;
 }
 
 export function ConfirmDialog({
@@ -38,6 +42,8 @@ export function ConfirmDialog({
   confirmVariant = "primary",
   cancelLabel = "Cancel",
   inline,
+  keepMounted,
+  id,
 }: ConfirmDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -64,7 +70,8 @@ export function ConfirmDialog({
         <button
           type="button"
           onClick={onClose}
-          className="-mr-2 flex size-8 items-center justify-center text-ink hov:bg-accent-hover"
+          data-dialog-close=""
+          className="-mr-2 flex size-8 items-center justify-center text-ink hov:bg-hover"
         >
           <X aria-hidden className="size-5" strokeWidth={2} />
           <span className="sr-only">Close</span>
@@ -81,13 +88,15 @@ export function ConfirmDialog({
         )}
       </div>
       <div className="flex flex-wrap justify-end gap-3 border-t border-border px-card py-4">
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose} data-dialog-close="">
           {cancelLabel}
         </Button>
         <Button
           variant={confirmVariant}
           disabled={Boolean(attestation) && !attested}
           onClick={onConfirm}
+          data-dialog-confirm=""
+          data-needs-attestation={attestation ? "" : undefined}
         >
           {confirmLabel}
         </Button>
@@ -107,11 +116,12 @@ export function ConfirmDialog({
   return (
     <dialog
       ref={ref}
+      id={id}
       aria-labelledby={titleId}
       onClose={onClose}
       className={cx(frame, "m-auto")}
     >
-      {open && panel}
+      {(open || keepMounted) && panel}
     </dialog>
   );
 }

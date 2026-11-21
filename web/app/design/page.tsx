@@ -20,14 +20,22 @@ import {
   X,
 } from "lucide-react";
 import { JOB_TYPE_LABELS } from "@permitpike/contract";
+import { Parcel } from "@permitpike/contract";
+import demoParcels from "@/lib/parcel/demo-parcels.json";
+import { QueueMapDemo } from "./MapDemo";
 import {
   BostonDrawing,
+  ButtonLink,
   ExampleCard,
   ExampleDetail,
   BOSTON_DRAWING_LABELS,
   Button,
   Callout,
   Card,
+  MapUnavailable,
+  PropertyCard,
+  PropertyMap,
+  ZoningChips,
   Checkbox,
   CheckRow,
   CheckRowRunning,
@@ -114,7 +122,6 @@ const COLOR_GROUPS: { title: string; swatches: Swatch[] }[] = [
     title: "Accent",
     swatches: [
       { token: "accent", hex: "#FFD21F", name: "Dome gold", on: [{ hex: "#15191F", label: "ink text" }] },
-      { token: "accent-hover", hex: "#F5C400", name: "Dome gold, pressed", on: [{ hex: "#15191F", label: "ink text" }] },
       { token: "accent-tint", hex: "#FFF4BF", name: "Dome tint", on: [{ hex: "#15191F", label: "ink text" }] },
     ],
   },
@@ -122,7 +129,6 @@ const COLOR_GROUPS: { title: string; swatches: Swatch[] }[] = [
     title: "Status",
     swatches: [
       { token: "critical", hex: "#A23B2A", name: "Brick", on: [{ hex: LIMESTONE, label: "limestone" }, { hex: "#F7ECE9", label: "tint" }] },
-      { token: "critical-hover", hex: "#86301F", name: "Brick, pressed", on: [{ hex: SURFACE, label: "white text" }] },
       { token: "critical-tint", hex: "#F7ECE9", name: "Brick tint" },
       { token: "warning", hex: "#8C6210", name: "Brass", on: [{ hex: LIMESTONE, label: "limestone" }, { hex: "#F8F1E2", label: "tint" }] },
       { token: "warning-tint", hex: "#F8F1E2", name: "Brass tint" },
@@ -199,6 +205,9 @@ const MOTION = [
   { name: "Reduced motion", spec: "all of it off; final state shown" },
 ];
 
+const [MAP_BROOKSIDE, MAP_DORCHESTER] = demoParcels.map((p) => Parcel.parse(p)) as [Parcel, Parcel, Parcel];
+const MAP_ADDRESS = { street: "28 Brookside Ave", unit: null, neighborhood: "Jamaica Plain", city: "Boston", state: "MA", zip: "02130" } as const;
+
 const SECTIONS = [
   ["logo", "Logo"],
   ["color", "Color"],
@@ -223,6 +232,7 @@ const SECTIONS = [
   ["trail", "TrailTimeline"],
   ["diff", "DiffView"],
   ["queue", "Permit queue"],
+  ["map", "Property map"],
   ["table", "Table"],
   ["library", "Example library"],
   ["callout", "Callout"],
@@ -301,6 +311,23 @@ export default function DesignPage() {
         <div className="flex flex-col gap-6">
           <PermitPikeLogo size="md" on="background" />
           <h1 className="text-display tracking-tight text-ink">Design system</h1>
+          {/* The two sides of PermitPike, built from this system with the example permits. */}
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink
+              href="/design/applicant"
+              variant="secondary"
+              icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}
+            >
+              The applicant portal
+            </ButtonLink>
+            <ButtonLink
+              href="/design/portal"
+              variant="secondary"
+              icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}
+            >
+              The review portal
+            </ButtonLink>
+          </div>
         </div>
         <BostonDrawing kind="city-hall" className="hidden md:block" />
       </div>
@@ -907,6 +934,32 @@ export default function DesignPage() {
         </div>
         <Sample state="queue: panels grouped by progress, oldest first; same order as a table">
           <PermitQueue permits={QUEUE} label="Permit queue sample" />
+        </Sample>
+      </Section>
+
+      {/* ----------------------------------------------------------------- Map */}
+      <Section id="map">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Sample state="PropertyMap: pin, parcel outline in harbor navy, pale fill">
+            <PropertyMap parcel={MAP_DORCHESTER} address="210 Dorchester St, Boston MA 02127" />
+          </Sample>
+          <Sample state="MapUnavailable: lookup failed, slow (over 3 s) or no match">
+            <MapUnavailable address="48 Brookside Ave, Boston MA 02130" />
+          </Sample>
+        </div>
+        <Sample state="ZoningChips: district (ink edge), then overlays">
+          <ZoningChips parcel={MAP_DORCHESTER} />
+        </Sample>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Sample state="PropertyCard: reviewer detail, beside the checks, with the setback table">
+            <PropertyCard parcel={MAP_BROOKSIDE} address={MAP_ADDRESS} setbackCheck />
+          </Sample>
+          <Sample state="PropertyCard: no saved parcel">
+            <PropertyCard parcel={null} address={MAP_ADDRESS} />
+          </Sample>
+        </div>
+        <Sample state="PermitsMap: queue pins marked by status, with the key">
+          <QueueMapDemo />
         </Sample>
       </Section>
 

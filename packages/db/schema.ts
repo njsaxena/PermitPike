@@ -8,6 +8,7 @@
  * (migrations/0001_boston_permits_hypertable.sql), together with the permits_weekly
  * continuous aggregate. Drizzle only knows its columns so it can query it.
  */
+import { sql } from "drizzle-orm";
 import {
   doublePrecision,
   index,
@@ -64,6 +65,11 @@ export const applications = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     /** Feeds the human permit number, e.g. EL-2026-00042. */
     permitSeq: serial("permit_seq").notNull().unique(),
+    /**
+     * Public /track code, e.g. PP-7K3Q-9M2X. The web generates it (web/lib/server/tracking-code.ts);
+     * the database default (pp_tracking_code(), migration 0004) covers older writers and backfill.
+     */
+    trackingCode: text("tracking_code").notNull().unique().default(sql`pp_tracking_code()`),
     applicantId: uuid("applicant_id")
       .notNull()
       .references(() => applicants.id),
@@ -81,6 +87,11 @@ export const applications = pgTable(
     extraction: jsonb("extraction").$type<Extraction>(),
     recommendation: jsonb("recommendation").$type<Recommendation>(),
     closureRisk: jsonb("closure_risk").$type<PermitRiskScoreResponse>(),
+    /** Applicant's estimate in USD. Null on rows filed before the field existed. */
+    estimatedProjectCost: numeric("estimated_project_cost", { mode: "number" }),
+    jobDescription: text("job_description"),
+    /** When the current version entered the review queue (submitted -> ai_review). */
+    queuedAt: timestamptz("queued_at"),
     /** Queue risk derived from recommendation (web/lib/risk.ts). Null until reviewed. */
     risk: jsonb("risk").$type<{ level: "high" | "med" | "low" }>(),
     submittedAt: timestamptz("submitted_at").notNull().defaultNow(),
@@ -176,6 +187,20 @@ export const bostonPermits = pgTable(
     index("boston_permits_worktype_issued_idx").on(t.workType, t.issuedDate),
     index("boston_permits_status_idx").on(t.status),
   ],
+);
+
+/**
+ * Fixed one-minute windows for public /track lookups. key is a SHA-256 of the client IP,
+ * never the IP itself. Old windows are deleted as new ones are written.
+ */
+export const trackRateLimits = pgTable(
+  "track_rate_limits",
+  {
+    key: text("key").notNull(),
+    windowStart: timestamptz("window_start").notNull(),
+    count: integer("count").notNull(),
+  },
+  (t) => [primaryKey({ name: "track_rate_limits_pk", columns: [t.key, t.windowStart] })],
 );
 
 /** Private lookup keyed by normalized Analyze Boston applicant; never exposed in API responses. */

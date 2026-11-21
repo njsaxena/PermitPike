@@ -19,11 +19,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "border-ink bg-accent text-ink hov:bg-accent-hover",
-  secondary: "border-border-strong bg-surface text-ink hov:border-ink hov:bg-sunken",
-  quiet: "border-transparent bg-transparent text-ink hov:bg-accent-tint",
-  destructive:
-    "border-critical bg-critical text-surface hov:border-critical-hover hov:bg-critical-hover",
+  primary: "border-ink bg-accent text-ink hov:wash",
+  secondary: "border-border-strong bg-surface text-ink hov:wash",
+  quiet: "border-transparent bg-transparent text-ink hov:bg-hover",
+  destructive: "border-critical bg-critical text-surface hov:wash",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -53,7 +52,7 @@ export function Button({
       onClick={loading ? undefined : onClick}
       className={cx(
         "inline-flex items-center justify-center border font-semibold whitespace-nowrap",
-        "transition-[background-color,border-color,color,transform] duration-100 ease-out active:translate-y-px",
+        "transition-[background-color,border-color,color,box-shadow,transform] duration-100 ease-out active:translate-y-px",
         SIZES[size],
         disabled
           ? cx(

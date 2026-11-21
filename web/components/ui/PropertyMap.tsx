@@ -96,7 +96,7 @@ export function PropertyMap({
   );
 }
 
-const chip = "inline-flex min-h-6 items-center border px-2 py-0.5 text-sm";
+const chip = "inline-block border px-2 py-0.5 text-sm";
 
 /** Zoning district first (ink edge), then overlays (quiet). */
 export function ZoningChips({ parcel, overlays = true }: { parcel: Parcel; overlays?: boolean }) {
@@ -104,7 +104,7 @@ export function ZoningChips({ parcel, overlays = true }: { parcel: Parcel; overl
     <ul className="flex flex-wrap gap-2" aria-label="Zoning">
       {parcel.districts.map((d) => (
         <li key={districtText(d)} className={cx(chip, "border-ink bg-surface font-semibold text-ink")}>
-          {d.subdistrict && <span className="font-mono">{d.subdistrict}</span>}
+          {d.subdistrict && <span className="font-mono whitespace-nowrap">{d.subdistrict}</span>}
           {d.subdistrict && d.district && <span aria-hidden className="px-1.5 text-muted">·</span>}
           {d.district}
         </li>

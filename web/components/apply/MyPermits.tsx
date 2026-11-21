@@ -11,7 +11,7 @@ export function MyPermits({ applicantId }: { applicantId: string }) {
     refreshInterval: POLL_MS,
   });
   const fileButton = (
-    <ButtonLink href="/apply/new" icon={<Plus aria-hidden className="size-4" strokeWidth={2} />}>
+    <ButtonLink href="/apply/new" icon={<Plus aria-hidden className="size-4" strokeWidth={1.75} />}>
       File a permit
     </ButtonLink>
   );

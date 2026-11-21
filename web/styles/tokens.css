@@ -22,15 +22,16 @@
   --pp-background: #f7f6f3;
   --pp-surface: #ffffff;
   --pp-sunken: #efeee9;
+  /* Hover on anything clickable: a faint ink wash that shows on white, limestone, sunken, gold and brick alike.
+     Transparent controls take it as their background; filled ones get it laid over their fill (the `wash` utility). */
+  --pp-hover: color-mix(in srgb, var(--pp-ink) 10%, transparent);
 
   /* Single accent: State House dome gold, in full sun. Fill only. */
   --pp-accent: #ffd21f;
-  --pp-accent-hover: #f5c400;
   --pp-accent-tint: #fff4bf;
 
   /* Status: Back Bay brick, Freedom Trail brass, Boston Common green */
   --pp-critical: #a23b2a;
-  --pp-critical-hover: #86301f;
   --pp-critical-tint: #f7ece9;
   /* Logo only: the two lighter brick steps in the PermitPike mark. Not for UI. */
   --pp-brick-step-2: #dda89b;
@@ -67,6 +68,7 @@
   --pp-border-width: 1px;
   --pp-card-padding: 24px;
   --pp-page-width: 1100px;
+  --pp-workspace-width: 1400px; /* the review workspace: documents beside the evidence */
 
   /* Focus: one ink line drawn over the element's own 1px border. */
   --pp-focus-width: 2px;

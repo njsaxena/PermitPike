@@ -8,6 +8,7 @@ import {
   CreateApplicationResponse,
   CreateReviewerSessionResponse,
   GetApplicationResponse,
+  GetTrackResponse,
   ListApplicationsResponse,
   ListEvalsResponse,
   ParcelLookupResponse,
@@ -80,6 +81,10 @@ export const api = {
   reviewApplication(id: string, body: ReviewApplicationRequest) {
     return call(ReviewApplicationResponse, `/api/applications/${enc(id)}/review`, post(body));
   },
+  /** Public status by tracking code. No login. */
+  getTrack(code: string) {
+    return call(GetTrackResponse, `/api/track/${enc(code)}`);
+  },
   listEvals() {
     return call(ListEvalsResponse, "/api/evals");
   },
@@ -106,3 +111,6 @@ export const PARCEL_TIMEOUT_MS = 3500;
 
 /** Live data refresh for queue and status pages. Postgres LISTEN/NOTIFY can't run on Vercel functions. */
 export const POLL_MS = 3000;
+
+/** The public /track page polls slower: 6 lookups a minute stays well under its 20-per-minute limit. */
+export const TRACK_POLL_MS = 10_000;

@@ -43,16 +43,26 @@ It draws on Boston's buildings and streets, not its brands.
 | `background` | `#F7F6F3` | Page (limestone) |
 | `surface` | `#FFFFFF` | Cards, controls |
 | `sunken` | `#EFEEE9` | Drop zones, chips, disabled fills |
-| `accent` / `-hover` / `-tint` | `#FFD21F` / `#F5C400` / `#FFF4BF` | Primary buttons, selected tab's count chip, current trail stop, link highlight |
-| `critical` / `-hover` / `-tint` | `#A23B2A` / `#86301F` / `#F7ECE9` | Fail, returned, destructive, trail path |
+| `accent` / `-tint` | `#FFD21F` / `#FFF4BF` | Primary buttons, selected tab's count chip, current trail stop |
+| `critical` / `-tint` | `#A23B2A` / `#F7ECE9` | Fail, returned, destructive, trail path |
 | `warning` / `-tint` | `#8C6210` / `#F8F1E2` | Warn checks, conditions |
 | `positive` / `-tint` | `#2F6B3F` / `#EAF2EC` | Pass, approved |
+| `--pp-harbor` / `-tint` (map only) | `#1F3A5F` / navy at 12% | Parcel outline and its pale fill on property maps. Not a Tailwind color; never text, controls or UI lines |
 
 **Dome gold is a fill, never text, never a line on its own.** It is 12.2:1 under ink text
 but only 1.3:1 against limestone, so every yellow fill carries ink text and a 1px ink edge,
-and the focus ring is ink. Links are ink and semibold with a gold fill on hover.
+and the focus ring is ink. Links are ink and semibold.
 
 **No underlines.** Links, quiet buttons and tabs carry no underline of any color.
+
+**Hover is a wash, never a color swap.** Anything clickable gets `--pp-hover` (ink at 10%)
+on hover. Transparent controls (links, quiet buttons, table rows, role cards) take it as
+their background; filled ones (gold primary, white secondary, brick destructive, tabs, cards,
+the drop zone) get it laid over their fill with the `wash` utility, so they darken a touch
+and keep their color and edge. There are no separate `-hover` colors. Gold is never a hover
+color. Where a whole row is the link, only the row shows the wash.
+
+**System text selection.** Never restyle `::selection`; selected text uses the browser's own highlight.
 
 Every text/background pair passes WCAG AA. Tints are for backgrounds only.
 
@@ -82,6 +92,8 @@ Every text/background pair passes WCAG AA. Tints are for backgrounds only.
 - 4px spacing grid (`--spacing: 4px`). Prefer multiples of 8.
 - Corners: square. No rounded corners anywhere (`--pp-radius: 0`; Tailwind radius tokens are cleared).
 - Borders are 1px. Card padding is 24px (`p-card`). Page max width is 1100px (`max-w-page`).
+  The review workspace (one permit open for an official) is wider, 1400px
+  (`--pp-workspace-width`), so documents and evidence fit side by side; its header widens to match.
 - Focus: one 2px ink line drawn over the element's border (offset -1px), so it never
   reads as a double border. Never remove it.
 
@@ -183,7 +195,9 @@ the entry screen.
   fixes is a normal outcome and uses `secondary`.
 - Checks are listed failures first, then warnings, then passes, under a `CheckSummary`:
   X, triangle and check icons, each beside a large count.
-- Every check shows its code citation in a mono chip.
+- Every check shows its code citation in a chip, and links to the published source when
+  `packages/compliance/catalog.ts` lists it (`codeSource()` in `web/lib/review-sources.ts`).
+  Never write code text or section titles in the UI; name the source and link to it.
 - Spell out abbreviations the first time: "maximum overcurrent protection (MOCP)".
 - Use real units and plain words: "45 A breaker", not "breaker amperage value".
 
@@ -207,6 +221,55 @@ the entry screen.
 
 lucide-react only, 1.75 stroke, 16 or 20px. One icon per meaning (see `/design` → Icons).
 
+## Review workspace
+
+One permit, open for a building official (`/review/[id]`; the demo with the example
+library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/review/`.
+
+- **Layout.** A "Queue" link, then the heading (address, status, permit number, job,
+  neighborhood, filed date in words) and who filed it, with "Change status" at the top
+  right. Then the trail and two columns: documents on the left, held in view while the
+  right side scrolls; PermitPike's recommendation and the evidence on the right. Below
+  `lg` the columns stack and "Change status" sits under the heading.
+- **Documents first.** The official reads the applicant's files, not a summary of them.
+  `DocumentViewer` shows one document at a time, large, with zoom (fit, 50 to 300%) and
+  "Open original". Under each document: the values to check against it.
+- **Confidence is shown, never hidden.** A value read with under 85% confidence, or not
+  found, gets a brass tint and a sentence telling the official to read it from the
+  document. Never fill a missing value with a guess.
+- **"Check against", not "read from".** The extraction has no per-field provenance, so the
+  UI says which document backs a value up (`fieldSource()`), not where the model read it.
+- **Evidence tabs:** Checks (failures first; each has "Show in [document]", which opens
+  that document, and its code source link), Permit record (below), Load calculation
+  (every line with volt-amps and its code section, the totals, and a meter against the
+  service with 80% and 100% marks; before and after when the service is upgraded),
+  Inspection (the inspector's checklist and the code and city sources for the job type),
+  History (submissions and decisions). The load calculation opens with two short
+  paragraphs on what it answers (can the service carry the new load) and how to read the
+  result (under 80% fits, 80 to 100% tight, over 100% needs a bigger service; 80% is a
+  PermitPike setting). The inspection tab is the "Site inspection checklist", with one
+  line saying a city inspector checks these on site after the work is done.
+- **The permit record** is every value the permit rests on, in one place: PermitPike reads
+  them (Gemini), the electrician confirms them when filing, and the official can correct
+  any of them with "Edit record". Each row shows where its value came from: the document
+  and confidence, or "Edited by you". Inputs, options and limits come from the contract's
+  Zod schemas (`web/lib/record-edit.ts`). When an edited value fed a check, a warning says
+  the checks ran on the earlier value. Editing is on in the demo; the live page shows the
+  record read-only until the API can save edits (needs a contract change).
+- **The decision.** "Change status" (gold, top right) opens a menu with the two moves:
+  approve and return for fixes, each with one line on what happens, and "PermitPike
+  recommends this" on the recommended one, which is listed first. Each opens its own
+  confirmation. Approving past a failing check is "Approve anyway" and needs a written
+  reason; approving needs the attestation tick; returning pre-fills the requested fixes
+  from the checks. Only these change the permit. After a decision the control goes away
+  and the page shows the `SignatureBlock` (approved) or the reasons (returned).
+- **Bold carries the facts.** Values in the record and document panel, addresses in the
+  queue, and the applicant's name are semibold; labels and provenance are regular, muted.
+- **No helper sentences** that restate the layout ("Failures first…"). If the UI needs
+  explaining, fix the UI.
+- **Dates in words** everywhere in the workspace ("November 20th", "10:30 AM"); the
+  numeric stamp appears only in `SignatureBlock`.
+
 ## Components
 
 | Component | Notes |
@@ -218,27 +281,38 @@ lucide-react only, 1.75 stroke, 16 or 20px. One icon per meaning (see `/design` 
 | `DocumentSlot` | One row per document a job needs: title, Required/Optional, what a good one shows, its own Choose file button; gold check square once attached. Use on the filing form instead of one big drop zone |
 | `StatusChip` | `draft` (UI-only) plus contract `ApplicationStatus` values |
 | `RiskBadge` | low / med / high, with a three-bar meter; `plain` drops the box for panels and rows |
-| `CheckRow` | Contract `CheckResult`: icon, title, citation chip, message, fix; `overridden` |
+| `CheckRow` | Contract `CheckResult`: icon, title, citation chip, message, fix; `overridden`; `children` for row actions ("Show in site plan", the source link) |
 | `CheckRowRunning` | Placeholder while a check runs |
 | `CheckSummary` | Fail / warning / pass counts with their icons. `tiles` (zeros dimmed) for check lists; `inline` (no boxes, zeros left out) for panels and rows |
 | `CitationChip` | Mono code citation |
 | `RecommendationCard` | "PermitPike recommends …" in a tinted band, Advisory chip, confidence meter, summary, `conditions` |
 | `SignatureBlock` | Official's sign-off line; signed and unsigned |
-| `ConfirmDialog` | Native modal with summary, optional attestation checkbox, actions |
+| `ConfirmDialog` | Native modal with summary, optional attestation checkbox, actions; `keepMounted` keeps the content in the page while closed (static copies) |
 | `TrailTimeline` | Steps: done, current, returned, upcoming, skipped; vertical on phones |
 | `PermitCard`, `MiniTrail` | One permit as a panel: status chip, address and job, then check counts and risk, then the filed date and permit number. One box on the card (the chip). `MiniTrail` shows progress in the table view |
 | `ExampleCard`, `ExampleDetail`, `CheckList`, `FieldSheet`, `DecisionChip` | The example library (`EvalCase`s). Card: expected outcome, the example in one sentence, what PermitPike should find. Detail: outcome and sentence, then `CheckList`: every check on one line each, failures first, with a status tile, the plain-words result, the fix and the citation, and the verdict in words ("Fails", "Needs a look", "Passes"; screen-reader only on phones). Every field sits behind an "All fields" disclosure as a filled-in form via `fieldGroups()` (`web/lib/example-fields.ts`); each field a check read shows that check's mark, failing rows tinted brick. All text in Red Hat Text |
-| `PermitQueue` | Open work as a Board: one column per stage (In progress, Waiting, Returned), each keeping the order passed in (the API sends highest risk first, then newest); a Table view of the same permits. Approved permits sit apart below, in a compact table, since nobody acts on them |
+| `PermitQueue` | Open work as a Board: one column per stage (In progress, Waiting, Returned), each keeping the order passed in (the API sends highest risk first, then newest); a Table view of the same permits. Board and Table switch with icon-only tabs. Approved permits sit apart below, in a compact table, since nobody acts on them. In both tables the whole row opens the permit |
+| `QueueWelcome` | The queue's title: "Welcome back, [first name]." and "There are [n] permits waiting for your review." (count of permits awaiting an official, in bold) |
+| `ReviewWorkspace` | One permit for an official (see Review workspace). Takes a contract `ApplicationDetail`, the pinned version, PDF previews, an `actions` slot (top right), an optional `note`, and `recordEditable` |
+| `PermitRecord` | The permit record tab: grouped values with provenance and check marks; "Edit record" swaps in a form validated against the contract |
+| `DocumentViewer`, `FieldLine` | Document tabs (one per file kind), zoom toolbar, image or PDF; the values to check against each document with confidence and check marks |
+| `LoadCalcPanel`, `ServiceMeter` | The worked load calculation and the flat service meter (80% and 100% marks; fits / tight / needs upgrade) |
+| `ChangeStatus` | "Change status" button and menu (status now, approve, return; recommended first) and the approve and return dialogs; override needs a reason |
 | `DiffView` | Before/after values; "Not set" and "Removed" for missing values |
 | `Table` | Horizontal rules only |
 | `Callout` | info, warning, utility; full box with an icon tile |
 | `Card` | Optional header label, actions, footer; `selected` |
-| `Tabs` | WAI-ARIA tabs drawn as a row of square buttons; the selected one is filled ink with a gold count chip |
-| `HeaderShell` | Logo plus the role you entered as and a "Leave" link back to the entry screen. No role toggle. |
+| `Tabs` | WAI-ARIA tabs drawn as a row of square buttons; the selected one is filled ink with a gold count chip. Optional `value`/`onChange` to control it (a check opening its document). `icon` plus `iconOnly` draws a square icon button with the label as its accessible name and tooltip |
+| `HeaderShell` | Logo plus the role you entered as and a "Leave" link back to the entry screen. No role toggle. `wide` matches the review workspace |
 | `RoleChoiceCard` | One label with an icon or a Boston drawing; the entry screen uses two |
 | `PermitPikeLogo`, `PermitPikeMark` | The logo (see Logo) |
 | `BostonDrawing` | Line drawings (see Imagery) |
 | `EmptyState` | Drawing, one sentence, at most one action |
+| `PropertyMap` | Leaflet map (next/dynamic, `ssr:false`) of one parcel: grayscale OpenStreetMap tiles with visible attribution, harbor-navy outline, brick-red square pin. Screen-reader summary on the focusable map; arrow keys pan, +/- zoom. With no parcel it renders `MapUnavailable` |
+| `MapUnavailable` | The address as text plus "Map unavailable". Used whenever the lookup fails, finds nothing or takes over 3 seconds. Never blocks filing |
+| `ZoningChips` | Zoning district (ink edge, subdistrict in mono), then overlays (quiet) |
+| `PropertyCard` | Reviewer detail, beside the checks: map, parcel ID, assessor address, zoning, overlays and the article's dimensional tables (labelled "Setback table" when the job has a setback check) |
+| `PermitsMap` | Queue map behind a "Show map" toggle: one pin per permit, pin heads reuse the `StatusChip` mark shapes and fills so status is never color-only; key with counts below |
 
 ## Adding or changing UI
 

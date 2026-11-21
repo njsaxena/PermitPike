@@ -71,6 +71,8 @@ function useSort(rows: PermitRow[], initial: { key: string; direction: SortDirec
   });
   function header(key: string) {
     return {
+      sortKey: key,
+      firstDirection: FIRST_DIRECTION[key],
       direction: sort.key === key ? sort.direction : undefined,
       onSort: () =>
         setSort((s) =>
@@ -83,9 +85,15 @@ function useSort(rows: PermitRow[], initial: { key: string; direction: SortDirec
   return { sorted, header };
 }
 
+/** Every sort value for one row, so a static copy of the page (the design artifact) can sort without React. */
+function sortData(p: PermitSummary) {
+  return JSON.stringify(Object.fromEntries(Object.entries(VALUE).map(([k, v]) => [k, v(p)])));
+}
+
 function PermitLink({ row }: { row: PermitRow }) {
   return row.href ? (
-    <Link href={row.href} className="pp-link">
+    // The link covers the whole row (the row is position: relative), so any cell opens the permit.
+    <Link href={row.href} className="pp-link after:absolute after:inset-0 after:content-[''] hov:bg-transparent">
       {row.permit.permitNumber}
     </Link>
   ) : (
@@ -122,7 +130,7 @@ export function OpenPermitTable({ rows, label }: { rows: PermitRow[]; label: str
         {sorted.map((row) => {
           const p = row.permit;
           return (
-            <TableRow key={p.id} interactive={Boolean(row.href)}>
+            <TableRow key={p.id} interactive={Boolean(row.href)} className="relative" data-sort={sortData(p)}>
               <TableCell mono>
                 <PermitLink row={row} />
                 <span className="mt-1 block">
@@ -130,7 +138,7 @@ export function OpenPermitTable({ rows, label }: { rows: PermitRow[]; label: str
                 </span>
               </TableCell>
               <TableCell className="min-w-44">
-                {p.street}
+                <span className="font-semibold">{p.street}</span>
                 <span className="block text-sm text-muted">
                   {p.neighborhood} · {JOB_TYPE_LABELS[p.jobType]}
                 </span>
@@ -180,12 +188,12 @@ export function ApprovedPermitTable({ rows, label }: { rows: PermitRow[]; label:
         {sorted.map((row) => {
           const p = row.permit;
           return (
-            <TableRow key={p.id} interactive={Boolean(row.href)}>
+            <TableRow key={p.id} interactive={Boolean(row.href)} className="relative" data-sort={sortData(p)}>
               <TableCell mono className="whitespace-nowrap">
                 <PermitLink row={row} />
               </TableCell>
               <TableCell className="min-w-44">
-                {p.street}
+                <span className="font-semibold">{p.street}</span>
                 <span className="block text-sm text-muted">{p.neighborhood}</span>
               </TableCell>
               <TableCell>{JOB_TYPE_LABELS[p.jobType]}</TableCell>

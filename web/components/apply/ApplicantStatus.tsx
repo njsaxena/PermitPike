@@ -2,18 +2,16 @@
 
 import useSWR from "swr";
 import { useState, type FormEvent } from "react";
-import { Button, Callout, FileDrop, Textarea, TrailTimeline, type FileChipData } from "@/components/ui";
-import { Decision } from "@/components/permit/Decision";
-import { PermitHeading } from "@/components/permit/PermitHeading";
+import { Button, FileDrop, Textarea, type FileChipData } from "@/components/ui";
 import { api, ApiRequestError, POLL_MS } from "@/lib/api-client";
 import { readApplicantId } from "@/lib/applicant";
-import { trailSteps } from "@/lib/trail";
 import { guessKind } from "@/lib/documents";
 import { uploadFiles } from "@/lib/upload";
-import { ACCEPT } from "./FilePermitForm";
+import { ApplicantPermitView } from "./ApplicantPermitView";
+import { ACCEPT } from "./PermitForm";
 
 /** The applicant's view of one permit. Polls so "Approved" shows up within a few seconds. */
-export function ApplicantStatus({ id }: { id: string }) {
+export function ApplicantStatus({ id, justFiled = false }: { id: string; justFiled?: boolean }) {
   const { data, error, mutate } = useSWR(["application", id], () => api.getApplication(id), {
     refreshInterval: POLL_MS,
   });
@@ -26,21 +24,11 @@ export function ApplicantStatus({ id }: { id: string }) {
   const app = data.application;
 
   return (
-    <div className="flex flex-col gap-8">
-      <PermitHeading app={app} />
-      <TrailTimeline steps={trailSteps(data)} />
-
-      {(app.status === "submitted" || app.status === "ai_review") && (
-        <Callout title="PermitPike is checking your documents." />
-      )}
-      {app.status === "awaiting_official" && <Callout title="Waiting for a building official to review." />}
-
-      <Decision detail={data} />
-
+    <ApplicantPermitView detail={data} justFiled={justFiled} trackHref={`/track/${app.trackingCode}`}>
       {app.status === "returned" && (
         <ResubmitForm id={id} applicantId={app.applicantId} onDone={() => void mutate()} />
       )}
-    </div>
+    </ApplicantPermitView>
   );
 }
 

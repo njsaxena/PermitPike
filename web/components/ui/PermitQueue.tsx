@@ -1,3 +1,4 @@
+import { Columns3, Rows3 } from "lucide-react";
 import { PermitCard, PROGRESS_GROUPS, type PermitSummary } from "./PermitCard";
 import { ApprovedPermitTable, OpenPermitTable } from "./PermitTable";
 import { Tabs } from "./Tabs";
@@ -72,8 +73,20 @@ export function PermitQueue({
       <Tabs
         label={label}
         items={[
-          { id: "board", label: "Board", count: open.length, content: board },
-          { id: "table", label: "Table", content: table },
+          {
+            id: "board",
+            label: "Board",
+            iconOnly: true,
+            icon: <Columns3 aria-hidden className="size-5" strokeWidth={1.75} />,
+            content: board,
+          },
+          {
+            id: "table",
+            label: "Table",
+            iconOnly: true,
+            icon: <Rows3 aria-hidden className="size-5" strokeWidth={1.75} />,
+            content: table,
+          },
         ]}
       />
 

@@ -9,7 +9,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
-    "cache:parcels": "tsx scripts/cache-parcels.ts"
+    "cache:parcels": "tsx scripts/cache-parcels.ts",
+    "test": "tsx --test lib/*.test.ts"
   },
   "dependencies": {
     "@permitpike/compliance": "workspace:*",

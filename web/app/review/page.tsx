@@ -6,5 +6,5 @@ export const dynamic = "force-dynamic";
 
 export default async function ReviewPage() {
   const reviewer = await getReviewer();
-  return reviewer ? <ReviewQueue /> : <ReviewerEntry />;
+  return reviewer ? <ReviewQueue reviewerName={reviewer.name} /> : <ReviewerEntry />;
 }

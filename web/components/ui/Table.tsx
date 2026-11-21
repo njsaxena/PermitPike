@@ -27,7 +27,7 @@ export function TableRow({
 }: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean; "data-demo"?: string }) {
   return (
     <tr
-      className={cx("border-b border-border", interactive && "hov:bg-sunken", className)}
+      className={cx("border-b border-border", interactive && "cursor-pointer hov:bg-hover", className)}
       {...rest}
     />
   );
@@ -81,6 +81,8 @@ export function TableSortHeader({
   children,
   direction,
   onSort,
+  sortKey,
+  firstDirection,
   numeric,
   className,
 }: {
@@ -88,12 +90,21 @@ export function TableSortHeader({
   /** Set on the column the table is sorted by; leave out on the others. */
   direction?: SortDirection;
   onSort: () => void;
+  /** Column id and the direction a first click sorts in; written as data attributes for static copies of a page. */
+  sortKey?: string;
+  firstDirection?: SortDirection;
   numeric?: boolean;
   className?: string;
 }) {
   const Icon = direction === "ascending" ? ArrowUp : direction === "descending" ? ArrowDown : ChevronsUpDown;
   return (
-    <TableHeader aria-sort={direction ?? "none"} numeric={numeric} className={className}>
+    <TableHeader
+      aria-sort={direction ?? "none"}
+      data-sort-key={sortKey}
+      data-first-direction={firstDirection}
+      numeric={numeric}
+      className={className}
+    >
       <button
         type="button"
         onClick={onSort}

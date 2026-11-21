@@ -1,0 +1,36 @@
+{
+  "id": "battery_garage_backup_clean",
+  "description": "UL 9540 battery in the garage, backup only (no export). Everything passes; no interconnection needed.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 200,
+    "existingPanelRatingAmps": 200,
+    "mainBreakerAmps": 200,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1600,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 7000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "home_battery",
+    "battery": {
+      "manufacturer": "Example Storage",
+      "model": "ES-10",
+      "capacityKWh": 10,
+      "continuousOutputW": 5000,
+      "ul9540Listed": true
+    },
+    "hasSolar": false,
+    "interconnection": "backup_only",
+    "backfeedBreakerAmps": null,
+    "installLocation": "garage",
+    "clearanceToOpeningsFt": null
+  },
+  "expectedDecision": "approve",
+  "expectedFailingRuleIds": [],
+  "expectUtilityFlag": false
+}

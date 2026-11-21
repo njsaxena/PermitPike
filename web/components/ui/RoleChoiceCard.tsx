@@ -37,7 +37,7 @@ export function RoleChoiceCard({
       ? "cursor-not-allowed border-border bg-sunken text-muted opacity-70"
       : selected
         ? "border-ink bg-accent-tint"
-        : "border-border-strong bg-surface hov:border-ink hov:bg-accent-tint",
+        : "border-border-strong bg-surface hov:bg-hover",
     className,
   );
   const body = (

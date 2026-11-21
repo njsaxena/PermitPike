@@ -25,10 +25,12 @@
     "**/*.ts",
     "**/*.tsx",
     ".next-check/types/**/*.ts",
+    ".next-design/types/**/*.ts",
     ".next-map/types/**/*.ts",
+    ".next-tiger/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-design/types/**/*.ts"
+    ".next-3300/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

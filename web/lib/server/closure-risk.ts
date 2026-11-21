@@ -41,7 +41,7 @@ async function applicantPriorClosureRate(applicantName: string): Promise<number>
 export async function scoreAndSaveClosureRisk(
   application: Pick<
     Application,
-    "id" | "version" | "jobType" | "address" | "parcel" | "applicant"
+    "id" | "version" | "jobType" | "address" | "parcel" | "applicant" | "estimatedProjectCost" | "jobDescription"
   >,
   extraction: Extraction | null,
 ): Promise<void> {
@@ -55,6 +55,8 @@ export async function scoreAndSaveClosureRisk(
       application,
       extraction,
       applicantPriorRate,
+      // The applicant's own words and estimate, from the filing form.
+      { estimatedProjectCost: application.estimatedProjectCost, jobDescription: application.jobDescription },
     );
     const response = await fetch(new URL("/score", riskApiUrl), {
       method: "POST",

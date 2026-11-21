@@ -18,9 +18,12 @@ const ROLE: Record<ShellRole, { label: string; Icon: typeof HardHat }> = {
 export function HeaderShell({
   role,
   action,
+  wide,
   className,
 }: {
   role?: ShellRole | null;
+  /** Match the wider review workspace (--pp-workspace-width). */
+  wide?: boolean;
   /** Shown after the role, e.g. a "Leave" link to "/". */
   action?: ReactNode;
   className?: string;
@@ -28,13 +31,16 @@ export function HeaderShell({
   const r = role ? ROLE[role] : null;
   return (
     <header className={cx("border-b border-ink bg-surface", className)}>
-      <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 sm:px-6">
+      <div
+        className={cx(
+          "mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6",
+          wide ? "max-w-[var(--pp-workspace-width)]" : "max-w-page",
+        )}
+      >
         <div className="flex min-w-0 items-center gap-4">
           <PermitPikeLogo size="sm" />
           <span aria-hidden className="hidden h-6 w-px bg-border lg:block" />
-          <span className="hidden font-mono text-label whitespace-nowrap text-muted uppercase lg:block">
-            Residential electrical · Boston
-          </span>
+          <span className="hidden text-sm whitespace-nowrap text-muted lg:block">Boston, MA</span>
         </div>
 
         {r && (

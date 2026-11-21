@@ -148,7 +148,7 @@ export function PermitCard({
   );
   const classes = cx(
     "flex h-full flex-col gap-4 border border-border bg-surface p-5 text-left",
-    href && "transition-colors duration-100 ease-out hov:border-ink",
+    href && "transition-[background-color,box-shadow] duration-100 ease-out hov:wash",
     className,
   );
   return href ? (

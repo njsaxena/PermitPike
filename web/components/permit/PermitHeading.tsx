@@ -1,6 +1,6 @@
 import { JOB_TYPE_LABELS, type Application } from "@permitpike/contract";
 import { StatusChip } from "@/components/ui";
-import { stamp, streetLine } from "@/lib/format";
+import { clockTime, longDate, streetLine } from "@/lib/format";
 
 /** Address as the title; permit number, job and status beside and below it (no eyebrows). */
 export function PermitHeading({ app }: { app: Application }) {
@@ -14,7 +14,9 @@ export function PermitHeading({ app }: { app: Application }) {
         <span className="font-mono text-ink">{app.permitNumber}</span>
         <span>{JOB_TYPE_LABELS[app.jobType]}</span>
         <span>{app.address.neighborhood ?? "Boston"} {app.address.zip}</span>
-        <span className="font-mono">Filed {stamp(app.submittedAt)}</span>
+        <span>
+          Filed {longDate(app.submittedAt)} at {clockTime(app.submittedAt)}
+        </span>
       </p>
     </div>
   );

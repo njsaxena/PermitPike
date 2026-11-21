@@ -7,9 +7,10 @@ import { Map as MapIcon } from "lucide-react";
 import { Button, EmptyState, PermitQueue, PermitsMap } from "@/components/ui";
 import { api, ApiRequestError, POLL_MS } from "@/lib/api-client";
 import { toSummary } from "@/lib/summary";
+import { QueueWelcome } from "./QueueWelcome";
 
 /** The shared queue. Polls every 3 seconds; counts permits that arrived since the page opened. */
-export function ReviewQueue() {
+export function ReviewQueue({ reviewerName }: { reviewerName: string }) {
   const router = useRouter();
   const { data, error } = useSWR("review-queue", () => api.listApplications(), { refreshInterval: POLL_MS });
   const seen = useRef<Set<string> | null>(null);
@@ -30,21 +31,22 @@ export function ReviewQueue() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-title text-ink">Permit queue</h1>
+      <QueueWelcome
+        name={reviewerName}
+        waiting={data ? data.applications.filter((a) => a.status === "awaiting_official").length : 0}
+      >
         <span role="status" aria-live="polite" className="flex items-center gap-2">
           {newCount > 0 && (
             <>
-              <span className="border border-ink bg-accent px-2 py-0.5 font-mono text-sm text-ink">
-                {newCount} new
-              </span>
+              {/* Plain text: dome gold is for actions and the current step, not badges. */}
+              <span className="text-sm font-semibold text-ink">{newCount} new since you opened this</span>
               <Button variant="quiet" size="sm" onClick={markSeen}>
                 Mark as seen
               </Button>
             </>
           )}
         </span>
-      </div>
+      </QueueWelcome>
       {error && !data && <p className="text-critical">Could not load the queue. Retrying.</p>}
       {data && data.applications.length === 0 && (
         <EmptyState drawing="gas-lamp" message="No permits have been filed yet." />

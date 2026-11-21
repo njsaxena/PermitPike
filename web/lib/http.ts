@@ -8,6 +8,7 @@ const STATUS: Record<ErrorCode, number> = {
   unauthorized: 401,
   not_found: 404,
   conflict: 409,
+  rate_limited: 429,
   not_implemented: 501,
   internal: 500,
 };
