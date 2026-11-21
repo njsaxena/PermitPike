@@ -13,7 +13,13 @@ const archiveInput = z.object({
 export async function POST(request: Request) {
   if (!await getReviewer()) return fail("unauthorized", "Sign in as a reviewer to search the archive.");
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) return fail("bad_request", "Search from the reviewer workspace.");
+  const expected = new URL(request.url);
+  // Next can use a different internal hostname when it constructs the request URL.
+  const host = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() || request.headers.get("host");
+  if (host) expected.host = host;
+  const protocol = request.headers.get("x-forwarded-proto");
+  if (protocol === "http" || protocol === "https") expected.protocol = `${protocol}:`;
+  if (origin && origin !== expected.origin) return fail("bad_request", "Search from the reviewer workspace.");
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json") ||
       Number(request.headers.get("content-length")) > 64 * 1024) {
     return fail("bad_request", "Send a JSON archive question of up to 500 characters.");
