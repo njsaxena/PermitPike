@@ -27,7 +27,6 @@ import {
 import type {
   Address,
   Applicant,
-  EvalCaseResult,
   Extraction,
   FileRef,
   Parcel,
@@ -145,16 +144,6 @@ export const reviewerActions = pgTable(
   },
   (t) => [index("reviewer_actions_app_idx").on(t.applicationId, t.createdAt)],
 );
-
-export const evalRuns = pgTable("eval_runs", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  ranAt: timestamptz("ran_at").notNull().defaultNow(),
-  gitSha: text("git_sha"),
-  model: text("model").notNull(),
-  totalCases: integer("total_cases").notNull(),
-  passedCases: integer("passed_cases").notNull(),
-  results: jsonb("results").$type<EvalCaseResult[]>().notNull(),
-});
 
 /**
  * Historical Boston permits (Analyze Boston "Approved Building Permits").

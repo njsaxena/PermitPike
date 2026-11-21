@@ -2,7 +2,7 @@
  * PermitPike shared contract.
  *
  * The single source of truth for every shape that crosses a boundary:
- * web <-> agent <-> db <-> packs <-> evals.
+ * web <-> agent <-> db <-> packs.
  *
  * Rules:
  * - Change this file only after announcing it in team chat.
@@ -681,10 +681,10 @@ export const ApplicationDetail = z.object({
 export type ApplicationDetail = z.infer<typeof ApplicationDetail>;
 
 // ---------------------------------------------------------------------------
-// Evals
+// Example cases
 // ---------------------------------------------------------------------------
 
-/** One labeled test case in /evals/cases. */
+/** One labeled example permit: fields in, expected decision, failing rule ids and utility flag out. */
 export const EvalCase = z.object({
   id: z.string(),
   description: z.string(),
@@ -694,37 +694,6 @@ export const EvalCase = z.object({
   expectUtilityFlag: z.boolean(),
 });
 export type EvalCase = z.infer<typeof EvalCase>;
-
-export const EvalCaseResult = z.object({
-  caseId: z.string(),
-  jobType: JobType,
-  expectedDecision: RecommendationDecision,
-  actualDecision: RecommendationDecision,
-  passed: z.boolean(),
-  notes: z.string().nullable(),
-  /**
-   * Rule-level detail for the eval dashboard. Optional so runs saved before these
-   * fields existed still parse; the dashboard says when a run doesn't have them.
-   */
-  /** Every rule the pipeline evaluated on this case (pack rules plus the load check). */
-  checkedRuleIds: z.array(z.string()).optional(),
-  expectedFailingRuleIds: z.array(z.string()).optional(),
-  actualFailingRuleIds: z.array(z.string()).optional(),
-  expectedUtilityFlag: z.boolean().optional(),
-  actualUtilityFlag: z.boolean().optional(),
-});
-export type EvalCaseResult = z.infer<typeof EvalCaseResult>;
-
-export const EvalRun = z.object({
-  id: z.string(),
-  ranAt: IsoDateTime,
-  gitSha: z.string().nullable(),
-  model: z.string(),
-  totalCases: z.number().int().nonnegative(),
-  passedCases: z.number().int().nonnegative(),
-  results: z.array(EvalCaseResult),
-});
-export type EvalRun = z.infer<typeof EvalRun>;
 
 // ---------------------------------------------------------------------------
 // HTTP API (web, Next.js route handlers)
@@ -907,10 +876,6 @@ export type PublicTrackView = z.infer<typeof PublicTrackView>;
 export const GetTrackResponse = PublicTrackView;
 export type GetTrackResponse = z.infer<typeof GetTrackResponse>;
 
-// GET /api/evals
-export const ListEvalsResponse = z.object({ runs: z.array(EvalRun) });
-export type ListEvalsResponse = z.infer<typeof ListEvalsResponse>;
-
 /** Route table so web clients and handlers agree on paths and shapes. */
 export const API_ROUTES = {
   createApplicant: {
@@ -976,11 +941,6 @@ export const API_ROUTES = {
     path: "/api/parcel",
     query: ParcelLookupQuery,
     response: ParcelLookupResponse,
-  },
-  listEvals: {
-    method: "GET",
-    path: "/api/evals",
-    response: ListEvalsResponse,
   },
   getTrack: {
     method: "GET",

@@ -210,31 +210,6 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  evals:
-    dependencies:
-      '@permitpike/contract':
-        specifier: workspace:*
-        version: link:../packages/contract
-      '@permitpike/db':
-        specifier: workspace:*
-        version: link:../packages/db
-      '@permitpike/loadcalc':
-        specifier: workspace:*
-        version: link:../packages/loadcalc
-      '@permitpike/packs':
-        specifier: workspace:*
-        version: link:../packs
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
   packages/compliance:
     dependencies:
       '@mastra/core':

@@ -12,7 +12,6 @@ import {
   GetApplicationResponse,
   GetTrackResponse,
   ListApplicationsResponse,
-  ListEvalsResponse,
   ParcelLookupResponse,
   ResubmitApplicationResponse,
   ReviewApplicationResponse,
@@ -98,9 +97,6 @@ export const api = {
   /** Public status by tracking code. No login. */
   getTrack(code: string) {
     return call(GetTrackResponse, `/api/track/${enc(code)}`);
-  },
-  listEvals() {
-    return call(ListEvalsResponse, "/api/evals");
   },
   /**
    * Parcel and zoning for the "Is this the property?" step. Never throws: errors and

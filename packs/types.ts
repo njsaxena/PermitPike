@@ -14,7 +14,7 @@ import type {
 } from "@permitpike/contract";
 
 export interface Rule<J extends JobType> {
-  /** "<jobType>.<rule>", stable forever: evals and the audit log reference it. */
+  /** "<jobType>.<rule>", stable forever: the audit log references it. */
   id: string;
   title: string;
   /** Code section this rule enforces, e.g. "NEC 440.22". */
@@ -24,7 +24,7 @@ export interface Rule<J extends JobType> {
 
 export interface RulePack<J extends JobType> {
   jobType: J;
-  /** Bump when rules change so eval runs can be compared. */
+  /** Bump when rules change. */
   version: string;
   extraction: {
     /** Zod schema Gemini output must satisfy (from the contract). */
