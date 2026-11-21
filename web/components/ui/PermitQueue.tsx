@@ -43,7 +43,7 @@ export function PermitQueue({
           aria-labelledby={`queue-${c.id}`}
           className="flex min-w-0 flex-col gap-3 border border-border bg-sunken p-3"
         >
-          <h3 id={`queue-${c.id}`} className="flex items-center justify-between gap-2.5 font-semibold text-ink">
+          <h3 id={`queue-${c.id}`} className="flex items-center justify-between gap-2.5 text-ink">
             {c.title}
             <Count n={c.permits.length} />
           </h3>
@@ -78,7 +78,7 @@ export function PermitQueue({
       />
 
       <section aria-labelledby="queue-approved" className="flex flex-col gap-4 border-t border-border pt-8">
-        <h3 id="queue-approved" className="flex items-center gap-2.5 text-lg font-semibold text-ink">
+        <h3 id="queue-approved" className="flex items-center gap-2.5 text-lg text-ink">
           Approved
           <span className="flex h-6 min-w-6 items-center justify-center bg-sunken px-1.5 font-mono text-sm font-normal">
             {approved.length}

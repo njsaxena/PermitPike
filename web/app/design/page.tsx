@@ -268,7 +268,7 @@ function Sample({ state, children, className }: { state: string; children: React
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-semibold text-ink">{title}</h3>
+      <h3 className="text-sm text-ink">{title}</h3>
       {children}
     </div>
   );
@@ -300,7 +300,7 @@ export default function DesignPage() {
       <div className="grid items-end gap-8 border-b border-ink pb-8 md:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
           <PermitPikeLogo size="md" on="background" />
-          <h1 className="text-display font-semibold tracking-tight text-ink">Design system</h1>
+          <h1 className="text-display tracking-tight text-ink">Design system</h1>
         </div>
         <BostonDrawing kind="city-hall" className="hidden md:block" />
       </div>
@@ -373,7 +373,7 @@ export default function DesignPage() {
 
       {/* ------------------------------------------------------------------ Type */}
       <Section id="type">
-        <Group title="Archivo: headings wide, body normal">
+        <Group title="Red Hat Text: headings regular weight">
           <ul className="border-t border-border">
             {TYPE_SCALE.map((t) => (
               <li key={t.token} className="grid gap-2 border-b border-border py-4 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-6">
@@ -389,7 +389,7 @@ export default function DesignPage() {
             ))}
           </ul>
         </Group>
-        <Group title="Values: Archivo with even-width figures">
+        <Group title="Values: Red Hat Text with even-width figures">
           <ul className="border-t border-border">
             {MONO_SAMPLES.map((m) => (
               <li key={m.use} className="grid gap-2 border-b border-border py-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-6">

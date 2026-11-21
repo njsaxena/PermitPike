@@ -58,13 +58,16 @@ Every text/background pair passes WCAG AA. Tints are for backgrounds only.
 
 ### Type
 
-- **Archivo** for everything (SIL Open Font License, loaded with `next/font/google`).
-  **No monospace.** Permit numbers, code citations and electrical values (`200 A`,
-  `240 V`) are Archivo with even-width figures (`tabular-nums` is set on `<html>`).
-  The `font-mono` utility still exists as the marker for "a value" and maps to Archivo.
-- **Page and section titles run wide.** `h1`, `h2` and the `text-display` and
-  `text-title` sizes use Archivo's width axis at `--pp-heading-stretch` (120%), which reads like civic
-  signage and City Hall's long horizontals. Headings inside components (`h3` and below: the recommendation label, queue groups, card titles), body, labels, controls and card addresses stay normal width.
+- **Red Hat Text** for all UI text (SIL Open Font License, loaded with `next/font/google`
+  as a variable font, weights 300 to 700). Open shapes with a technical edge; amps and
+  permit numbers read clearly. Public Sans Bold is kept for the wordmark only. **No
+  monospace.** Permit numbers, code citations and electrical values (`200 A`, `240 V`) are
+  Red Hat Text with even-width figures (`tabular-nums` is set on `<html>`). The
+  `font-mono` utility still exists as the marker for "a value" and maps to Red Hat Text.
+- Avoid the usual app defaults (Inter, DM Sans, Space Grotesk, Manrope, Geist, Plus
+  Jakarta) and the faces already tried and dropped (Overpass, Archivo, plain Public Sans).
+- **Headings are regular weight (400), not bold.** Size carries the hierarchy. Only the
+  wordmark is bold. Small emphasis (labels, buttons, links) stays semibold.
 - **Dates are written in words**: "November 21st", with the time on its own line as
   "9:14 AM". Use `longDate` and `clockTime` from `web/lib/format.ts`. The year shows only
   when it is not this year. Raw `2026-11-21 09:14` stamps stay only on formal records
@@ -108,8 +111,8 @@ motion on hover beyond color.
 - Mark: a 4×4 grid of square cells in three flat brick steps (`critical`, and the
   logo-only `--pp-brick-step-2` `#DDA89B` and `--pp-brick-step-3` `#EFD9D3`). The darkest
   cells form a blocky "P". One knockout line, the Mass Pike, crosses the bottom right.
-- Wordmark: "PermitPike" in Public Sans Bold, -0.02em, ink. Public Sans is loaded for the
-  wordmark only; all other text is Archivo.
+- Wordmark: "PermitPike" in Public Sans Bold, -0.02em, ink. All other text is Red Hat
+  Text, at regular weight for headings.
 - Cut the Pike line in the color behind the mark (`on="surface"` or `"background"`).
 - Never recolor it, outline it, add effects, or put the brick steps anywhere else in the UI.
 
@@ -224,7 +227,7 @@ lucide-react only, 1.75 stroke, 16 or 20px. One icon per meaning (see `/design` 
 | `ConfirmDialog` | Native modal with summary, optional attestation checkbox, actions |
 | `TrailTimeline` | Steps: done, current, returned, upcoming, skipped; vertical on phones |
 | `PermitCard`, `MiniTrail` | One permit as a panel: status chip, address and job, then check counts and risk, then the filed date and permit number. One box on the card (the chip). `MiniTrail` shows progress in the table view |
-| `ExampleCard`, `ExampleDetail`, `FieldSheet`, `DecisionChip` | The example library (`EvalCase`s). Card: expected outcome, the example in one sentence, what PermitPike should find. Detail: that, then every field as a filled-in form via `fieldGroups()` (`web/lib/example-fields.ts`), failing values marked in brick. Measurements in mono, names in the text face |
+| `ExampleCard`, `ExampleDetail`, `CheckList`, `FieldSheet`, `DecisionChip` | The example library (`EvalCase`s). Card: expected outcome, the example in one sentence, what PermitPike should find. Detail: outcome and sentence, then `CheckList`: every check on one line each, failures first, with a status tile, the plain-words result, the fix and the citation, and the verdict in words ("Fails", "Needs a look", "Passes"; screen-reader only on phones). Every field sits behind an "All fields" disclosure as a filled-in form via `fieldGroups()` (`web/lib/example-fields.ts`); each field a check read shows that check's mark, failing rows tinted brick. All text in Red Hat Text |
 | `PermitQueue` | Open work as a Board: one column per stage (In progress, Waiting, Returned), each keeping the order passed in (the API sends highest risk first, then newest); a Table view of the same permits. Approved permits sit apart below, in a compact table, since nobody acts on them |
 | `DiffView` | Before/after values; "Not set" and "Removed" for missing values |
 | `Table` | Horizontal rules only |

@@ -28,7 +28,7 @@ export function ReviewerEntry() {
 
   return (
     <form onSubmit={submit} noValidate className="flex max-w-md flex-col gap-6">
-      <h1 className="text-title font-semibold text-ink">Review permits</h1>
+      <h1 className="text-title text-ink">Review permits</h1>
       <Input
         label="Your name"
         autoComplete="name"

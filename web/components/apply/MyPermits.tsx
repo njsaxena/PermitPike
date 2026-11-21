@@ -19,7 +19,7 @@ export function MyPermits({ applicantId }: { applicantId: string }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-title font-semibold text-ink">Your permits</h1>
+        <h1 className="text-title text-ink">Your permits</h1>
         {data && data.applications.length > 0 && fileButton}
       </div>
       {error && !data && <p className="text-critical">Could not load your permits. Retrying.</p>}

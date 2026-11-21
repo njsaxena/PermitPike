@@ -121,20 +121,21 @@ export function PropertyConfirm({
 
       {state.kind === "loading" && (
         <>
-          <h2 id="property" className="text-lg font-semibold text-ink">
+          <h2 id="property" className="text-lg text-ink">
             Finding the property
           </h2>
-          <div aria-hidden className="h-64 border border-border bg-sunken" />
+          <div aria-hidden className="h-64 border border-border bg-sunken lg:h-44" />
         </>
       )}
 
       {state.kind === "found" && (
         <>
-          <h2 id="property" className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <h2 id="property" className="flex items-center gap-2 text-lg text-ink">
             {state.confirmed && <CircleCheck aria-hidden className="size-5 text-positive" strokeWidth={1.75} />}
             {state.confirmed ? "Property confirmed" : "Is this the property?"}
           </h2>
           <PropertyMap
+            className="lg:h-44"
             parcel={state.parcel}
             address={state.parcel.assessorAddress ? assessorAddressText(state.parcel.assessorAddress) : typed}
           />
@@ -167,7 +168,7 @@ export function PropertyConfirm({
 
       {state.kind === "rejected" && (
         <>
-          <h2 id="property" className="text-lg font-semibold text-ink">
+          <h2 id="property" className="text-lg text-ink">
             Property not confirmed
           </h2>
           <p className="text-ink">
@@ -178,7 +179,7 @@ export function PropertyConfirm({
 
       {state.kind === "ambiguous" && (
         <>
-          <h2 id="property" className="text-lg font-semibold text-ink">
+          <h2 id="property" className="text-lg text-ink">
             Which property is it?
           </h2>
           <ChoiceGroup legend={`${state.candidates.length} Boston parcels match this address`}>

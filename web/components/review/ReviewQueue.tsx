@@ -31,7 +31,7 @@ export function ReviewQueue() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-title font-semibold text-ink">Permit queue</h1>
+        <h1 className="text-title text-ink">Permit queue</h1>
         <span role="status" aria-live="polite" className="flex items-center gap-2">
           {newCount > 0 && (
             <>

@@ -7,7 +7,7 @@ export function PermitHeading({ app }: { app: Application }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-title font-semibold text-ink">{streetLine(app.address)}</h1>
+        <h1 className="text-title text-ink">{streetLine(app.address)}</h1>
         <StatusChip status={app.status} />
       </div>
       <p className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">

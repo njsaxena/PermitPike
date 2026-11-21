@@ -44,14 +44,13 @@
   --pp-harbor: #1f3a5f; /* 11.6:1 on white, 3:1+ on the light basemap */
   --pp-harbor-tint: rgba(31, 58, 95, 0.12);
 
-  /* Type: Archivo for everything (SIL OFL), set wide for page titles. No monospace. */
-  --pp-font-sans: var(--font-archivo), "Archivo", system-ui, sans-serif;
-  /* Archivo's width axis: headings run wide, like civic signage and City Hall's long lines. */
-  --pp-heading-stretch: 120%;
-  /* Values (permit numbers, citations, amps) use Archivo too, with even-width figures
+  /* Type: Red Hat Text for all UI text (SIL OFL). No monospace.
+     Headings are regular weight; only the wordmark is bold. */
+  --pp-font-sans: var(--font-red-hat-text), "Red Hat Text", system-ui, sans-serif;
+  /* Values (permit numbers, citations, amps) use Red Hat Text too, with even-width figures
      (tabular-nums is on <html>). `font-mono` is kept as the name for "a value". */
   --pp-font-mono: var(--pp-font-sans);
-  /* Wordmark only: "PermitPike" is set in Public Sans Bold, as drawn in the logo. */
+  /* "PermitPike" is set in Public Sans Bold, as drawn in the logo. */
   --pp-font-wordmark: var(--font-public-sans), "Public Sans", system-ui, sans-serif;
   --pp-text-label: 12px; /* uppercase, letter-spaced section labels */
   --pp-text-sm: 13px;

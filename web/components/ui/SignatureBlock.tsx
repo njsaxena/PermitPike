@@ -29,7 +29,7 @@ export function SignatureBlock({
     <div className={cx("flex flex-col gap-3 border border-border bg-surface p-card", className)}>
       <div className="flex min-h-10 items-end">
         {signed ? (
-          <span className="text-title font-semibold tracking-tight text-ink">{name}</span>
+          <span className="text-title tracking-tight text-ink">{name}</span>
         ) : (
           <span className="text-muted">Not signed yet</span>
         )}

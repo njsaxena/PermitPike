@@ -246,7 +246,7 @@ export function ExampleDetail({
     <article className={cx("flex flex-col gap-6 border border-border bg-surface p-card", className)}>
       <header className="flex flex-col gap-2">
         <DecisionChip decision={example.expectedDecision} className="self-start" />
-        <h3 className="max-w-2xl text-lg leading-snug font-semibold text-ink">{example.description}</h3>
+        <h3 className="max-w-2xl text-lg leading-snug text-ink">{example.description}</h3>
         <p className="text-sm text-muted">
           {JOB_TYPE_LABELS[example.fields.jobType]}
           {example.expectUtilityFlag && " · Needs utility review"}

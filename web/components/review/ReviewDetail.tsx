@@ -124,7 +124,7 @@ export function ReviewDetail({ id }: { id: string }) {
           </div>
           <section aria-labelledby="checks" className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 id="checks" className="text-lg font-semibold text-ink">
+              <h2 id="checks" className="text-lg text-ink">
                 Checks
               </h2>
               <CheckSummary checks={rec.checks} size="sm" />
@@ -149,7 +149,7 @@ export function ReviewDetail({ id }: { id: string }) {
       )}
 
       <section aria-labelledby="documents" className="flex flex-col gap-3">
-        <h2 id="documents" className="text-lg font-semibold text-ink">
+        <h2 id="documents" className="text-lg text-ink">
           Documents
         </h2>
         <ul className="flex flex-col gap-2">
@@ -255,7 +255,7 @@ function ReviewActions({
 
   return (
     <section aria-labelledby="decide" className="flex flex-col gap-4 border-t border-border pt-8">
-      <h2 id="decide" className="text-lg font-semibold text-ink">
+      <h2 id="decide" className="text-lg text-ink">
         Your decision
       </h2>
       {error && <p className="text-sm text-critical">{error}</p>}
@@ -329,7 +329,7 @@ const ACTION_LABEL: Record<ReviewerAction["type"], string> = {
 function AuditLog({ actions }: { actions: ReviewerAction[] }) {
   return (
     <section aria-labelledby="audit" className="flex flex-col gap-3">
-      <h2 id="audit" className="text-lg font-semibold text-ink">
+      <h2 id="audit" className="text-lg text-ink">
         Audit log
       </h2>
       <div className="overflow-x-auto">

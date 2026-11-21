@@ -6,7 +6,7 @@ export default function EntryPage() {
   return (
     <div className="flex flex-col gap-10 py-6">
       <div className="flex max-w-2xl flex-col gap-3">
-        <h1 className="text-display font-semibold tracking-tight text-ink">PermitPike</h1>
+        <h1 className="text-display tracking-tight text-ink">PermitPike</h1>
         <p className="text-lg text-ink">
           Boston residential electrical permits, checked against the code before an official signs.
         </p>

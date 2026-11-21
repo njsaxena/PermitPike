@@ -58,7 +58,7 @@ export function ConfirmDialog({
   const panel = (
     <div className="flex flex-col">
       <div className="flex items-start justify-between gap-4 border-b border-ink bg-accent px-card py-4">
-        <h2 id={titleId} className="text-lg font-semibold text-ink">
+        <h2 id={titleId} className="text-lg text-ink">
           {title}
         </h2>
         <button

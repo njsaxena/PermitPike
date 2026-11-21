@@ -107,19 +107,12 @@
     color: var(--pp-ink);
   }
 
+  /* Headings: Red Hat Text at regular weight. Size carries the hierarchy, not boldness. */
   h1,
   h2,
   h3 {
     text-wrap: balance;
-  }
-
-  /* Page and section titles use Archivo's wide width. Headings inside components
-     (cards, recommendations, queue groups) stay normal width. */
-  h1,
-  h2,
-  .text-display,
-  .text-title {
-    font-stretch: var(--pp-heading-stretch);
+    font-weight: 400;
   }
 
   /* Modal layer: flat ink at 55%. No blur. */

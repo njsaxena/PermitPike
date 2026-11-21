@@ -61,7 +61,7 @@ export function RecommendationCard({
         <span aria-hidden className={cx("flex size-9 shrink-0 items-center justify-center border", d.tile)}>
           <d.Icon className="size-5" strokeWidth={2.25} />
         </span>
-        <h3 className="min-w-0 flex-1 pt-1 text-lg font-semibold text-ink">{d.label}</h3>
+        <h3 className="min-w-0 flex-1 pt-1 text-lg text-ink">{d.label}</h3>
         <span className="mt-1 shrink-0 border border-ink bg-surface px-1.5 font-mono text-label text-ink uppercase">
           Advisory
         </span>

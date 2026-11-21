@@ -80,89 +80,98 @@ export function FilePermitForm({ applicantId }: { applicantId: string }) {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex max-w-2xl flex-col gap-6">
-      <h1 className="text-title font-semibold text-ink">File a permit</h1>
-      <Select
-        label="Job"
-        options={JOB_OPTIONS}
-        value={jobType}
-        onChange={(v) => setJobType(JobType.parse(v))}
-      />
-      <Input
-        label="Street address"
-        autoComplete="address-line1"
-        value={street}
-        onChange={(e) => setStreet(e.target.value)}
-        error={errors.street}
-        required
-      />
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Input label="Unit" autoComplete="address-line2" value={unit} onChange={(e) => setUnit(e.target.value)} />
-        <Input
-          label="ZIP code"
-          mono
-          inputMode="numeric"
-          autoComplete="postal-code"
-          maxLength={5}
-          value={zip}
-          onChange={(e) => {
-            setZip(e.target.value);
-            setParcelNeighborhood(null);
-          }}
-          error={errors.zip}
-          required
-        />
-      </div>
-      <PropertyConfirm
-        street={street}
-        zip={zip}
-        state={property}
-        onState={(next) => {
-          setProperty(next);
-          if (next.kind !== "found" || next.confirmed) setErrors((prev) => ({ ...prev, property: undefined }));
-        }}
-        onPlace={(place) => {
-          setZip(place.zip);
-          setParcelNeighborhood(place.neighborhood);
-        }}
-        error={errors.property}
-      />
-      <section aria-labelledby="documents" className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 id="documents" className="text-lg font-semibold text-ink">
-            Documents
-          </h2>
-          <p className="text-sm text-muted">
-            Accepted file types: PDF, JPG, PNG, HEIC and WebP, up to 25 MB each.
-          </p>
+    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+      <h1 className="text-title text-ink">File a permit</h1>
+      {/* Two columns on a laptop so the whole form fits on one screen: the job and
+          property on the left, the documents and the submit button on the right. */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+        <div className="flex min-w-0 flex-col gap-4">
+          <Select
+            label="Job"
+            options={JOB_OPTIONS}
+            value={jobType}
+            onChange={(v) => setJobType(JobType.parse(v))}
+          />
+          <Input
+            label="Street address"
+            autoComplete="address-line1"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            error={errors.street}
+            required
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="Unit" autoComplete="address-line2" value={unit} onChange={(e) => setUnit(e.target.value)} />
+            <Input
+              label="ZIP code"
+              mono
+              inputMode="numeric"
+              autoComplete="postal-code"
+              maxLength={5}
+              value={zip}
+              onChange={(e) => {
+                setZip(e.target.value);
+                setParcelNeighborhood(null);
+              }}
+              error={errors.zip}
+              required
+            />
+          </div>
+          <PropertyConfirm
+            street={street}
+            zip={zip}
+            state={property}
+            onState={(next) => {
+              setProperty(next);
+              if (next.kind !== "found" || next.confirmed) setErrors((prev) => ({ ...prev, property: undefined }));
+            }}
+            onPlace={(place) => {
+              setZip(place.zip);
+              setParcelNeighborhood(place.neighborhood);
+            }}
+            error={errors.property}
+          />
         </div>
-        <ul className="flex flex-col gap-2">
-          {DOCUMENTS[jobType].map((ask) => (
-            <li key={ask.kind}>
-              <DocumentSlot
-                title={ask.title}
-                hint={ask.hint}
-                required={ask.required}
-                accept={ACCEPT}
-                files={files[ask.kind] ?? []}
-                onFilesChange={(next) => {
-                  setFiles((prev) => ({ ...prev, [ask.kind]: next }));
-                  if (next.length > 0) {
-                    setErrors((prev) => ({ ...prev, docs: { ...prev.docs, [ask.kind]: undefined } }));
-                  }
-                }}
-                error={errors.docs?.[ask.kind]}
-                disabled={progress !== null}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
-      {errors.form && <p className="text-sm text-critical">{errors.form}</p>}
-      <div>
-        <Button type="submit" loading={progress !== null}>
-          {progress ?? "File permit"}
-        </Button>
+
+        <div className="flex min-w-0 flex-col gap-5">
+          <section aria-labelledby="documents" className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <h2 id="documents" className="text-lg text-ink">
+                Documents
+              </h2>
+              <p className="text-sm text-muted">
+                Accepted file types: PDF, JPG, PNG, HEIC and WebP, up to 25 MB each.
+              </p>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {DOCUMENTS[jobType].map((ask) => (
+                <li key={ask.kind}>
+                  <DocumentSlot
+                    title={ask.title}
+                    hint={ask.hint}
+                    required={ask.required}
+                    accept={ACCEPT}
+                    files={files[ask.kind] ?? []}
+                    onFilesChange={(next) => {
+                      setFiles((prev) => ({ ...prev, [ask.kind]: next }));
+                      if (next.length > 0) {
+                        setErrors((prev) => ({ ...prev, docs: { ...prev.docs, [ask.kind]: undefined } }));
+                      }
+                    }}
+                    error={errors.docs?.[ask.kind]}
+                    disabled={progress !== null}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+          {errors.form && <p className="text-sm text-critical">{errors.form}</p>}
+          <div>
+            <Button type="submit" loading={progress !== null}>
+              {progress ?? "File permit"}
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
   );

@@ -17,7 +17,7 @@ export function Decision({ detail }: { detail: ApplicationDetail }) {
     const conditions = action.type === "approve" ? action.conditions : [];
     return (
       <section aria-labelledby="decision" className="flex flex-col gap-4">
-        <h2 id="decision" className="text-lg font-semibold text-ink">
+        <h2 id="decision" className="text-lg text-ink">
           Approved
         </h2>
         {action.type === "override" && <p className="text-ink">{action.reason}</p>}

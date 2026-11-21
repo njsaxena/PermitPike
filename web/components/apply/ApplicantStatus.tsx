@@ -80,7 +80,7 @@ function ResubmitForm({ id, applicantId, onDone }: { id: string; applicantId: st
 
   return (
     <form onSubmit={submit} noValidate className="flex max-w-2xl flex-col gap-6 border-t border-border pt-8">
-      <h2 className="text-lg font-semibold text-ink">Send corrected documents</h2>
+      <h2 className="text-lg text-ink">Send corrected documents</h2>
       <FileDrop label="Corrected documents" accept={ACCEPT} onFilesChange={setFiles} error={error ?? undefined} />
       <Textarea label="What you changed" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
       <div>
