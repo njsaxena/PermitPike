@@ -696,6 +696,16 @@ export const EvalCaseResult = z.object({
   actualDecision: RecommendationDecision,
   passed: z.boolean(),
   notes: z.string().nullable(),
+  /**
+   * Rule-level detail for the eval dashboard. Optional so runs saved before these
+   * fields existed still parse; the dashboard says when a run doesn't have them.
+   */
+  /** Every rule the pipeline evaluated on this case (pack rules plus the load check). */
+  checkedRuleIds: z.array(z.string()).optional(),
+  expectedFailingRuleIds: z.array(z.string()).optional(),
+  actualFailingRuleIds: z.array(z.string()).optional(),
+  expectedUtilityFlag: z.boolean().optional(),
+  actualUtilityFlag: z.boolean().optional(),
 });
 export type EvalCaseResult = z.infer<typeof EvalCaseResult>;
 

@@ -85,6 +85,11 @@ const scored: Scored[] = cases.map((c) => {
       actualDecision,
       passed,
       notes: notes.length > 0 ? notes.join("; ") : null,
+      checkedRuleIds: [LOAD_CHECK_ID, ...PACKS[c.fields.jobType].rules.map((r) => r.id)],
+      expectedFailingRuleIds: [...expected].sort(),
+      actualFailingRuleIds: [...failing].sort(),
+      expectedUtilityFlag: c.expectUtilityFlag,
+      actualUtilityFlag: review?.utilityFlag != null,
     },
   };
 });
