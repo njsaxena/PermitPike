@@ -359,14 +359,7 @@ const evNewLoad = (f: EvChargerFields): NewLoad => ({
   isHeatingOrCooling: false,
 });
 
-const hpNewLoad = (f: HeatPumpPanelFields): NewLoad => ({
-  source: "heat_pump_panel",
-  name: "Heat pump",
-  va: heatPumpPanelPack.addedLoad(f),
-  kind: "other",
-  isHeatingOrCooling: true,
-  hvacMode: "both",
-});
+const hpNewLoads = (f: HeatPumpPanelFields): NewLoad[] => heatPumpPanelPack.addedLoads(f);
 
 const EV_TIP: CleanEnergyTip = {
   message: "Eversource's EV charger program can rebate the charger and wiring for qualifying homes. Share the link with the homeowner.",
@@ -653,7 +646,7 @@ function example2(work: string): LibraryExample {
     render(slug, "f_ex2_panel", { kind: "panel_photo", name: "panel-photo.jpg", format: "jpg", html: panelPhotoHtml(panel), height: panelPhotoHeight(panel) }, submittedAt, work),
     render(slug, "f_ex2_site", { kind: "site_plan", name: "site-plan.pdf", format: "pdf", html: sitePlanHtml(site) }, submittedAt, work),
   ];
-  const newLoads = [hpNewLoad(fields)];
+  const newLoads = hpNewLoads(fields);
   const lc = loadCalc(house, heatPumpPanelPack.serviceRatingAmps(fields), newLoads);
   const before = loadCalc(house, fields.existingServiceAmps, newLoads);
   const flag = heatPumpPanelPack.utilityFlag(fields);
@@ -771,7 +764,7 @@ function example3(work: string): LibraryExample {
   const siteA = render(slug, "f_ex3_site_v1", { kind: "site_plan", name: "site-plan-rev-a.pdf", format: "pdf", html: sitePlanHtml(plan(3, "A", v1At, 33)) }, v1At, work);
   const siteB = render(slug, "f_ex3_site_v2", { kind: "site_plan", name: "site-plan-rev-b.pdf", format: "pdf", html: sitePlanHtml(plan(6, "B", v2At, 30)) }, v2At, work);
 
-  const lc = loadCalc(house, heatPumpPanelPack.serviceRatingAmps(v1Fields), [hpNewLoad(v1Fields)]);
+  const lc = loadCalc(house, heatPumpPanelPack.serviceRatingAmps(v1Fields), hpNewLoads(v1Fields));
   const common = {
     applicationId: id,
     loadCalc: lc,

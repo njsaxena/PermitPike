@@ -9,7 +9,8 @@
     ".": "./index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test packs.test.ts"
   },
   "dependencies": {
     "@permitpike/contract": "workspace:*",

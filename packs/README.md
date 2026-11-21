@@ -17,7 +17,7 @@ interface RulePack<J extends JobType> {
   version: string;                         // bump when rules change
   extraction: { schema; hints: string[] }; // contract Zod schema + Gemini prompt hints
   rules: Rule<J>[];                        // pure functions -> CheckResult
-  addedLoad(fields): number;               // VA added to the dwelling (connected, before demand factors)
+  addedLoads(fields): NewLoad[];           // loads added, connected VA (a heat pump with backup strips is two)
   serviceRatingAmps(fields): number;       // existing or proposed service rating
   utilityFlag(fields): UtilityFlag | null; // Eversource follow-up, if any
   cleanEnergyTip(fields): CleanEnergyTip | null;

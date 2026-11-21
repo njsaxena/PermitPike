@@ -69,7 +69,7 @@ const gasHeatHome: LoadCalcInput["home"] = {
 
 // --- New loads (va as the rule packs compute it) -----------------------------
 
-/** heat_pump_panel addedLoad: MCA × voltage. */
+/** heat_pump_panel addedLoads: MCA × voltage. */
 function heatPump(mcaAmps: number, voltage = 240): NewLoad {
   return {
     source: "heat_pump_panel",
@@ -81,7 +81,7 @@ function heatPump(mcaAmps: number, voltage = 240): NewLoad {
   };
 }
 
-/** ev_charger addedLoad: required breaker × 0.8 × voltage. */
+/** ev_charger addedLoads: required breaker × 0.8 × voltage. */
 function evCharger(breakerAmps: number, voltage = 240): NewLoad {
   return {
     source: "ev_charger",
@@ -121,6 +121,7 @@ describe("calculateLoad", () => {
     expect(r.loadManagementTip).toBe(false);
     expect(r.check.status).toBe("fail");
     expect(r.check.suggestedFix).toContain("at least 103 A (next common size: 125 A)");
+    expect(r.method).toBe("nec_120_83");
     expectValidShape(r);
   });
 
@@ -206,7 +207,7 @@ describe("calculateLoad", () => {
   });
 
   it("battery adds no continuous load", () => {
-    // home_battery addedLoad is 0 VA: it charges from solar and adds no continuous load.
+    // home_battery addedLoads is 0 VA: it charges from solar and adds no continuous load.
     const r = calculateLoad({
       service: { ratingAmps: 200 },
       home: largeElectricHome,
@@ -267,3 +268,151 @@ describe("calculateLoad edge cases", () => {
     ).toThrow(/Give watts, or both amps and volts/);
   });
 });
+
+describe("heat pump with backup resistance heat (120.83)", () => {
+  it("counts the strips as new central resistance heat at 80%, on top of the heat pump", () => {
+    // Heat pump: 24 A × 240 V = 5,760 VA × 50% = 2,880 VA (hvacMode both).
+    // Strips: 10 kW × 80% = 8,000 VA (heating). Heating 10,000 VA beats cooling (AC 4,800 VA): AC omitted.
+    // Existing: 30,300 − 4,800 = 25,500 VA → 8,000 + 17,500 × 40% = 15,000 VA.
+    // Total 15,000 + 2,880 + 8,000 = 25,880 VA = 107.8 A on 100 A.
+    const strips: NewLoad = {
+      source: "heat_pump_panel",
+      name: "Backup heat strips",
+      va: 10000,
+      kind: "central_resistance_heat",
+      isHeatingOrCooling: true,
+      hvacMode: "heating",
+    };
+    const withStrips = calculateLoad({ service: { ratingAmps: 100 }, home: gasHeatHome, newLoads: [heatPump(24), strips] });
+    expect(withStrips.existingVA).toBe(15000);
+    expect(withStrips.addedVA).toBe(10880);
+    expect(withStrips.totalAmps).toBe(107.8);
+    expect(withStrips.result).toBe("needs_upgrade");
+
+    // Same heat pump without strips: 16,920 + 2,880 = 19,800 VA = 82.5 A, tight. Dropping the strips hides an upgrade.
+    const without = calculateLoad({ service: { ratingAmps: 100 }, home: gasHeatHome, newLoads: [heatPump(24)] });
+    expect(without.totalAmps).toBe(82.5);
+    expect(without.result).toBe("tight");
+  });
+});
+
+describe("measured demand (120.87)", () => {
+  it("12 months of utility data: same 100 A home that needs an upgrade under 120.83 is tight", () => {
+    // 10 kW peak × 1,000 × 125% = 12,500 VA. Heat pump 35 A × 240 V = 8,400 VA at 100%.
+    // Total 20,900 VA = 87.1 A on 100 A. (Under 120.83 this home is 102.5 A.)
+    const r = calculateLoad({
+      service: { ratingAmps: 100 },
+      home: { ...smallElectricHome, measuredDemand: { peakKW: 10, source: "utility_12_months" } },
+      newLoads: [heatPump(35)],
+    });
+
+    expect(r.method).toBe("nec_120_87");
+    expect(r.existingVA).toBe(12500);
+    expect(r.addedVA).toBe(8400);
+    expect(r.totalAmps).toBe(87.1);
+    expect(r.result).toBe("tight");
+    expect(r.check.citation).toBe("NEC 2026 120.87 (527 CMR 12.00)");
+    expect(r.steps[0]).toMatchObject({ va: 10000, citation: "NEC 2026 120.87(1)" });
+    expectValidShape120_87(r);
+  });
+
+  it("30-day recording outside heating season adds the larger of heating or cooling by calculation", () => {
+    // 6 kW spring peak + baseboard 10,000 VA (no cooling listed) = 16,000 VA × 125% = 20,000 VA.
+    // + heat pump 8,400 VA = 28,400 VA = 118.3 A on 100 A.
+    const r = calculateLoad({
+      service: { ratingAmps: 100 },
+      home: {
+        ...smallElectricHome,
+        measuredDemand: { peakKW: 6, source: "recording_30_days", includesPeakSeason: false },
+      },
+      newLoads: [heatPump(35)],
+    });
+
+    expect(r.existingVA).toBe(20000);
+    expect(r.totalAmps).toBe(118.3);
+    expect(r.result).toBe("needs_upgrade");
+    expect(r.steps[1]).toMatchObject({ va: 10000, citation: "NEC 2026 120.87(1) Exception" });
+  });
+
+  it("30-day recording can't be used with solar on the service", () => {
+    expect(() =>
+      calculateLoad({
+        service: { ratingAmps: 100 },
+        home: {
+          ...smallElectricHome,
+          measuredDemand: { peakKW: 6, source: "recording_30_days", includesPeakSeason: true, hasRenewableSource: true },
+        },
+        newLoads: [heatPump(35)],
+      }),
+    ).toThrow(/30-day recording can't be used when the service has solar/);
+  });
+
+  it("30-day recording can't be used with peak load shaving", () => {
+    expect(() =>
+      calculateLoad({
+        service: { ratingAmps: 100 },
+        home: {
+          ...smallElectricHome,
+          measuredDemand: { peakKW: 6, source: "recording_30_days", includesPeakSeason: true, hasPeakLoadShaving: true },
+        },
+        newLoads: [heatPump(35)],
+      }),
+    ).toThrow(/peak load shaving/);
+  });
+
+  it("subtracts a removed load: heat pump replacing the central AC", () => {
+    // 8 kW × 125% = 10,000 VA − AC 4,800 VA = 5,200 VA. + heat pump 30 A × 240 V = 7,200 VA.
+    // Total 12,400 VA = 51.7 A on 100 A.
+    const r = calculateLoad({
+      service: { ratingAmps: 100 },
+      home: { ...gasHeatHome, measuredDemand: { peakKW: 8, source: "utility_12_months" } },
+      newLoads: [heatPump(30)],
+      removedLoads: [{ name: "Central AC", va: 4800 }],
+    });
+
+    expect(r.existingVA).toBe(5200);
+    expect(r.totalCalculatedVA).toBe(12400);
+    expect(r.totalAmps).toBe(51.7);
+    expect(r.result).toBe("fits");
+    expect(r.steps.find((s) => s.label.startsWith("Central AC"))).toMatchObject({ va: -4800 });
+  });
+
+  it("EV charger: load management tip when capping the charger fits the service", () => {
+    // 14 kW × 125% = 17,500 VA + EV 11,520 VA at 100% = 29,020 VA = 120.9 A. Capped: 17,500 VA = 72.9 A.
+    const r = calculateLoad({
+      service: { ratingAmps: 100 },
+      home: { ...gasHeatHome, measuredDemand: { peakKW: 14, source: "utility_12_months" } },
+      newLoads: [evCharger(60)],
+    });
+
+    expect(r.totalAmps).toBe(120.9);
+    expect(r.result).toBe("needs_upgrade");
+    expect(r.loadManagementTip).toBe(true);
+  });
+
+  it("doesn't need square footage", () => {
+    const r = calculateLoad({
+      service: { ratingAmps: 200 },
+      home: { squareFeet: null, existingAppliances: [], measuredDemand: { peakKW: 12, source: "utility_12_months" } },
+      newLoads: [evCharger(50)],
+    });
+    expect(r.method).toBe("nec_120_87");
+    expect(r.totalCalculatedVA).toBe(15000 + 9600);
+  });
+
+  it("rejects removedLoads under 120.83", () => {
+    expect(() =>
+      calculateLoad({
+        service: { ratingAmps: 100 },
+        home: gasHeatHome,
+        newLoads: [heatPump(30)],
+        removedLoads: [{ name: "Central AC", va: 4800 }],
+      }),
+    ).toThrow(/removedLoads only applies to the 120.87/);
+  });
+});
+
+function expectValidShape120_87(result: LoadCalcResult) {
+  expect(LoadCalcResult.parse(result)).toEqual(result);
+  for (const step of result.steps) expect(step.citation.length).toBeGreaterThan(0);
+}

@@ -1,8 +1,10 @@
 /**
  * Shared load engine: does this home's electrical service have room for the new device(s)?
  *
- * Method: optional calculation for existing dwellings, NEC 2026 120.83, as adopted by
- * 527 CMR 12.00. Each rule pack turns its fields into NewLoad entries (addedLoad(fields) -> va);
+ * Methods, as adopted by 527 CMR 12.00:
+ * - NEC 2026 120.83, the existing dwelling calculation (floor area + nameplates). Default.
+ * - NEC 2026 120.87, existing load from measured peak demand. Used when
+ *   home.measuredDemand is given. Each rule pack turns its fields into NewLoad entries (addedLoads(fields));
  * this engine adds them to the existing load and compares the total to the service rating.
  *
  * Pure: no I/O, no clocks. Same input, same result.
@@ -13,7 +15,9 @@ import type {
   HvacMode,
   LoadCalcOutcome,
   LoadCalcResult,
+  LoadCalcMethod,
   LoadCalcStep,
+  MeasuredDemand,
   NewLoad,
 } from "@permitpike/contract";
 import { DEFAULT_SETTINGS, TIGHT_THRESHOLD_CITATION, type LoadCalcSettings } from "./config";
@@ -28,6 +32,12 @@ import {
   GENERAL_LIGHTING_VA_PER_SQFT,
   LAUNDRY_CIRCUIT_VA,
   LOAD_MANAGEMENT_CITATION,
+  MEASURED_12_MONTH_CITATION,
+  MEASURED_30_DAY_CITATION,
+  MEASURED_DEMAND_MULTIPLIER,
+  MEASURED_LOAD_CITATION,
+  MEASURED_METHOD_CITATION,
+  MEASURED_NEW_LOAD_FACTOR,
   METHOD_CITATION,
   MIN_CIRCUITS_CITATION,
   MIN_LAUNDRY_CIRCUITS,
@@ -69,10 +79,12 @@ export function calculateLoad(
 ): LoadCalcResult {
   const cfg: LoadCalcSettings = { ...DEFAULT_SETTINGS, ...settings };
 
-  if (input?.home?.squareFeet === null || input?.home?.squareFeet === undefined) {
+  const measured = input?.home?.measuredDemand !== undefined;
+  if (!measured && (input?.home?.squareFeet === null || input?.home?.squareFeet === undefined)) {
     throw new LoadCalcInputError(
       "Square footage is missing. The NEC 2026 120.83 calculation starts from the dwelling's floor area " +
-        "(2 VA per sq ft). Add home.squareFeet (living space, outside dimensions) and run the calc again.",
+        "(2 VA per sq ft). Add home.squareFeet (living space, outside dimensions) and run the calc again, " +
+        "or give home.measuredDemand to use 120.87.",
     );
   }
   const parsed = LoadCalcInput.safeParse(input);
@@ -80,9 +92,35 @@ export function calculateLoad(
     const issues = parsed.error.issues.map((i) => `${i.path.join(".") || "input"}: ${i.message}`);
     throw new LoadCalcInputError(`Load calc input is invalid. ${issues.join("; ")}`);
   }
-  const { service, home, newLoads } = parsed.data;
+  const data = parsed.data;
+  if (!measured && (data.removedLoads?.length ?? 0) > 0) {
+    throw new LoadCalcInputError(
+      "removedLoads only applies to the 120.87 measured-demand method. For 120.83, leave removed " +
+        "equipment out of home.existingAppliances instead.",
+    );
+  }
+  const voltage = data.service.voltage ?? cfg.defaultServiceVoltage;
+  const part = measured ? measuredDemandMethod(data) : existingDwellingMethod(data);
+  return finish(part, data.service.ratingAmps, voltage, cfg);
+}
+
+/** What each method hands to finish(): the existing and added load, and its steps so far. */
+interface MethodResult {
+  method: LoadCalcMethod;
+  citation: string;
+  existingVA: number;
+  addedVA: number;
+  /** Total with every controllable new load capped at 0, for the load management tip. */
+  managedVA: number;
+  /** Controllable new loads with VA above 0, by name. */
+  controllableNames: string[];
+  steps: LoadCalcStep[];
+}
+
+/** NEC 2026 120.83: existing dwelling calculation from floor area and nameplates. */
+function existingDwellingMethod(data: LoadCalcInput): MethodResult {
+  const { home, newLoads } = data;
   const squareFeet = home.squareFeet as number;
-  const voltage = service.voltage ?? cfg.defaultServiceVoltage;
   const steps: LoadCalcStep[] = [];
 
   // 1. Existing connected load.
@@ -183,15 +221,118 @@ export function calculateLoad(
   const addedVA = demand.addedVA;
   steps.push({ label: "Added calculated load", va: round(addedVA), citation: METHOD_CITATION });
 
-  // 5. Compare to the service.
-  const totalVA = existingVA + addedVA;
-  const totalAmps = totalVA / voltage;
-  const percent = (totalAmps / service.ratingAmps) * 100;
-  steps.push({ label: "Total calculated load", va: round(totalVA), citation: METHOD_CITATION });
-  steps.push({
-    label: `${fmt(round(totalVA))} VA ÷ ${fmt(voltage)} V = ${fmt(round(totalAmps, 1))} A on a ${fmt(service.ratingAmps)} A service`,
-    va: round(totalVA),
+  const managed = applyDemand(existingConnectedVA, keptAdded.filter((i) => !i.controllable));
+  return {
+    method: "nec_120_83",
     citation: METHOD_CITATION,
+    existingVA,
+    addedVA,
+    managedVA: managed.existingFirstTierVA + managed.existingRemainderVA + managed.addedVA,
+    controllableNames: keptAdded.filter((i) => i.controllable && i.va > 0).map((i) => i.load.name),
+    steps,
+  };
+}
+
+/**
+ * NEC 2026 120.87: existing load is the measured maximum demand at 125%. New loads are
+ * added at 100% of connected VA; removed loads are subtracted at nameplate.
+ */
+function measuredDemandMethod(data: LoadCalcInput): MethodResult {
+  const md = data.home.measuredDemand as MeasuredDemand;
+  const steps: LoadCalcStep[] = [];
+  const recording = md.source === "recording_30_days";
+
+  if (recording && md.hasRenewableSource) {
+    throw new LoadCalcInputError(
+      "A 30-day recording can't be used when the service has solar, wind or another power source " +
+        "(NEC 2026 120.87(1) Exception). Use 12 months of utility demand data, or the 120.83 calculation.",
+    );
+  }
+  if (recording && md.hasPeakLoadShaving) {
+    throw new LoadCalcInputError(
+      "A 30-day recording can't be used when the service uses any form of peak load shaving " +
+        "(NEC 2026 120.87(1) Exception). Use 12 months of utility demand data, or the 120.83 calculation.",
+    );
+  }
+
+  const peakVA = md.peakKW * 1000;
+  steps.push({
+    label: recording
+      ? `Measured maximum demand: ${fmt(md.peakKW)} kW (highest 15-minute average over a 30-day recording)`
+      : `Measured maximum demand: ${fmt(md.peakKW)} kW (12 months of utility data)`,
+    va: round(peakVA),
+    citation: recording ? MEASURED_30_DAY_CITATION : MEASURED_12_MONTH_CITATION,
+  });
+
+  // A recording outside the heating or cooling season must add that load by calculation.
+  let seasonalVA = 0;
+  if (recording && !md.includesPeakSeason) {
+    const hvac = data.home.existingAppliances.filter((a) => a.isHeatingOrCooling);
+    const vaOf = (a: (typeof hvac)[number]) => a.watts ?? (a.amps as number) * (a.volts as number);
+    const heating = sum(hvac.filter((a) => (a.hvacMode ?? "both") !== "cooling").map(vaOf));
+    const cooling = sum(hvac.filter((a) => (a.hvacMode ?? "both") !== "heating").map(vaOf));
+    seasonalVA = Math.max(heating, cooling);
+    steps.push({
+      label:
+        hvac.length === 0
+          ? "Recording missed the heating/cooling season, and no existing heating or cooling equipment is listed: nothing added. Add it to existingAppliances if the home has electric heating or cooling."
+          : `Recording missed the heating/cooling season: add the larger of existing heating (${fmt(round(heating))} VA) or cooling (${fmt(round(cooling))} VA)`,
+      va: round(seasonalVA),
+      citation: MEASURED_30_DAY_CITATION,
+    });
+  }
+
+  const demandVA = (peakVA + seasonalVA) * MEASURED_DEMAND_MULTIPLIER;
+  steps.push({
+    label: `Maximum demand ${fmt(round(peakVA + seasonalVA))} VA × ${pct(MEASURED_DEMAND_MULTIPLIER)}`,
+    va: round(demandVA),
+    citation: MEASURED_LOAD_CITATION,
+  });
+
+  const removed = data.removedLoads ?? [];
+  for (const r of removed) {
+    steps.push({ label: `${r.name}: removed (nameplate)`, va: -round(r.va), citation: MEASURED_LOAD_CITATION });
+  }
+  const existingVA = Math.max(demandVA - sum(removed.map((r) => r.va)), 0);
+  steps.push({ label: "Existing load", va: round(existingVA), citation: MEASURED_METHOD_CITATION });
+
+  const added = data.newLoads.map((load) => ({
+    load,
+    va: load.va * MEASURED_NEW_LOAD_FACTOR,
+    controllable: load.controllable ?? load.kind === "evse",
+  }));
+  for (const a of added) {
+    steps.push({
+      label: `${a.load.name} (${a.load.source}): ${fmt(round(a.load.va))} VA × ${pct(MEASURED_NEW_LOAD_FACTOR)}`,
+      va: round(a.va),
+      citation: MEASURED_LOAD_CITATION,
+    });
+  }
+  const addedVA = sum(added.map((a) => a.va));
+  steps.push({ label: "Added load", va: round(addedVA), citation: MEASURED_METHOD_CITATION });
+
+  return {
+    method: "nec_120_87",
+    citation: MEASURED_METHOD_CITATION,
+    existingVA,
+    addedVA,
+    managedVA: existingVA + sum(added.filter((a) => !a.controllable).map((a) => a.va)),
+    controllableNames: added.filter((a) => a.controllable && a.va > 0).map((a) => a.load.name),
+    steps,
+  };
+}
+
+/** Shared by both methods: compare to the service, classify, load management tip, check. */
+function finish(m: MethodResult, serviceAmps: number, voltage: number, cfg: LoadCalcSettings): LoadCalcResult {
+  const steps = [...m.steps];
+  const totalVA = m.existingVA + m.addedVA;
+  const totalAmps = totalVA / voltage;
+  const percent = (totalAmps / serviceAmps) * 100;
+  steps.push({ label: "Total calculated load", va: round(totalVA), citation: m.citation });
+  steps.push({
+    label: `${fmt(round(totalVA))} VA ÷ ${fmt(voltage)} V = ${fmt(round(totalAmps, 1))} A on a ${fmt(serviceAmps)} A service`,
+    va: round(totalVA),
+    citation: m.citation,
   });
 
   const result = classify(percent, cfg.tightThresholdPercent);
@@ -201,31 +342,31 @@ export function calculateLoad(
     citation: TIGHT_THRESHOLD_CITATION,
   });
 
-  // 6. Could a load management device avoid the upgrade? Recompute with controllable loads capped at 0.
-  const hasControllable = keptAdded.some((i) => i.controllable && i.va > 0);
-  const managed = applyDemand(existingConnectedVA, keptAdded.filter((i) => !i.controllable));
-  const managedAmps = (managed.existingFirstTierVA + managed.existingRemainderVA + managed.addedVA) / voltage;
-  const loadManagementTip = result !== "fits" && hasControllable && managedAmps <= service.ratingAmps;
+  // Could a load management device avoid the upgrade? Controllable new loads capped at 0.
+  const loadManagementTip =
+    result !== "fits" && m.controllableNames.length > 0 && m.managedVA / voltage <= serviceAmps;
 
   return {
-    existingVA: round(existingVA),
-    addedVA: round(addedVA),
+    method: m.method,
+    existingVA: round(m.existingVA),
+    addedVA: round(m.addedVA),
     totalCalculatedVA: round(totalVA),
     totalAmps: round(totalAmps, 1),
-    serviceAmps: service.ratingAmps,
+    serviceAmps,
     percentOfRating: round(percent, 1),
     result,
     utilityLikely: result === "needs_upgrade",
     loadManagementTip,
     steps,
     check: buildCheck({
+      citation: m.citation,
       result,
       totalAmps,
       percent,
-      serviceAmps: service.ratingAmps,
+      serviceAmps,
       threshold: cfg.tightThresholdPercent,
       loadManagementTip,
-      controllableNames: keptAdded.filter((i) => i.controllable && i.va > 0).map((i) => i.load.name),
+      controllableNames: m.controllableNames,
       standardSizes: cfg.standardServiceSizesAmps,
     }),
   };
@@ -286,6 +427,7 @@ function resultLabel(result: LoadCalcOutcome): string {
 }
 
 function buildCheck(args: {
+  citation: string;
   result: LoadCalcOutcome;
   totalAmps: number;
   percent: number;
@@ -297,7 +439,7 @@ function buildCheck(args: {
 }): CheckResult {
   const amps = fmt(round(args.totalAmps, 1));
   const percent = fmt(round(args.percent, 1));
-  const base = { ruleId: CHECK_RULE_ID, title: CHECK_TITLE, citation: `${METHOD_CITATION} (${ADOPTING_REGULATION})` };
+  const base = { ruleId: CHECK_RULE_ID, title: CHECK_TITLE, citation: `${args.citation} (${ADOPTING_REGULATION})` };
   const managed = args.controllableNames.join(" and ");
   const tip = args.loadManagementTip
     ? ` A listed power control system that caps ${managed} (${LOAD_MANAGEMENT_CITATION}) would keep the calculated load within the ${args.serviceAmps} A rating.`

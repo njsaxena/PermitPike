@@ -1,0 +1,39 @@
+{
+  "id": "battery_busbar_space_fail",
+  "description": "Load-side battery with solar: 200 A main + 60 A backfeed on a 200 A bus (over 240 A), and only one open space.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 200,
+    "existingPanelRatingAmps": 200,
+    "mainBreakerAmps": 200,
+    "availableBreakerSpaces": 1,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1600,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 7000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "home_battery",
+    "battery": {
+      "manufacturer": "Example Storage",
+      "model": "ES-13",
+      "capacityKWh": 13.5,
+      "continuousOutputW": 11500,
+      "ul9540Listed": true
+    },
+    "hasSolar": true,
+    "interconnection": "load_side",
+    "backfeedBreakerAmps": 60,
+    "installLocation": "basement",
+    "clearanceToOpeningsFt": null
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "home_battery.interconnection_breaker",
+    "home_battery.panel_space"
+  ],
+  "expectUtilityFlag": true
+}
