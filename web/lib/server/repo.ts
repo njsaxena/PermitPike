@@ -18,6 +18,7 @@ import type {
   EvalRun,
   ListApplicationsQuery,
   Parcel,
+  PermitRiskScoreResponse,
   Recommendation,
   ResubmitApplicationRequest,
   ReviewerAction,
@@ -96,6 +97,7 @@ function toApplication(app: AppRow, v: VersionRow): Application {
     files: v.files,
     extraction: v.extraction,
     recommendation: v.recommendation,
+    closureRisk: app.closureRisk,
     version: app.version,
   };
 }
@@ -261,6 +263,7 @@ export async function resubmitApplication(id: string, req: ResubmitApplicationRe
         decidedAt: null,
         extraction: null,
         recommendation: null,
+        closureRisk: null,
         risk: null,
         updatedAt: new Date(),
       })
@@ -360,6 +363,18 @@ export async function saveRecommendation(
   });
 }
 
+/** Stores closure risk independently from the existing recommendation-derived queue risk. */
+export async function saveClosureRisk(
+  id: string,
+  version: number,
+  closureRisk: PermitRiskScoreResponse | null,
+): Promise<void> {
+  await getDb()
+    .update(applications)
+    .set({ closureRisk, updatedAt: new Date() })
+    .where(and(eq(applications.id, id), eq(applications.version, version)));
+}
+
 export async function getVersionForReview(
   id: string,
   version: number,
@@ -368,7 +383,13 @@ export async function getVersionForReview(
     .select({ app: applications, v: applicationVersions })
     .from(applications)
     .innerJoin(applicationVersions, eq(applicationVersions.applicationId, applications.id))
-    .where(and(eq(applications.id, id), eq(applicationVersions.version, version)));
+    .where(
+      and(
+        eq(applications.id, id),
+        eq(applications.version, version),
+        eq(applicationVersions.version, version),
+      ),
+    );
   return row ?? null;
 }
 

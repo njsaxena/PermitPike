@@ -142,6 +142,25 @@ export function ReviewDetail({ id }: { id: string }) {
         </div>
       )}
 
+      {app.closureRisk && (
+        <section aria-labelledby="closure-risk" className="flex max-w-2xl flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 id="closure-risk" className="text-lg font-semibold text-ink">
+              Historical closure risk
+            </h2>
+            <span className="font-semibold capitalize text-ink">{app.closureRisk.band}</span>
+          </div>
+          <p className="text-sm text-muted">Model estimate, separate from the recommendation.</p>
+          {app.closureRisk.reasons.length > 0 && (
+            <ul className="list-disc pl-5 text-sm text-ink">
+              {app.closureRisk.reasons.map((reason, index) => (
+                <li key={`${index}-${reason}`}>{reason}</li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {!rec && <PropertyCard parcel={app.parcel} address={app.address} className="max-w-xl" />}
 
       {!rec && !checking && (

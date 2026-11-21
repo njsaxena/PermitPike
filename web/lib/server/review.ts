@@ -8,6 +8,7 @@ import {
 } from "@permitpike/contract";
 import { hpVersion1, hpVersion2, MOCK_APPLICATIONS } from "@/mocks/applications";
 import { getVersionForReview, markInReview, saveRecommendation } from "./repo";
+import { scoreAndSaveClosureRisk } from "./closure-risk";
 
 /*
  * Runs after the response is sent (next/server `after`), so filing returns fast.
@@ -27,6 +28,12 @@ export async function runReview(applicationId: string, version: number): Promise
       ? await callAgent(agentUrl, applicationId, version)
       : await stubReview(applicationId, version);
     await saveRecommendation(applicationId, version, result);
+    try {
+      const row = await getVersionForReview(applicationId, version);
+      if (row) await scoreAndSaveClosureRisk(row.app, result.extraction);
+    } catch (err) {
+      console.error(`[closure-risk] scoring skipped for ${applicationId} v${version}:`, err);
+    }
   } catch (err) {
     // The official still gets the application, just without a recommendation.
     console.error(`[review] ${applicationId} v${version} failed:`, err);

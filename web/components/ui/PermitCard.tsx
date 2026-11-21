@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { Check, X } from "lucide-react";
-import { JOB_TYPE_LABELS, type ApplicationStatus, type CheckStatus, type JobType } from "@permitpike/contract";
+import {
+  JOB_TYPE_LABELS,
+  type ApplicationStatus,
+  type CheckStatus,
+  type JobType,
+  type PermitRiskBand,
+} from "@permitpike/contract";
 import { cx } from "@/lib/cx";
 import { longDate } from "@/lib/format";
 import { CheckSummary } from "./CheckRow";
@@ -18,6 +24,7 @@ export interface PermitSummary {
   status: ApplicationStatus;
   /** Null until PermitPike has posted a recommendation. */
   risk: RiskLevel | null;
+  closureRisk: { band: PermitRiskBand } | null;
   /** "2026-11-21 09:14" or ISO; shown in words. Also the sort key within a group. */
   filed: string;
   checks: Partial<Record<CheckStatus, number>>;
@@ -121,6 +128,15 @@ export function PermitCard({
           <span className="text-sm text-muted">Checks not run yet</span>
         )}
         {permit.risk && <RiskBadge level={permit.risk} plain />}
+        {permit.closureRisk && (
+          <span className="flex items-center gap-1.5 text-sm text-muted">
+            Closure risk
+            <RiskBadge
+              level={permit.closureRisk.band === "medium" ? "med" : permit.closureRisk.band}
+              plain
+            />
+          </span>
+        )}
       </div>
       <span className="mt-auto flex flex-col gap-0.5 pt-1 text-sm text-muted">
         <span>
