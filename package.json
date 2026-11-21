@@ -15,7 +15,8 @@
     "db:migrate": "pnpm --filter @permitpike/db migrate",
     "db:check": "tsx scripts/db-check.ts",
     "seed": "pnpm --filter @permitpike/web seed",
-    "evals": "pnpm --filter @permitpike/evals run evals"
+    "evals": "pnpm --filter @permitpike/evals run evals",
+    "examples": "tsx examples/build.ts"
   },
   "devDependencies": {
     "@permitpike/db": "workspace:*",
