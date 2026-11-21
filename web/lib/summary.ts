@@ -1,6 +1,7 @@
 import type { Application, CheckStatus } from "@permitpike/contract";
 import type { PermitSummary } from "@/components/ui";
 import { stamp, streetLine } from "./format";
+import { isExpired } from "./expiry";
 import { riskOf } from "./risk";
 
 /** What PermitCard and PermitQueue need, from a contract Application. */
@@ -18,5 +19,6 @@ export function toSummary(app: Application): PermitSummary {
     closureRisk: app.closureRisk,
     filed: stamp(app.submittedAt),
     checks,
+    expired: isExpired(app),
   };
 }

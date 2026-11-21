@@ -23,6 +23,7 @@ export function ApplicantPermitView({
   note,
   trackHref,
   children,
+  footer,
 }: {
   detail: ApplicationDetail;
   /** Straight after filing: lead with the tracking code. */
@@ -33,6 +34,8 @@ export function ApplicantPermitView({
   trackHref?: string | null;
   /** Below the decision, e.g. the resubmit form. */
   children?: ReactNode;
+  /** The very end of the page, after the programs, e.g. deleting the permit. */
+  footer?: ReactNode;
 }) {
   const app = detail.application;
   const rec = detail.versions.find((v) => v.version === app.version)?.recommendation ?? null;
@@ -112,6 +115,7 @@ export function ApplicantPermitView({
       )}
 
       <ProgramsCard jobType={app.jobType} />
+      {footer}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ApplicationDetail,
+  approvalExpiresAt,
   LoadCalcResult,
   type Address,
   type Applicant,
@@ -304,6 +305,7 @@ function detail(a: {
       status: a.status,
       submittedAt: first.submittedAt,
       decidedAt: decided ? a.actions[a.actions.length - 1]!.timestamp : null,
+      expiresAt: approvalExpiresAt(a.status, decided ? a.actions[a.actions.length - 1]!.timestamp : null),
       files: latest.files,
       extraction: latest.extraction,
       recommendation: latest.recommendation,

@@ -229,9 +229,16 @@ lucide-react only, 1.75 stroke, 16 or 20px. One icon per meaning (see `/design` 
 
 One permit, open for a building official (`/review/[id]`). Built from `ReviewWorkspace` in `web/components/review/`.
 
-- **Layout.** A "Queue" link, then the heading (address, status, permit number, job,
-  neighborhood, filed date in words) and who filed it, with "Change status" at the top
-  right. Then the trail and two columns: documents on the left, held in view while the
+- **Layout.** A "Queue" link, then `PermitHeading`: a square ink-edged tile with the job's
+  icon (`JOB_ICON` in `components/permit/jobIcon.ts`, the same icons as filing), the address at
+  display size, and under it the job name (semibold) with the neighborhood, city and ZIP.
+  The status sits at the top right beside "Change status", as words with its mark and no
+  box: "Waiting for your decision" for the official ("Waiting for an official" for the
+  electrician), "Returned for fixes", "Approved", "Expired". Then the record strip (Permit,
+  Filed, Cost, Applicant with company and license). When the heading is at least 768px wide
+  (a container query) the strip is one table row, column headers over an unbroken ink rule;
+  below that each label sits beside its value. The applicant's view leaves out the
+  Applicant column. Then the trail and two columns: documents on the left, held in view while the
   right side scrolls; PermitPike's recommendation and the evidence on the right. Below
   `lg` the columns stack and "Change status" sits under the heading.
 - **Documents first.** The official reads the applicant's files, not a summary of them.
@@ -286,7 +293,8 @@ The electrician's side (`/apply`).
   documents it needs. Below them, in a sunken panel, "Example permits to start from":
   small cards that say only the request ("Heat pump at 64 Ashfield St", neighborhood,
   number of documents). Never what PermitPike found or what the official decided: that
-  is found out by filing it. A card opens its documents to look through (one tab per
+  is found out by filing it. Each card has two buttons: "Use this example" (gold) opens
+  the filled-in form; "View documents" opens them to look through first (one tab per
   document, "Open original"), with "Start from this example".
 - **Filing is always real.** Both paths open the same form (`/apply/new?job=<jobType>` or
   `?example=<slug>`, filled in with the example's documents attached). Filing uploads the
@@ -332,7 +340,7 @@ The electrician's side (`/apply`).
 | `LoadCalcPanel`, `ServiceMeter` | The worked load calculation and the flat service meter (80% and 100% marks; fits / tight / needs upgrade) |
 | `ChangeStatus` | "Change status" button and menu (status now, approve, return; recommended first) and the approve and return dialogs; override needs a reason |
 | `StartPermit` | First screen of "File a permit": one card per job type, then `ExamplePermits`. Cards hover with an ink edge and the wash |
-| `ExamplePermits` | Example permits in a sunken panel: small cards with the request only; each opens a dialog with its documents in tabs and "Start from this example" |
+| `ExamplePermits` | Example permits in a sunken panel: small cards with the request only, and two buttons: "Use this example" (to the filled-in form) and "View documents" (a dialog with the documents in tabs and "Start from this example") |
 | `PermitForm` | The filing form without the saving: job, address, ZIP, cost, description, one `DocumentSlot` per document. Starts filled in from `exampleInitial()` (`web/lib/example-filing.ts`) or empty; `FilePermitForm` wraps it to upload and file |
 | `ApplicantPermitView` | One permit as the electrician sees it: tracking code, trail, status line, decision, then what PermitPike found. `justFiled` leads with the tracking code |
 | `DiffView` | Before/after values; "Not set" and "Removed" for missing values |

@@ -1,20 +1,15 @@
 import Link from "next/link";
-import { ArrowRight, BatteryCharging, Fan, PlugZap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { JOB_TYPE_LABELS, JobType } from "@permitpike/contract";
 import { DOCUMENTS } from "@/lib/documents";
 import type { ExampleSummary } from "@/lib/example-filing";
+import { JOB_ICON } from "@/components/permit/jobIcon";
 import { ExamplePermits } from "./ExamplePermits";
 
 /*
  * The first screen of "File a permit": the three kinds of job, then example permits to
  * start from, in their own panel below. Either way the permit is filed for real.
  */
-
-const JOB_ICON: Record<JobType, typeof Fan> = {
-  heat_pump_panel: Fan,
-  ev_charger: PlugZap,
-  home_battery: BatteryCharging,
-};
 
 export function StartPermit({
   examples,

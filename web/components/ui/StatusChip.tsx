@@ -1,14 +1,15 @@
-import { Check, X } from "lucide-react";
+import { Check, Clock, X } from "lucide-react";
 import type { ReactNode } from "react";
 import type { ApplicationStatus } from "@permitpike/contract";
 import { cx } from "@/lib/cx";
 
 /**
- * "draft" is a UI-only state (not yet submitted, so not in the contract).
+ * "draft" and "expired" are UI-only states: a draft is not submitted yet, and an expired
+ * permit is stored as "approved" with an expiresAt in the past (lib/expiry.ts).
  * Each status has its own mark shape, so they differ without relying on color:
- * empty, outlined, half, full, X, check.
+ * empty, outlined, half, full, X, check, clock.
  */
-export type StatusChipStatus = ApplicationStatus | "draft";
+export type StatusChipStatus = ApplicationStatus | "draft" | "expired";
 
 const box = "flex size-2.5 items-center border";
 
@@ -46,6 +47,11 @@ const STATUS: Record<StatusChipStatus, { label: string; className: string; mark:
     label: "Approved",
     className: "border-positive bg-positive-tint text-positive",
     mark: <Check className="size-3" strokeWidth={3} />,
+  },
+  expired: {
+    label: "Expired",
+    className: "border-border-strong bg-sunken text-muted",
+    mark: <Clock className="size-3" strokeWidth={2.5} />,
   },
 };
 

@@ -22,9 +22,11 @@ import type {
   Recommendation,
   ResubmitApplicationRequest,
   ReviewerAction,
+  UpdateApplicantRequest,
   ReviewerActionInput,
   ReviewerSession,
 } from "@permitpike/contract";
+import { approvalExpiresAt } from "@permitpike/contract";
 import { RISK_ORDER, riskOf } from "@/lib/risk";
 import { newTrackingCode } from "@/lib/tracking-code";
 
@@ -96,6 +98,7 @@ function toApplication(app: AppRow, v: VersionRow): Application {
     status: app.status,
     submittedAt: iso(app.submittedAt),
     decidedAt: app.decidedAt ? iso(app.decidedAt) : null,
+    expiresAt: approvalExpiresAt(app.status, app.decidedAt ? iso(app.decidedAt) : null),
     files: v.files,
     extraction: v.extraction,
     recommendation: v.recommendation,
@@ -142,6 +145,24 @@ export async function upsertApplicant(name: string, licenseNumber: string): Prom
     .onConflictDoUpdate({ target: applicants.licenseNumber, set: { name } })
     .returning();
   if (!row) throw new Error("applicant upsert returned no row");
+  return toApplicant(row);
+}
+
+export async function getApplicant(id: string): Promise<ApplicantRecord | null> {
+  if (!isUuid(id)) return null;
+  const [row] = await getDb().select().from(applicants).where(eq(applicants.id, id));
+  return row ? toApplicant(row) : null;
+}
+
+/** Name and company only. Filed permits keep their own snapshot of the applicant. */
+export async function updateApplicant(id: string, req: UpdateApplicantRequest): Promise<ApplicantRecord> {
+  if (!isUuid(id)) throw new RepoError("not_found", "No such applicant.");
+  const [row] = await getDb()
+    .update(applicants)
+    .set({ name: req.name, company: req.company || null })
+    .where(eq(applicants.id, id))
+    .returning();
+  if (!row) throw new RepoError("not_found", "No such applicant.");
   return toApplicant(row);
 }
 
@@ -267,6 +288,32 @@ export async function saveParcel(id: string, parcel: Parcel): Promise<void> {
 }
 
 /** Adds a new version and puts the application back to "submitted". Only from "returned". */
+/**
+ * Deletes an application the applicant filed, before any official has acted on it.
+ * Versions go with it (cascade). Returns every file URL it held so the caller can
+ * remove the uploads. Once a reviewer action exists the audit log keeps the permit.
+ */
+export async function deleteApplication(id: string, applicantId: string): Promise<string[]> {
+  if (!isUuid(id)) throw new RepoError("not_found", "No such application.");
+  return getDb().transaction(async (tx) => {
+    const [app] = await tx.select().from(applications).where(eq(applications.id, id)).for("update");
+    if (!app || app.applicantId !== applicantId) throw new RepoError("not_found", "No such application.");
+    const [acted] = await tx
+      .select({ n: count() })
+      .from(reviewerActions)
+      .where(eq(reviewerActions.applicationId, id));
+    if ((acted?.n ?? 0) > 0) {
+      throw new RepoError("conflict", "A building official has acted on this permit, so it stays on record.");
+    }
+    const versions = await tx
+      .select({ files: applicationVersions.files })
+      .from(applicationVersions)
+      .where(eq(applicationVersions.applicationId, id));
+    await tx.delete(applications).where(eq(applications.id, id));
+    return [...new Set(versions.flatMap((v) => v.files.map((f) => f.url)))];
+  });
+}
+
 export async function resubmitApplication(id: string, req: ResubmitApplicationRequest): Promise<Application> {
   if (!isUuid(id)) throw new RepoError("not_found", "No such application.");
   return getDb().transaction(async (tx) => {

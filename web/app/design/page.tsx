@@ -298,6 +298,7 @@ const STATUSES: StatusChipStatus[] = [
   "awaiting_official",
   "returned",
   "approved",
+  "expired",
 ];
 
 const JOB_OPTIONS = Object.entries(JOB_TYPE_LABELS).map(([value, label]) => ({ value, label }));

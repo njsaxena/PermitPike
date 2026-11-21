@@ -27,6 +27,8 @@ export interface ExampleSummary {
   request: string;
   jobType: JobType;
   neighborhood: string | null;
+  /** Where the work is, for the map in "View details". */
+  address: Address;
   documents: ExampleDocument[];
 }
 
@@ -57,6 +59,7 @@ export function exampleSummary(entry: LibraryEntry): ExampleSummary {
     request: `${JOB_NOUN[entry.jobType]} at ${streetLine(entry.address)}`,
     jobType: entry.jobType,
     neighborhood: entry.address.neighborhood,
+    address: entry.address,
     documents: entry.files.map((f) => ({
       kind: f.kind,
       title: asks.find((a) => a.kind === f.kind)?.title ?? f.name,

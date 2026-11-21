@@ -5,7 +5,8 @@
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { PublicTrackView, type ApplicationDetail } from "@permitpike/contract";
+import { APPROVAL_VALID_DAYS, approvalExpiresAt, PublicTrackView, type ApplicationDetail } from "@permitpike/contract";
+import { displayStatus } from "./expiry";
 import { MOCK_APPLICATIONS } from "@/mocks/applications";
 import { buildTrackView, streetNameOnly } from "./track";
 import { newTrackingCode, normalizeTrackingCode } from "./tracking-code";
@@ -159,4 +160,24 @@ test("tracking codes use the safe alphabet and read back from sloppy input", () 
   assert.equal(normalizeTrackingCode("7K3Q9M2X"), "PP-7K3Q-9M2X");
   assert.equal(normalizeTrackingCode("PP-7K3Q-9M20"), null);
   assert.equal(normalizeTrackingCode("nope"), null);
+});
+
+test("an approval reads as expired once its 30 days are up", () => {
+  const approved = loaded().find((d) => d.application.status === "approved")!;
+  const { decidedAt, expiresAt } = approved.application;
+  assert.equal(expiresAt, approvalExpiresAt("approved", decidedAt));
+  assert.equal(Date.parse(expiresAt!) - Date.parse(decidedAt!), APPROVAL_VALID_DAYS * 86_400_000);
+  assert.equal(approvalExpiresAt("returned", decidedAt), null);
+
+  const before = buildTrackView(approved, { queuedAt: null, aheadInQueue: 0, now: Date.parse(expiresAt!) - 1 });
+  assert.equal(before.status, "approved");
+  assert.match(before.nextSteps.at(-1)!, /^This approval is valid until /);
+  assert.ok(!before.timeline.some((s) => s.kind === "expired"));
+  assert.equal(displayStatus(approved.application, Date.parse(expiresAt!) - 1), "approved");
+
+  const after = buildTrackView(approved, { queuedAt: null, aheadInQueue: 0, now: Date.parse(expiresAt!) });
+  assert.equal(after.status, "expired");
+  assert.equal(after.statusLabel, "Approval expired");
+  assert.deepEqual(after.timeline.at(-1), { kind: "expired", label: "Approval expired", at: expiresAt });
+  assert.equal(displayStatus(approved.application, Date.parse(expiresAt!)), "expired");
 });

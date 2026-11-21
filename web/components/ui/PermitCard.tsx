@@ -28,6 +28,8 @@ export interface PermitSummary {
   /** "2026-11-21 09:14" or ISO; shown in words. Also the sort key within a group. */
   filed: string;
   checks: Partial<Record<CheckStatus, number>>;
+  /** An approval past its expiresAt (lib/expiry.ts). The chip reads "Expired". */
+  expired?: boolean;
 }
 
 /** Where each status sits on the trail: one state per stop, Filed → Signed. */
@@ -113,7 +115,7 @@ export function PermitCard({
   const body = (
     <>
       <div className="flex flex-col items-start gap-3">
-        <StatusChip status={permit.status} />
+        <StatusChip status={permit.expired ? "expired" : permit.status} />
         <div className="flex flex-col gap-0.5">
           <span className="text-lg leading-snug font-semibold text-ink">{permit.street}</span>
           <span className="text-sm text-muted">
