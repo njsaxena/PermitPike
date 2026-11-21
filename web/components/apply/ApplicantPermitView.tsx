@@ -12,7 +12,7 @@ import { trailSteps } from "@/lib/trail";
 /*
  * One permit as the electrician who filed it sees it: where it is, what PermitPike found
  * (so they can fix things before an official gets to it), and the official's decision.
- * Used by /apply/[id] (live) and the applicant demo on /design/applicant.
+ * Used by /apply/[id] and the example permits on /design/applicant.
  */
 
 const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, pass: 2 };
@@ -23,6 +23,7 @@ export function ApplicantPermitView({
   note,
   trackHref,
   children,
+  footer,
 }: {
   detail: ApplicationDetail;
   /** Straight after filing: lead with the tracking code. */
@@ -33,6 +34,8 @@ export function ApplicantPermitView({
   trackHref?: string | null;
   /** Below the decision, e.g. the resubmit form. */
   children?: ReactNode;
+  /** The very end of the page, after the programs, e.g. deleting the permit. */
+  footer?: ReactNode;
 }) {
   const app = detail.application;
   const rec = detail.versions.find((v) => v.version === app.version)?.recommendation ?? null;
@@ -112,6 +115,7 @@ export function ApplicantPermitView({
       )}
 
       <ProgramsCard jobType={app.jobType} />
+      {footer}
     </div>
   );
 }

@@ -161,18 +161,20 @@ function DocumentPanel({
         </div>
       </div>
 
-      <div data-zoom-stage className="max-h-[68vh] overflow-auto border border-border bg-sunken lg:max-h-[58vh]">
+      {/* Fixed height: the box stays the same size at every zoom level and window size;
+          the document scrolls inside it. */}
+      <div data-zoom-stage className="h-[34rem] overflow-auto border border-border bg-sunken">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element -- applicant uploads, any size, from Blob
           <img
             src={image}
             alt={`${DOCUMENT_LABEL[file.kind]}: ${file.name}`}
             data-zoom-image
-            className="block h-auto max-w-none bg-surface"
+            className="mx-auto block h-auto max-w-none bg-surface"
             style={{ width: zoom === "fit" ? "100%" : `${zoom}%` }}
           />
         ) : (
-          <object data={file.url} type={file.contentType} aria-label={file.name} className="block h-[68vh] w-full">
+          <object data={file.url} type={file.contentType} aria-label={file.name} className="block h-full w-full">
             <p className="p-card text-ink">
               This file can't be shown here.{" "}
               <a href={file.url} target="_blank" rel="noreferrer" className="pp-link">

@@ -35,8 +35,9 @@ function NewPermit() {
   );
 
   useEffect(() => {
-    if (ready && !id) router.replace("/apply");
-  }, [ready, id, router]);
+    // Sign in first, then come back to this same form (the job or example picked).
+    if (ready && !id) router.replace(`/apply?next=${encodeURIComponent(`/apply/new?${params.toString()}`)}`);
+  }, [ready, id, router, params]);
   if (!ready || !id) return null;
 
   if (job.success) return <FilePermitForm applicantId={id} initial={{ jobType: job.data }} />;
@@ -51,8 +52,8 @@ function NewPermit() {
         initial={exampleInitial(entry, files)}
         intro={
           <p className="text-sm text-muted">
-            Filled in from the example <span className="font-semibold text-ink">{entry.title}</span>. Change anything
-            before you file.
+            Filled in from the example <span className="font-semibold text-ink">{exampleSummary(entry).request}</span>,
+            with its documents attached. Change anything before you file.
           </p>
         }
       />

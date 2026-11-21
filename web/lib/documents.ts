@@ -11,21 +11,21 @@ export interface DocumentAsk {
 const PANEL_PHOTO: DocumentAsk = {
   kind: "panel_photo",
   title: "Photo of the electrical panel",
-  hint: "Door open, with the main breaker and the label inside the door readable. A phone photo is fine.",
+  hint: "The main breaker and interior label must be readable.",
   required: true,
 };
 
 const LOAD_CALC: DocumentAsk = {
   kind: "load_calc",
   title: "Load calculation",
-  hint: "Only if you already did one. PermitPike runs its own either way.",
+  hint: "PermitPike runs this either way.",
   required: false,
 };
 
 const OTHER: DocumentAsk = {
   kind: "other",
-  title: "Anything else",
-  hint: "Single-line diagram, utility letter or anything else the official should see.",
+  title: "Other",
+  hint: "Anything else relevant to the application.",
   required: false,
 };
 
@@ -35,14 +35,14 @@ export const DOCUMENTS: Record<JobType, DocumentAsk[]> = {
     {
       kind: "spec_sheet",
       title: "Heat pump spec sheet",
-      hint: "The manufacturer's sheet for the outdoor unit. It lists the minimum circuit ampacity (MCA) and maximum overcurrent protection (MOCP).",
+      hint: "The manufacturer's sheet for the outdoor unit listing minimum circuit ampacity (MCA) and maximum overcurrent protection (MOCP).",
       required: true,
     },
     PANEL_PHOTO,
     {
       kind: "site_plan",
       title: "Site plan",
-      hint: "Where the outdoor unit and its disconnect go. A photo of a hand sketch is fine.",
+      hint: "Location for outdoor unit and disconnect.",
       required: false,
     },
     LOAD_CALC,

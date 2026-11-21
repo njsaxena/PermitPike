@@ -64,6 +64,8 @@ color. Where a whole row is the link, only the row shows the wash.
 
 **System text selection.** Never restyle `::selection`; selected text uses the browser's own highlight.
 
+**No overscroll bounce.** `html` and `body` set `overscroll-behavior: none`: the page stops at its top and bottom instead of rubber-banding past them.
+
 Every text/background pair passes WCAG AA. Tints are for backgrounds only.
 
 ### Type
@@ -125,6 +127,8 @@ motion on hover beyond color.
   cells form a blocky "P". One knockout line, the Mass Pike, crosses the bottom right.
 - Wordmark: "PermitPike" in Public Sans Bold, -0.02em, ink. All other text is Red Hat
   Text, at regular weight for headings.
+- In the site header the logo is followed, from `lg` up, by the slogan "Boston's Fast Lane
+  for Electrical Permits" in small muted text.
 - Cut the Pike line in the color behind the mark (`on="surface"` or `"background"`).
 - Never recolor it, outline it, add effects, or put the brick steps anywhere else in the UI.
 
@@ -223,17 +227,24 @@ lucide-react only, 1.75 stroke, 16 or 20px. One icon per meaning (see `/design` 
 
 ## Review workspace
 
-One permit, open for a building official (`/review/[id]`; the demo with the example
-library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/review/`.
+One permit, open for a building official (`/review/[id]`). Built from `ReviewWorkspace` in `web/components/review/`.
 
-- **Layout.** A "Queue" link, then the heading (address, status, permit number, job,
-  neighborhood, filed date in words) and who filed it, with "Change status" at the top
-  right. Then the trail and two columns: documents on the left, held in view while the
+- **Layout.** A "Queue" link, then `PermitHeading`: a square ink-edged tile with the job's
+  icon (`JOB_ICON` in `components/permit/jobIcon.ts`, the same icons as filing), the address at
+  display size, and under it the job name (semibold) with the neighborhood, city and ZIP.
+  The status sits at the top right beside "Change status", as words with its mark and no
+  box: "Waiting for your decision" for the official ("Waiting for an official" for the
+  electrician), "Returned for fixes", "Approved", "Expired". Then the record strip (Permit,
+  Filed, Cost, Applicant with company and license). When the heading is at least 768px wide
+  (a container query) the strip is one table row, column headers over an unbroken ink rule;
+  below that each label sits beside its value. The applicant's view leaves out the
+  Applicant column. Then the trail and two columns: documents on the left, held in view while the
   right side scrolls; PermitPike's recommendation and the evidence on the right. Below
   `lg` the columns stack and "Change status" sits under the heading.
 - **Documents first.** The official reads the applicant's files, not a summary of them.
   `DocumentViewer` shows one document at a time, large, with zoom (fit, 50 to 300%) and
-  "Open original". Under each document: the values to check against it.
+  "Open original". The document box is a fixed height; zooming scrolls inside it and
+  never resizes it. Under each document: the values to check against it.
 - **Confidence is shown, never hidden.** A value read with under 85% confidence, or not
   found, gets a brass tint and a sentence telling the official to read it from the
   document. Never fill a missing value with a guess.
@@ -254,11 +265,12 @@ library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/re
   any of them with "Edit record". Each row shows where its value came from: the document
   and confidence, or "Edited by you". Inputs, options and limits come from the contract's
   Zod schemas (`web/lib/record-edit.ts`). When an edited value fed a check, a warning says
-  the checks ran on the earlier value. Editing is on in the demo; the live page shows the
-  record read-only until the API can save edits (needs a contract change).
+  the checks ran on the earlier value. The live page shows the record
+  read-only until the API can save edits (needs a contract change).
 - **The decision.** "Change status" (gold, top right) opens a menu with the two moves:
-  approve and return for fixes, each with one line on what happens, and "PermitPike
-  recommends this" on the recommended one, which is listed first. Each opens its own
+  "Approve" and "Return for fixes", titles only, with "PermitPike recommends this" on the
+  recommended one, which is listed first. Approving against the recommendation shows a
+  warning icon instead of a check. Each opens its own
   confirmation. Approving past a failing check is "Approve anyway" and needs a written
   reason; approving needs the attestation tick; returning pre-fills the requested fixes
   from the checks. Only these change the permit. After a decision the control goes away
@@ -269,6 +281,39 @@ library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/re
   explaining, fix the UI.
 - **Dates in words** everywhere in the workspace ("November 20th", "10:30 AM"); the
   numeric stamp appears only in `SignatureBlock`.
+
+## Applicant portal
+
+The electrician's side (`/apply`).
+
+- **Home.** "Welcome back, [first name]." and how many permits are waiting on the city,
+  "File a permit" (gold) at the top right, then "Your permits" as `PermitCard`s. No risk
+  badges: risk is for the city's reviewers, not the electrician.
+- **File a permit** opens on the three kinds of job (`StartPermit`), each with how many
+  documents it needs. Below them, in a sunken panel, "Example permits to start from":
+  small cards that say only the request ("Heat pump at 64 Kittredge St", neighborhood,
+  number of documents). Never what PermitPike found or what the official decided: that
+  is found out by filing it. Each card has two quiet (white) buttons, so the library
+  never outshouts "Your own job": "Use this example" opens the filled-in form; "View
+  details" opens a dialog whose first tab, Location, shows the address on the live parcel
+  map (the same lookup the filing form runs), then one tab per document ("Open
+  original"). The footer, with "Use this example", stays in view while the body scrolls. Tab names are short ("Spec sheet",
+  "Panel photo") so they fit on one row; documents follow the form's order, and an
+  "Other" file is named by what it is ("Load manager spec") and comes last.
+- **Filing is always real.** Both paths open the same form (`/apply/new?job=<jobType>` or
+  `?example=<slug>`, filled in with the example's documents attached). Filing uploads the
+  documents and creates the permit, which PermitPike checks and officials then review in
+  the queue. There is no pretend filing anywhere. Not signed in yet: name and license
+  first, then straight back to the form that was picked.
+- **One form.** `PermitForm` is the form without the saving; `FilePermitForm` uploads and
+  files. Validation: street, 5-digit ZIP, cost in dollars, each required document. The cost
+  groups itself with commas as it's typed (30000 → 30,000), keeping the caret in place.
+- **After filing** the page leads with the tracking code, then the permit as it stands.
+- **One permit** (`ApplicantPermitView`): heading, tracking code, trail, a one-line status
+  ("Waiting for a building official. PermitPike found 1 problem they will look at."),
+  the official's decision, the resubmit form when it came back, then "What PermitPike
+  found" (checks, failures first, with fixes; the utility flag; the load on the service)
+  and programs for the job.
 
 ## Components
 
@@ -298,17 +343,21 @@ library is `/design/portal`). Built from `ReviewWorkspace` in `web/components/re
 | `DocumentViewer`, `FieldLine` | Document tabs (one per file kind), zoom toolbar, image or PDF; the values to check against each document with confidence and check marks |
 | `LoadCalcPanel`, `ServiceMeter` | The worked load calculation and the flat service meter (80% and 100% marks; fits / tight / needs upgrade) |
 | `ChangeStatus` | "Change status" button and menu (status now, approve, return; recommended first) and the approve and return dialogs; override needs a reason |
+| `StartPermit` | First screen of "File a permit": one card per job type, then `ExamplePermits`. Cards hover with an ink edge and the wash |
+| `ExamplePermits` | Example permits in a sunken panel: small cards with the request only, and two secondary buttons: "Use this example" (to the filled-in form) and "View details" (a dialog with a Location tab on the live parcel map, the documents in tabs, and "Use this example" in a footer that stays in view) |
+| `PermitForm` | The filing form without the saving: job, address, ZIP, cost, description, one `DocumentSlot` per document. Starts filled in from `exampleInitial()` (`web/lib/example-filing.ts`) or empty; `FilePermitForm` wraps it to upload and file |
+| `ApplicantPermitView` | One permit as the electrician sees it: tracking code, trail, status line, decision, then what PermitPike found. `justFiled` leads with the tracking code |
 | `DiffView` | Before/after values; "Not set" and "Removed" for missing values |
 | `Table` | Horizontal rules only |
 | `Callout` | info, warning, utility; full box with an icon tile |
 | `Card` | Optional header label, actions, footer; `selected` |
-| `Tabs` | WAI-ARIA tabs drawn as a row of square buttons; the selected one is filled ink with a gold count chip. Optional `value`/`onChange` to control it (a check opening its document). `icon` plus `iconOnly` draws a square icon button with the label as its accessible name and tooltip |
+| `Tabs` | WAI-ARIA tabs drawn as a row of square buttons; the selected one is filled ink with a gold count chip. Optional `value`/`onChange` to control it (a check opening its document). Switching tabs keeps the tab bar where it was on screen, so a shorter panel never makes the page jump. `icon` plus `iconOnly` draws a square icon button with the label as its accessible name and tooltip |
 | `HeaderShell` | Logo plus the role you entered as and a "Leave" link back to the entry screen. No role toggle. `wide` matches the review workspace |
 | `RoleChoiceCard` | One label with an icon or a Boston drawing; the entry screen uses two |
 | `PermitPikeLogo`, `PermitPikeMark` | The logo (see Logo) |
 | `BostonDrawing` | Line drawings (see Imagery) |
 | `EmptyState` | Drawing, one sentence, at most one action |
-| `PropertyMap` | Leaflet map (next/dynamic, `ssr:false`) of one parcel: grayscale OpenStreetMap tiles with visible attribution, harbor-navy outline, brick-red square pin. Screen-reader summary on the focusable map; arrow keys pan, +/- zoom. With no parcel it renders `MapUnavailable` |
+| `PropertyMap` | Leaflet map (next/dynamic, `ssr:false`) of one parcel: grayscale OpenStreetMap tiles with visible attribution, harbor-navy outline, brick-red square pin. Screen-reader summary on the focusable map; arrow keys pan, +/- zoom. The scroll wheel zooms the map while the pointer is over it, and the page stays still. The queue's permit map works the same way. With no parcel it renders `MapUnavailable` |
 | `MapUnavailable` | The address as text plus "Map unavailable". Used whenever the lookup fails, finds nothing or takes over 3 seconds. Never blocks filing |
 | `ZoningChips` | Zoning district (ink edge, subdistrict in mono), then overlays (quiet) |
 | `PropertyCard` | Reviewer detail, beside the checks: map, parcel ID, assessor address, zoning, overlays and the article's dimensional tables (labelled "Setback table" when the job has a setback check) |

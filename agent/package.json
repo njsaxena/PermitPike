@@ -8,7 +8,8 @@
     "build": "mastra build",
     "start": "node .mastra/output/index.mjs",
     "typecheck": "tsc --noEmit",
-    "score": "node --import tsx extract/scripts/score.ts"
+    "score": "node --import tsx extract/scripts/score.ts",
+    "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^3.6.1",

@@ -6,6 +6,7 @@ import { MapPinOff } from "lucide-react";
 import { useId } from "react";
 import type { Address, Application, ApplicationStatus, Parcel } from "@permitpike/contract";
 import { cx } from "@/lib/cx";
+import { displayStatus } from "@/lib/expiry";
 import { StatusChip } from "./StatusChip";
 import type { MapPin } from "./map/LeafletMaps";
 
@@ -232,7 +233,7 @@ export function PermitsMap({
     title: `${a.permitNumber}, ${a.address.street}`,
     popup: (
       <span className="flex flex-col items-start gap-2">
-        <StatusChip status={a.status} />
+        <StatusChip status={displayStatus(a)} />
         <span className="text-ink">{a.address.street}</span>
         <Link href={hrefFor(a)} className="pp-link font-mono">
           {a.permitNumber}

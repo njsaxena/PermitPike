@@ -618,6 +618,15 @@ export const JOB_DESCRIPTION_MAX = 500;
 export const EstimatedProjectCost = z.number().nonnegative().max(100_000_000);
 export const JobDescription = z.string().trim().max(JOB_DESCRIPTION_MAX);
 
+/** An approved permit is valid for this many days after the official signs it. */
+export const APPROVAL_VALID_DAYS = 30;
+
+/** Application.expiresAt for a status and decision time. One rule for every writer. */
+export function approvalExpiresAt(status: string, decidedAt: string | null): string | null {
+  if (status !== "approved" || !decidedAt) return null;
+  return new Date(Date.parse(decidedAt) + APPROVAL_VALID_DAYS * 86_400_000).toISOString();
+}
+
 /** Current state of an application: the latest version, flattened. */
 export const Application = z
   .object({
@@ -636,6 +645,11 @@ export const Application = z
     status: ApplicationStatus,
     submittedAt: IsoDateTime,
     decidedAt: IsoDateTime.nullable(),
+    /**
+     * When an approval stops being valid: decidedAt + APPROVAL_VALID_DAYS. Null unless approved.
+     * Past it the permit reads as expired; the status stays "approved" so the record is unchanged.
+     */
+    expiresAt: IsoDateTime.nullable(),
     files: z.array(FileRef),
     extraction: Extraction.nullable(),
     recommendation: Recommendation.nullable(),
@@ -682,6 +696,16 @@ export const EvalCaseResult = z.object({
   actualDecision: RecommendationDecision,
   passed: z.boolean(),
   notes: z.string().nullable(),
+  /**
+   * Rule-level detail for the eval dashboard. Optional so runs saved before these
+   * fields existed still parse; the dashboard says when a run doesn't have them.
+   */
+  /** Every rule the pipeline evaluated on this case (pack rules plus the load check). */
+  checkedRuleIds: z.array(z.string()).optional(),
+  expectedFailingRuleIds: z.array(z.string()).optional(),
+  actualFailingRuleIds: z.array(z.string()).optional(),
+  expectedUtilityFlag: z.boolean().optional(),
+  actualUtilityFlag: z.boolean().optional(),
 });
 export type EvalCaseResult = z.infer<typeof EvalCaseResult>;
 
@@ -717,6 +741,21 @@ export const CreateApplicantRequest = z.object({
 export type CreateApplicantRequest = z.infer<typeof CreateApplicantRequest>;
 export const CreateApplicantResponse = z.object({ applicant: ApplicantRecord });
 export type CreateApplicantResponse = z.infer<typeof CreateApplicantResponse>;
+
+// GET /api/applicants/:id   the signed-in electrician's own profile
+export const GetApplicantResponse = z.object({ applicant: ApplicantRecord });
+export type GetApplicantResponse = z.infer<typeof GetApplicantResponse>;
+
+// PATCH /api/applicants/:id   name and company. The license number identifies the
+// electrician, so it can't change here: sign out and enter the other license instead.
+// Permits already filed keep the details they were filed with.
+export const UpdateApplicantRequest = z.object({
+  name: z.string().trim().min(1).max(120),
+  company: z.string().trim().max(120).nullable(),
+});
+export type UpdateApplicantRequest = z.infer<typeof UpdateApplicantRequest>;
+export const UpdateApplicantResponse = z.object({ applicant: ApplicantRecord });
+export type UpdateApplicantResponse = z.infer<typeof UpdateApplicantResponse>;
 
 // POST /api/reviewer/session  (sets an httpOnly cookie with the name)  DELETE clears it
 export const CreateReviewerSessionRequest = z.object({
@@ -773,6 +812,17 @@ export type ResubmitApplicationRequest = z.infer<typeof ResubmitApplicationReque
 export const ResubmitApplicationResponse = z.object({ application: Application });
 export type ResubmitApplicationResponse = z.infer<typeof ResubmitApplicationResponse>;
 
+// DELETE /api/applications/:id   the electrician who filed it withdraws and deletes it,
+// with its uploaded files. Only before a building official has acted on it: once there is
+// a reviewer action the audit log keeps it (409 conflict).
+export const DeleteApplicationRequest = z.object({
+  /** Must match the application's applicant. */
+  applicantId: z.string(),
+});
+export type DeleteApplicationRequest = z.infer<typeof DeleteApplicationRequest>;
+export const DeleteApplicationResponse = z.object({ id: z.string() });
+export type DeleteApplicationResponse = z.infer<typeof DeleteApplicationResponse>;
+
 // POST /api/applications/:id/review  (reviewer cookie required; status must be "awaiting_official")
 // The actor comes from the reviewer session, never the body.
 // 409 conflict when the application changed since the reviewer loaded it.
@@ -808,7 +858,7 @@ export type ParcelLookupResponse = z.infer<typeof ParcelLookupResponse>;
 // recommendation, checks, confidence, load calc, closure risk, conditions or reviewer
 // notes; the one reviewer text is the official's return reason. Unknown code: 404 with
 // one generic message. The schema is strict so an added field fails loudly.
-export const TrackStatus = z.enum(["received", "in_queue", "changes_requested", "approved"]);
+export const TrackStatus = z.enum(["received", "in_queue", "changes_requested", "approved", "expired"]);
 export type TrackStatus = z.infer<typeof TrackStatus>;
 
 export const TRACK_STATUS_LABELS: Record<TrackStatus, string> = {
@@ -816,12 +866,13 @@ export const TRACK_STATUS_LABELS: Record<TrackStatus, string> = {
   in_queue: "In the review queue",
   changes_requested: "Changes requested",
   approved: "Approved, schedule your inspection",
+  expired: "Approval expired",
 };
 
 export const TrackTimelineStep = z
   .object({
     /** "decision" is the official's step before it happens; it becomes "approved" or "changes_requested". */
-    kind: z.enum(["received", "in_queue", "changes_requested", "resubmitted", "approved", "decision"]),
+    kind: z.enum(["received", "in_queue", "changes_requested", "resubmitted", "approved", "decision", "expired"]),
     label: z.string(),
     /** Null for a step not reached yet. */
     at: IsoDateTime.nullable(),
@@ -862,6 +913,17 @@ export const API_ROUTES = {
     request: CreateApplicantRequest,
     response: CreateApplicantResponse,
   },
+  getApplicant: {
+    method: "GET",
+    path: "/api/applicants/:id",
+    response: GetApplicantResponse,
+  },
+  updateApplicant: {
+    method: "PATCH",
+    path: "/api/applicants/:id",
+    request: UpdateApplicantRequest,
+    response: UpdateApplicantResponse,
+  },
   createReviewerSession: {
     method: "POST",
     path: "/api/reviewer/session",
@@ -890,6 +952,12 @@ export const API_ROUTES = {
     path: "/api/applications/:id/resubmit",
     request: ResubmitApplicationRequest,
     response: ResubmitApplicationResponse,
+  },
+  deleteApplication: {
+    method: "DELETE",
+    path: "/api/applications/:id",
+    request: DeleteApplicationRequest,
+    response: DeleteApplicationResponse,
   },
   reviewApplication: {
     method: "POST",

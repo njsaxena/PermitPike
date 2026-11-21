@@ -1,8 +1,7 @@
 {
   "id": "hp_setback_fail",
-  "description": "Heat pump outdoor unit 3 ft from the property line; everything else passes.",
+  "description": "Example heat-pump-setback-resubmit, v1. Demo: outdoor unit 3 ft from the property line fails the setback.",
   "fields": {
-    "jobType": "heat_pump_panel",
     "serviceVoltage": 240,
     "existingServiceAmps": 100,
     "existingPanelRatingAmps": 100,
@@ -17,9 +16,10 @@
       "existingHvacVA": 0,
       "measuredPeakDemandKW": null
     },
+    "jobType": "heat_pump_panel",
     "heatPump": {
-      "manufacturer": "Example HVAC Co.",
-      "model": "EX-24H",
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-18",
       "coolingBTU": 24000,
       "heatingBTU": 26000,
       "voltage": 240,
@@ -33,6 +33,8 @@
     "panelUpgrade": null
   },
   "expectedDecision": "return_for_fixes",
-  "expectedFailingRuleIds": ["heat_pump_panel.outdoor_setback"],
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.outdoor_setback"
+  ],
   "expectUtilityFlag": false
 }

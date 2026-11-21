@@ -24,13 +24,14 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".next-3300/types/**/*.ts",
     ".next-check/types/**/*.ts",
     ".next-design/types/**/*.ts",
     ".next-map/types/**/*.ts",
     ".next-tiger/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-3300/types/**/*.ts"
+    ".next-home/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -37,7 +37,16 @@ const STATUS: Record<CheckStatus, { word: string; Icon: typeof Check; tile: stri
 const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, pass: 2 };
 
 /** The outcome an example expects. Same shape as StatusChip; the icon carries the meaning too. */
-export function DecisionChip({ decision, className }: { decision: RecommendationDecision; className?: string }) {
+export function DecisionChip({
+  decision,
+  className,
+  srLabel = "Expected outcome: ",
+}: {
+  decision: RecommendationDecision;
+  className?: string;
+  /** Screen-reader prefix; pass "" where a column header already says what the chip is. */
+  srLabel?: string;
+}) {
   const d = DECISION[decision];
   return (
     <span
@@ -48,7 +57,7 @@ export function DecisionChip({ decision, className }: { decision: Recommendation
       )}
     >
       <d.Icon aria-hidden className="size-3.5" strokeWidth={3} />
-      <span className="sr-only">Expected outcome: </span>
+      {srLabel && <span className="sr-only">{srLabel}</span>}
       {d.label}
     </span>
   );

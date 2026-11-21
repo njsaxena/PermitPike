@@ -5,9 +5,9 @@ lives in `packages/loadcalc`.
 
 | File                 | Job type          | Status                    |
 | -------------------- | ----------------- | ------------------------- |
-| `heat_pump_panel.ts` | `heat_pump_panel` | 2 rules stubbed, rest TODO |
-| `ev_charger.ts`      | `ev_charger`      | TODO                      |
-| `home_battery.ts`    | `home_battery`    | TODO                      |
+| `heat_pump_panel.ts` | `heat_pump_panel` | 8 rules                   |
+| `ev_charger.ts`      | `ev_charger`      | 5 rules                   |
+| `home_battery.ts`    | `home_battery`    | 4 rules                   |
 
 ## Format (`types.ts`)
 

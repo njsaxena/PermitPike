@@ -1,4 +1,5 @@
 import {
+  APPROVAL_VALID_DAYS,
   JOB_TYPE_LABELS,
   PublicTrackView,
   TRACK_STATUS_LABELS,
@@ -48,7 +49,15 @@ export const NEXT_STEPS: Record<TrackStatus, string[]> = {
     "Schedule your inspection with Boston's Inspectional Services Department.",
     "Keep the permit at the job site until the work passes inspection.",
   ],
+  expired: [
+    `Approvals are valid for ${APPROVAL_VALID_DAYS} days, so this permit no longer covers the work.`,
+    "The electrician can file a new permit for the same job.",
+  ],
 };
+
+/** "December 21, 2026" in Boston time, for the validity line. */
+const validUntil = (at: string) =>
+  new Date(at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York" });
 
 /** "210 Dorchester St" -> "Dorchester St". Drops house numbers like 12, 12A, 12-14 and 12½. */
 export function streetNameOnly(street: string): string {
@@ -72,6 +81,7 @@ const LABEL: Record<TrackTimelineStep["kind"], string> = {
   changes_requested: "Changes requested",
   approved: "Approved",
   decision: "Decision from a building official",
+  expired: "Approval expired",
 };
 
 const step = (kind: TrackTimelineStep["kind"], at: string | null): TrackTimelineStep => ({
@@ -82,10 +92,11 @@ const step = (kind: TrackTimelineStep["kind"], at: string | null): TrackTimeline
 
 export function buildTrackView(
   detail: ApplicationDetail,
-  extra: { queuedAt: string | null; aheadInQueue: number },
+  extra: { queuedAt: string | null; aheadInQueue: number; now?: number },
 ): PublicTrackView {
   const app = detail.application;
-  const status = STATUS[app.status];
+  const expired = app.expiresAt !== null && Date.parse(app.expiresAt) <= (extra.now ?? Date.now());
+  const status: TrackStatus = expired ? "expired" : STATUS[app.status];
 
   // Every earlier round: filed or resubmitted, then the official's decision.
   const timeline: TrackTimelineStep[] = [];
@@ -103,6 +114,7 @@ export function buildTrackView(
   const queuedAt = status === "received" ? null : (extra.queuedAt ?? v0Submitted(detail));
   timeline.push(step("in_queue", queuedAt));
   timeline.push(decision && decided ? step(decision.kind, decided.timestamp) : step("decision", null));
+  if (expired && app.expiresAt) timeline.push(step("expired", app.expiresAt));
 
   const open = status === "received" || status === "in_queue";
   return PublicTrackView.parse({
@@ -115,7 +127,10 @@ export function buildTrackView(
     returnReason: status === "changes_requested" ? (decision?.reason ?? null) : null,
     timeline,
     aheadInQueue: open ? extra.aheadInQueue : null,
-    nextSteps: NEXT_STEPS[status],
+    nextSteps:
+      status === "approved" && app.expiresAt
+        ? [...NEXT_STEPS.approved, `This approval is valid until ${validUntil(app.expiresAt)}.`]
+        : NEXT_STEPS[status],
   });
 }
 

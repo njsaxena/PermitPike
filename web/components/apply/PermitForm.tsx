@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { JOB_DESCRIPTION_MAX, JOB_TYPE_LABELS, JobType, type Address, type FileKind } from "@permitpike/contract";
 import { Button, DocumentSlot, Input, Select, Textarea, type FileChipData } from "@/components/ui";
 import { DOCUMENTS } from "@/lib/documents";
@@ -8,9 +8,8 @@ import { neighborhoodForZip } from "@/lib/boston-zips";
 import { PropertyConfirm, confirmedParcelId, type PropertyState } from "./PropertyConfirm";
 
 /*
- * The filing form, without the saving. FilePermitForm (the real one) uploads and files;
- * the applicant demo on /design/applicant just moves on. Either can start it filled in,
- * e.g. from an example permit.
+ * The filing form, without the saving: FilePermitForm uploads the documents and files it.
+ * It can start filled in, e.g. from an example permit.
  */
 
 const JOB_OPTIONS = JobType.options.map((value) => ({ value, label: JOB_TYPE_LABELS[value] }));
@@ -27,6 +26,21 @@ export function parseUsd(input: string): number | null {
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
   const n = Number(cleaned);
   return Number.isFinite(n) && n <= 100_000_000 ? n : null;
+}
+
+/** "30000" -> "30,000", "1234567.5" -> "1,234,567.5": digits grouped by thousands as they're typed, two decimals at most. */
+export function groupUsd(input: string): string {
+  const cleaned = input.replace(/[^\d.]/g, "");
+  const [whole = "", ...rest] = cleaned.split(".");
+  const grouped = whole.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return cleaned.includes(".") ? `${grouped}.${rest.join("").slice(0, 2)}` : grouped;
+}
+
+/** Where the caret goes in `value` to sit after `digits` digits (commas don't count). */
+function caretAfter(value: string, digits: number): number {
+  let i = 0;
+  for (let seen = 0; i < value.length && seen < digits; i++) if (/[\d.]/.test(value[i]!)) seen++;
+  return i;
 }
 
 export interface PermitFormInitial {
@@ -56,7 +70,6 @@ export function PermitForm({
   intro,
   lookupProperty = true,
   onFile,
-  demoNext,
 }: {
   initial?: PermitFormInitial;
   heading?: string;
@@ -66,8 +79,6 @@ export function PermitForm({
   lookupProperty?: boolean;
   /** Saves the permit. Report progress with `progress`; throw to show an error. */
   onFile: (permit: FiledPermit, progress: (label: string) => void) => Promise<void>;
-  /** Static copies of the demo: where the form goes when filed. */
-  demoNext?: string;
 }) {
   const [jobType, setJobType] = useState<JobType>(initial.jobType ?? "heat_pump_panel");
   const [street, setStreet] = useState(initial.street ?? "");
@@ -76,7 +87,16 @@ export function PermitForm({
   const [parcelNeighborhood, setParcelNeighborhood] = useState<string | null>(initial.neighborhood ?? null);
   const [zip, setZip] = useState(initial.zip ?? "");
   const [property, setProperty] = useState<PropertyState>({ kind: "idle" });
-  const [cost, setCost] = useState(initial.cost ?? "");
+  const [cost, setCost] = useState(groupUsd(initial.cost ?? ""));
+  // Commas move as the cost is typed; keep the caret after the same digit.
+  const costCaret = useRef<{ el: HTMLInputElement; digits: number } | null>(null);
+  useLayoutEffect(() => {
+    const pending = costCaret.current;
+    if (!pending) return;
+    costCaret.current = null;
+    const at = caretAfter(pending.el.value, pending.digits);
+    pending.el.setSelectionRange(at, at);
+  }, [cost]);
   const [description, setDescription] = useState(initial.description ?? "");
   // Kept by kind, so switching the job keeps what was already attached.
   const [files, setFiles] = useState<Partial<Record<FileKind, FileChipData[]>>>(initial.files ?? {});
@@ -135,13 +155,7 @@ export function PermitForm({
   }
 
   return (
-    <form
-      onSubmit={submit}
-      noValidate
-      className="flex flex-col gap-5"
-      data-demo-form={demoNext !== undefined ? "" : undefined}
-      data-next={demoNext || undefined}
-    >
+    <form onSubmit={submit} onKeyDown={noEnterSubmit} noValidate className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <h1 className="text-title text-ink">{heading}</h1>
         {intro}
@@ -158,7 +172,6 @@ export function PermitForm({
             onChange={(e) => setStreet(e.target.value)}
             error={errors.street}
             required
-            data-required="Enter the street address."
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Unit" autoComplete="address-line2" value={unit} onChange={(e) => setUnit(e.target.value)} />
@@ -175,8 +188,6 @@ export function PermitForm({
               }}
               error={errors.zip}
               required
-              data-required="Enter a 5-digit ZIP code."
-              data-pattern="^\d{5}$"
             />
           </div>
           {lookupProperty && (
@@ -201,10 +212,20 @@ export function PermitForm({
             mono
             inputMode="decimal"
             value={cost}
-            onChange={(e) => setCost(e.target.value)}
+            onChange={(e) => {
+              const el = e.target;
+              let raw = el.value;
+              let caret = el.selectionStart ?? raw.length;
+              // Backspace on a comma: take the digit before it instead.
+              if (groupUsd(raw) === cost && raw.length < cost.length && caret > 0) {
+                raw = raw.slice(0, caret - 1) + raw.slice(caret);
+                caret -= 1;
+              }
+              costCaret.current = { el, digits: raw.slice(0, caret).replace(/[^\d.]/g, "").length };
+              setCost(groupUsd(raw));
+            }}
             error={errors.cost}
             required
-            data-required="Enter the estimated cost in dollars, for example 12,500."
           />
           <div className="flex flex-col gap-1">
             <Textarea
@@ -231,7 +252,7 @@ export function PermitForm({
             </div>
             <ul className="flex flex-col gap-2">
               {DOCUMENTS[jobType].map((ask) => (
-                <li key={ask.kind} data-doc-kind={ask.kind} data-doc-required={ask.required ? "" : undefined}>
+                <li key={ask.kind}>
                   <DocumentSlot
                     title={ask.title}
                     hint={ask.hint}
@@ -261,4 +282,17 @@ export function PermitForm({
       </div>
     </form>
   );
+}
+
+/**
+ * Enter in a text field would file the permit (the browser's implicit submit). Filing
+ * uploads documents and starts a review, so it only happens from the File button itself.
+ * Enter still works in text areas, on buttons and links, and in pickers that use it.
+ */
+function noEnterSubmit(e: KeyboardEvent<HTMLFormElement>) {
+  if (e.key !== "Enter") return;
+  const t = e.target as HTMLElement;
+  if (t instanceof HTMLInputElement && !["button", "submit", "checkbox", "radio", "file"].includes(t.type)) {
+    e.preventDefault();
+  }
 }

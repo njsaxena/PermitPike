@@ -8,6 +8,7 @@ export * from "./types";
 export { evChargerPack } from "./ev_charger";
 export { heatPumpPanelPack } from "./heat_pump_panel";
 export { homeBatteryPack } from "./home_battery";
+export { decide, reviewFields, runLoadCalc, type Review } from "./load";
 
 /** Registry of packs by job type. */
 export const PACKS: { [J in JobType]: RulePack<J> } = {

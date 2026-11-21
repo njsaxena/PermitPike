@@ -30,7 +30,8 @@ export function MyPermits({ applicantId }: { applicantId: string }) {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.applications.map((app) => (
             <li key={app.id}>
-              <PermitCard permit={toSummary(app)} href={`/apply/${app.id}`} />
+              {/* Risk is for the city's reviewers, not the electrician. */}
+              <PermitCard permit={{ ...toSummary(app), risk: null, closureRisk: null }} href={`/apply/${app.id}`} />
             </li>
           ))}
         </ul>

@@ -218,6 +218,9 @@ importers:
       '@permitpike/contract':
         specifier: workspace:*
         version: link:../packages/contract
+      '@permitpike/db':
+        specifier: workspace:*
+        version: link:../packages/db
       '@permitpike/loadcalc':
         specifier: workspace:*
         version: link:../packages/loadcalc
@@ -322,6 +325,9 @@ importers:
       '@permitpike/contract':
         specifier: workspace:*
         version: link:../packages/contract
+      '@permitpike/loadcalc':
+        specifier: workspace:*
+        version: link:../packages/loadcalc
       zod:
         specifier: ^4.3.0
         version: 4.6.7
@@ -332,6 +338,9 @@ importers:
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
+      vitest:
+        specifier: ^3.2.7
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.15)(yaml@2.9.1)
 
   web:
     dependencies:

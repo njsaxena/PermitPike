@@ -1,0 +1,44 @@
+{
+  "fields": {
+    "jobType": "heat_pump_panel",
+    "serviceVoltage": 240,
+    "existingServiceAmps": 100,
+    "existingPanelRatingAmps": 100,
+    "mainBreakerAmps": 100,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1400,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "heatPump": {
+      "manufacturer": "Example HVAC Co.",
+      "model": "EX-24H",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25,
+      "backupHeatKW": null
+    },
+    "proposedBreakerAmps": 25,
+    "conductorAWG": "10",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 3,
+    "panelUpgrade": null
+  },
+  "fieldConfidence": {
+    "heatPump.mcaAmps": 0.96,
+    "heatPump.mocpAmps": 0.94,
+    "proposedBreakerAmps": 0.9,
+    "outdoorUnitSetbackFt": 0.95,
+    "existingLoad.dwellingSqFt": 0.8
+  },
+  "missingFields": [],
+  "model": "fixture",
+  "extractedAt": "2026-11-21T15:00:00.000Z"
+}

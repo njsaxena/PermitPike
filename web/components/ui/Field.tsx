@@ -8,6 +8,7 @@ import {
   type InputHTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
+  type Ref,
   type TextareaHTMLAttributes,
 } from "react";
 import { Check, ChevronDown, CircleAlert, ScanText } from "lucide-react";
@@ -132,6 +133,8 @@ export interface InputProps extends FieldBaseProps, InputHTMLAttributes<HTMLInpu
   extracted?: Extracted;
   /** Where it was read from, e.g. "the load calculation". */
   extractedSource?: string;
+  /** Passed to the <input> itself (React 19 forwards it with the other props). */
+  ref?: Ref<HTMLInputElement>;
 }
 
 export function Input({

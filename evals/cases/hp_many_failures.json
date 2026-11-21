@@ -1,0 +1,46 @@
+{
+  "id": "hp_many_failures",
+  "description": "1 ft setback, no disconnect in sight, 20 in panel clearance, and a 100 A panel on a 150 A service.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 100,
+    "existingPanelRatingAmps": 100,
+    "mainBreakerAmps": 100,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 20,
+    "existingLoad": {
+      "dwellingSqFt": 1800,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-18",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25
+    },
+    "proposedBreakerAmps": 25,
+    "conductorAWG": "10 AWG Cu",
+    "disconnectWithinSight": false,
+    "outdoorUnitSetbackFt": 1,
+    "panelUpgrade": {
+      "proposedPanelRatingAmps": 100,
+      "proposedServiceAmps": 150
+    }
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.outdoor_setback",
+    "heat_pump_panel.disconnect_within_sight",
+    "heat_pump_panel.panel_working_clearance",
+    "heat_pump_panel.panel_upgrade_matches_service"
+  ],
+  "expectUtilityFlag": true
+}

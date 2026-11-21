@@ -1,10 +1,12 @@
 /**
- * Builds the example permit library: five demo applications, their documents, and the
- * agent output for each, all checked against the shared contract.
+ * Builds the example permit library: five permit requests and their documents, for
+ * applicants to start a real filing from. Only the request is written: what PermitPike
+ * finds and what an official decides happen when the permit is filed.
  *
  *   pnpm examples            (from the repo root)
  *
- * Writes web/public/examples/library.json and one folder of documents per example.
+ * Writes web/public/examples/library.json (the requests) and one folder of documents per
+ * example, with a PNG of the first page of each PDF to look through before filing.
  * Load calcs come from packages/loadcalc and heat pump checks from packs/heat_pump_panel.
  * EV charger and home battery checks are written here until those packs exist; their
  * rule ids match the ones in web/mocks so they stay stable when the packs land.
@@ -19,6 +21,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ApplicationDetail,
+  approvalExpiresAt,
   LoadCalcResult,
   type Address,
   type Applicant,
@@ -68,7 +71,8 @@ const REVIEWER = { name: "M. Okafor (example)", role: "reviewer" as const };
 // Library shape (web/public/examples/library.json)
 // ---------------------------------------------------------------------------
 
-export interface LibraryExample {
+/** An example as the build assembles it. Only its request and documents are written (toRequest). */
+interface LibraryExample {
   slug: string;
   title: string;
   /** One line: what this example shows in a demo. */
@@ -82,9 +86,58 @@ export interface LibraryExample {
   existingServiceLoadCalc: LoadCalcResult | null;
 }
 
+/** One example as library.json stores it: what the electrician files, nothing about how it goes. */
+export interface ExampleRequest {
+  slug: string;
+  jobType: JobType;
+  address: Address;
+  estimatedProjectCost: number;
+  jobDescription: string;
+  /** The documents of the first submission. */
+  files: FileRef[];
+}
+
 export interface ExampleLibrary {
   note: string;
-  examples: LibraryExample[];
+  examples: ExampleRequest[];
+}
+
+/** What the electrician types on the form for each example. */
+const TYPED: Record<string, { cost: number; description: string }> = {
+  "ev-garage-clean": {
+    cost: 2400,
+    description: "Hardwired 48 A Level 2 EV charger in the attached garage on a new 60 A circuit.",
+  },
+  "heat-pump-service-upgrade": {
+    cost: 28500,
+    description: "Cold-climate heat pump, with the service upgraded from 100 A to 200 A and a new 200 A panel.",
+  },
+  "heat-pump-setback-resubmit": {
+    cost: 16800,
+    description: "Heat pump outdoor unit beside the house on a new 25 A circuit. No panel change.",
+  },
+  "ev-triple-decker-load-management": {
+    cost: 6900,
+    description: "40 A EV charger on the outside wall of a triple-decker, with a load manager so the 100 A service isn't exceeded.",
+  },
+  "battery-solar-busbar": {
+    cost: 14200,
+    description: "Home battery in the basement, tied to the existing solar through a 60 A backfeed breaker in the main panel.",
+  },
+};
+
+function toRequest(ex: LibraryExample): ExampleRequest {
+  const app = ex.detail.application;
+  const typed = TYPED[ex.slug];
+  if (!typed) throw new Error(`${ex.slug}: no cost and description in TYPED`);
+  return {
+    slug: ex.slug,
+    jobType: app.jobType,
+    address: app.address,
+    estimatedProjectCost: typed.cost,
+    jobDescription: typed.description,
+    files: ex.detail.versions[0]!.files,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +157,9 @@ function render(slug: string, id: string, doc: Doc, uploadedAt: string, work: st
   const common = ["--headless", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${join(work, "chrome")}`];
   if (doc.format === "pdf") {
     execFileSync(CHROME, [...common, "--no-pdf-header-footer", `--print-to-pdf=${target}`, `file://${htmlPath}`], { stdio: "ignore" });
+    // The first page as an image, to look through on the filing screen.
+    const preview = target.replace(/\.pdf$/, ".png");
+    execFileSync("sips", ["-s", "format", "png", "-Z", "1600", target, "--out", preview], { stdio: "ignore" });
   } else {
     const png = join(work, `${slug}-${doc.name}.png`);
     execFileSync(CHROME, [...common, `--window-size=${PANEL_WIDTH},${doc.height}`, `--screenshot=${png}`, `file://${htmlPath}`], { stdio: "ignore" });
@@ -236,6 +292,12 @@ function detail(a: {
     application: {
       id: a.id,
       permitNumber: a.permitNumber,
+      // In-memory only (never written), so placeholders for what filing would assign.
+      trackingCode: "PP-EXAM-PLE2",
+      parcel: null,
+      closureRisk: null,
+      estimatedProjectCost: null,
+      jobDescription: null,
       jobType: a.jobType,
       address: a.address,
       applicantId: "example",
@@ -243,6 +305,7 @@ function detail(a: {
       status: a.status,
       submittedAt: first.submittedAt,
       decidedAt: decided ? a.actions[a.actions.length - 1]!.timestamp : null,
+      expiresAt: approvalExpiresAt(a.status, decided ? a.actions[a.actions.length - 1]!.timestamp : null),
       files: latest.files,
       extraction: latest.extraction,
       recommendation: latest.recommendation,
@@ -575,7 +638,7 @@ function example2(work: string): LibraryExample {
   const slug = "heat-pump-service-upgrade";
   const id = "ex_hp_upgrade";
   const submittedAt = "2026-11-20T15:30:00.000Z";
-  const address: Address = { street: "64 Ashfield St", unit: null, neighborhood: "Roslindale", city: "Boston", state: "MA", zip: "02131" };
+  const address: Address = { street: "64 Kittredge St", unit: null, neighborhood: "Roslindale", city: "Boston", state: "MA", zip: "02131" };
   const applicant: Applicant = { name: "Marcus Bell (example)", company: "Bell & Sons Electric (example)", licenseNumber: "EX-A-2002" };
   const house: House = {
     squareFeet: 1800,
@@ -836,7 +899,7 @@ function example4(work: string): LibraryExample {
   const slug = "ev-triple-decker-load-management";
   const id = "ex_ev_tight";
   const submittedAt = "2026-11-17T19:10:00.000Z";
-  const address: Address = { street: "29 Westville St", unit: "2", neighborhood: "Dorchester", city: "Boston", state: "MA", zip: "02124" };
+  const address: Address = { street: "29 Wheatland Ave", unit: "2", neighborhood: "Dorchester", city: "Boston", state: "MA", zip: "02124" };
   const applicant: Applicant = { name: "Priya Raman (example)", company: "Raman Electrical Services (example)", licenseNumber: "EX-A-2004" };
   const house: House = {
     squareFeet: 1150,
@@ -980,7 +1043,7 @@ function example5(work: string): LibraryExample {
   const slug = "battery-solar-busbar";
   const id = "ex_battery_busbar";
   const submittedAt = "2026-11-21T08:20:00.000Z";
-  const address: Address = { street: "18 Metropolitan Ave", unit: null, neighborhood: "Hyde Park", city: "Boston", state: "MA", zip: "02136" };
+  const address: Address = { street: "18 Williams Ave", unit: null, neighborhood: "Hyde Park", city: "Boston", state: "MA", zip: "02136" };
   const applicant: Applicant = { name: "Theo Nguyen (example)", company: "Harbor Solar & Electric (example)", licenseNumber: "EX-A-2005" };
   const house: House = {
     squareFeet: 1900,
@@ -1123,22 +1186,6 @@ function example5(work: string): LibraryExample {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Story checks: fail the build if a code change breaks what an example is meant to show
-// ---------------------------------------------------------------------------
-
-function expect(ex: LibraryExample, want: { decision: RecommendationDecision; load: LoadCalcOutcome; flag: UtilityFlag["kind"] | null; failing: string[] }) {
-  const rec = ex.detail.application.recommendation!;
-  const failing = rec.checks.filter((c) => c.status === "fail").map((c) => c.ruleId).sort();
-  const problems = [
-    rec.decision !== want.decision && `decision is ${rec.decision}, expected ${want.decision}`,
-    rec.loadCalc.result !== want.load && `load calc is ${rec.loadCalc.result}, expected ${want.load}`,
-    (rec.utilityFlag?.kind ?? null) !== want.flag && `utility flag is ${rec.utilityFlag?.kind ?? "none"}, expected ${want.flag ?? "none"}`,
-    failing.join() !== [...want.failing].sort().join() && `failing checks are [${failing}], expected [${want.failing}]`,
-  ].filter(Boolean);
-  if (problems.length) throw new Error(`${ex.slug}: ${problems.join("; ")}`);
-}
-
 function main() {
   const work = mkdtempSync(join(tmpdir(), "permitpike-examples-"));
   try {
@@ -1146,26 +1193,13 @@ function main() {
     mkdirSync(OUT, { recursive: true });
     const examples = [example1(work), example2(work), example3(work), example4(work), example5(work)];
 
-    const [e1, e2, e3, e4, e5] = examples as [LibraryExample, LibraryExample, LibraryExample, LibraryExample, LibraryExample];
-    expect(e1, { decision: "approve", load: "fits", flag: null, failing: [] });
-    expect(e2, { decision: "approve_with_conditions", load: "fits", flag: "service_upgrade", failing: [] });
-    if (e2.existingServiceLoadCalc?.result !== "needs_upgrade") throw new Error(`${e2.slug}: existing service should need an upgrade`);
-    expect(e3, { decision: "approve", load: "fits", flag: null, failing: [] });
-    if (e3.detail.versions[0]!.recommendation!.decision !== "return_for_fixes") throw new Error(`${e3.slug}: v1 should be returned`);
-    expect(e4, { decision: "approve_with_conditions", load: "tight", flag: null, failing: [] });
-    if (!e4.detail.application.recommendation!.loadCalc.loadManagementTip) throw new Error(`${e4.slug}: should show the load management tip`);
-    expect(e5, { decision: "return_for_fixes", load: "fits", flag: "interconnection", failing: ["home_battery.busbar_120_percent"] });
-    for (const ex of examples) if (ex.existingServiceLoadCalc) LoadCalcResult.parse(ex.existingServiceLoadCalc);
 
     const library: ExampleLibrary = {
-      note: "Demo examples for PermitPike. Every person, company, product and document is fictional. Built by examples/build.ts.",
-      examples,
+      note: "Example permit requests for PermitPike: what is filed, not what happens to it. Every person, company, product and document is fictional. Built by examples/build.ts.",
+      examples: examples.map(toRequest),
     };
     writeFileSync(join(OUT, "library.json"), `${JSON.stringify(library, null, 2)}\n`);
-    for (const ex of examples) {
-      const r = ex.detail.application.recommendation!;
-      console.log(`${ex.slug.padEnd(34)} ${r.decision.padEnd(24)} load ${r.loadCalc.result} ${pct(r.loadCalc)}  files ${ex.detail.versions.flatMap((v) => v.files).length}`);
-    }
+    for (const ex of library.examples) console.log(`${ex.slug.padEnd(34)} ${ex.jobType.padEnd(16)} files ${ex.files.length}`);
     console.log(`Wrote ${join(OUT, "library.json")}`);
   } finally {
     rmSync(work, { recursive: true, force: true });

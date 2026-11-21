@@ -1,7 +1,9 @@
 export const bostonZoningCode = "https://library.municode.com/ma/boston/codes/redevelopment_authority";
 export const bostonZoningViewer = "https://maps.bostonplans.org/zoningviewer/";
 
-// Article and table node IDs published by Boston Planning's Zoning Viewer.
+// Article and table node IDs in Municode's Boston Zoning Code, checked against its table of
+// contents on 2026-11-21. A table node only resolves under its article (ART55JAPLNEDI_ART55TA).
+// Articles that Municode no longer lists (repealed, merged or reserved) are left out.
 const codeNodes: Readonly<Record<string, readonly [article: string, tables?: string]>> = {
   "1": ["ART1TIPUSC"],
   "2": ["ART2DE"],
@@ -12,7 +14,6 @@ const codeNodes: Readonly<Record<string, readonly [article: string, tables?: str
   "7": ["ART7VA"],
   "8": ["ART8REUS"],
   "9": ["ART9NOUS"],
-  "10": ["ART10ACUS"],
   "11": ["ART11SI"],
   "12": ["ART12TRZO"],
   "13": ["ART13DIRE", "ART13TA"],
@@ -30,17 +31,14 @@ const codeNodes: Readonly<Record<string, readonly [article: string, tables?: str
   "25": ["ART25FLHADI"],
   "26": ["ART26SQSTDI"],
   "27": ["ART27INPLOVDI"],
-  "28": ["ART28BOCIDECO"],
+  "28": ["ART28DERE"],
   "29": ["ART29GRPROVDI"],
   "30": ["ART30BAEEAC"],
   "31": ["ART31SKDI"],
   "32": ["ART32GRCOOVDI"],
   "33": ["ART33OPSPSU"],
   "34": ["ART34INDI"],
-  "35": ["ART35PONONEDI"],
-  "36": ["ART36LIMADI"],
-  "37": ["ART37GRBU"],
-  "38": ["ART38MICUDI"],
+  "37": ["ART37GRBUNEZECA"],
   "39": ["ART39NOSTECDEAR"],
   "40": ["ART40SOSTECDEAR"],
   "41": ["ART41HUAVPRCEDI"],
@@ -48,7 +46,7 @@ const codeNodes: Readonly<Record<string, readonly [article: string, tables?: str
   "42A": ["ART42AHADINOENDOWADOBANERIWA"],
   "42B": ["ART42BHADIHAWA"],
   "42F": ["ART42FHADIHANAYA"],
-  "43": ["ART43CHDI"],
+  "43": ["ART43CHNEDI"],
   "44": ["ART44LEDI"],
   "45": ["ART45GOCEMADI"],
   "46": ["ART46BUTRDI"],
@@ -56,13 +54,10 @@ const codeNodes: Readonly<Record<string, readonly [article: string, tables?: str
   "49": ["ART49CEARSPDI"],
   "50": ["ART50RONEDI", "ART50TA"],
   "51": ["ART51ALIGNEDI", "ART51TA"],
-  "52": ["ART52DOAVNEDI", "ART52TA"],
   "53": ["ART53EABONEDI", "ART53TA"],
   "54": ["ART54NOENNEDI", "ART54TA"],
   "55": ["ART55JAPLNEDI", "ART55TA"],
   "56": ["ART56WERONEDI", "ART56TA"],
-  "57": ["ART57SAVINEDI", "ART57TA"],
-  "58": ["ART58CISQNEDI", "ART58TA"],
   "59": ["ART59MIHINEDI", "ART59TA"],
   "60": ["ART60GRMANEDI", "ART60TA"],
   "61": ["ART61AUCINEDI", "ART61TA"],
@@ -79,6 +74,7 @@ const codeNodes: Readonly<Record<string, readonly [article: string, tables?: str
   "72": ["ART72NEENDEHOINDI", "ART72TA"],
   "73": ["ART73DARBCAININDI", "ART73TA"],
   "80": ["ART80DEREAP"],
+  "81": ["ART81BOCIDECO"],
   "85": ["ART85DEDE"],
   "86": ["ART86WICOEQ"],
   "87": ["ART87SMGROVDI"],
@@ -93,6 +89,6 @@ export function zoningCodeLinks(article: string | null, subdistrict: string) {
   const nodes = key && Object.hasOwn(codeNodes, key) ? codeNodes[key] : undefined;
   return {
     articleUrl: nodes ? `${bostonZoningCode}?nodeId=${nodes[0]}` : null,
-    tablesUrl: nodes?.[1] ? `${bostonZoningCode}?nodeId=${nodes[1]}` : null,
+    tablesUrl: nodes?.[1] ? `${bostonZoningCode}?nodeId=${nodes[0]}_${nodes[1]}` : null,
   };
 }

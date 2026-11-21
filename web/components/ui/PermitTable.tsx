@@ -134,7 +134,7 @@ export function OpenPermitTable({ rows, label }: { rows: PermitRow[]; label: str
               <TableCell mono>
                 <PermitLink row={row} />
                 <span className="mt-1 block">
-                  <StatusChip status={p.status} />
+                  <StatusChip status={p.expired ? "expired" : p.status} />
                 </span>
               </TableCell>
               <TableCell className="min-w-44">

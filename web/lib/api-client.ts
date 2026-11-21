@@ -7,6 +7,8 @@ import {
   CreateApplicantResponse,
   CreateApplicationResponse,
   CreateReviewerSessionResponse,
+  DeleteApplicationResponse,
+  GetApplicantResponse,
   GetApplicationResponse,
   GetTrackResponse,
   ListApplicationsResponse,
@@ -14,13 +16,16 @@ import {
   ParcelLookupResponse,
   ResubmitApplicationResponse,
   ReviewApplicationResponse,
+  UpdateApplicantResponse,
   type CreateApplicantRequest,
   type CreateApplicationRequest,
   type CreateReviewerSessionRequest,
+  type DeleteApplicationRequest,
   type ListApplicationsQuery,
   type ParcelLookupQuery,
   type ResubmitApplicationRequest,
   type ReviewApplicationRequest,
+  type UpdateApplicantRequest,
 } from "@permitpike/contract";
 import type { z } from "zod";
 
@@ -58,6 +63,12 @@ export const api = {
   createApplicant(body: CreateApplicantRequest) {
     return call(CreateApplicantResponse, "/api/applicants", post(body));
   },
+  getApplicant(id: string) {
+    return call(GetApplicantResponse, `/api/applicants/${enc(id)}`);
+  },
+  updateApplicant(id: string, body: UpdateApplicantRequest) {
+    return call(UpdateApplicantResponse, `/api/applicants/${enc(id)}`, { method: "PATCH", body: JSON.stringify(body) });
+  },
   createReviewerSession(body: CreateReviewerSessionRequest) {
     return call(CreateReviewerSessionResponse, "/api/reviewer/session", post(body));
   },
@@ -77,6 +88,9 @@ export const api = {
   },
   resubmitApplication(id: string, body: ResubmitApplicationRequest) {
     return call(ResubmitApplicationResponse, `/api/applications/${enc(id)}/resubmit`, post(body));
+  },
+  deleteApplication(id: string, body: DeleteApplicationRequest) {
+    return call(DeleteApplicationResponse, `/api/applications/${enc(id)}`, { method: "DELETE", body: JSON.stringify(body) });
   },
   reviewApplication(id: string, body: ReviewApplicationRequest) {
     return call(ReviewApplicationResponse, `/api/applications/${enc(id)}/review`, post(body));

@@ -1,0 +1,43 @@
+{
+  "id": "hp_upgrade_service_under_100",
+  "description": "60 A service upgraded to only 90 A, below the 100 A dwelling minimum.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 60,
+    "existingPanelRatingAmps": 60,
+    "mainBreakerAmps": 60,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1000,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 3000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-18",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25
+    },
+    "proposedBreakerAmps": 25,
+    "conductorAWG": "10 AWG Cu",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 8,
+    "panelUpgrade": {
+      "proposedPanelRatingAmps": 100,
+      "proposedServiceAmps": 90
+    }
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.panel_upgrade_matches_service"
+  ],
+  "expectUtilityFlag": true
+}

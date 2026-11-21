@@ -1,5 +1,5 @@
 {
   "extends": "../tsconfig.base.json",
-  "include": ["src/**/*.ts", "extract/**/*.ts"],
+  "include": ["src/**/*.ts", "extract/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", ".mastra"]
 }

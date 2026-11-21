@@ -10,14 +10,16 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test packs.test.ts"
+    "test": "node --import tsx --test packs.test.ts && vitest run --exclude packs.test.ts"
   },
   "dependencies": {
     "@permitpike/contract": "workspace:*",
-    "zod": "^4.3.0"
+    "zod": "^4.3.0",
+    "@permitpike/loadcalc": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.7"
   }
 }

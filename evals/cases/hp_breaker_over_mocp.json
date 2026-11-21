@@ -1,0 +1,40 @@
+{
+  "id": "hp_breaker_over_mocp",
+  "description": "30 A breaker on a unit with a 25 A MOCP.",
+  "fields": {
+    "serviceVoltage": 240,
+    "existingServiceAmps": 200,
+    "existingPanelRatingAmps": 200,
+    "mainBreakerAmps": 200,
+    "availableBreakerSpaces": 4,
+    "panelWorkingClearanceIn": 36,
+    "existingLoad": {
+      "dwellingSqFt": 1800,
+      "smallApplianceCircuits": 2,
+      "hasLaundryCircuit": true,
+      "fixedAppliancesVA": 6000,
+      "existingHvacVA": 0,
+      "measuredPeakDemandKW": null
+    },
+    "jobType": "heat_pump_panel",
+    "heatPump": {
+      "manufacturer": "Northfield Climate",
+      "model": "NCH-18",
+      "coolingBTU": 24000,
+      "heatingBTU": 26000,
+      "voltage": 240,
+      "mcaAmps": 18,
+      "mocpAmps": 25
+    },
+    "proposedBreakerAmps": 30,
+    "conductorAWG": "10 AWG Cu",
+    "disconnectWithinSight": true,
+    "outdoorUnitSetbackFt": 8,
+    "panelUpgrade": null
+  },
+  "expectedDecision": "return_for_fixes",
+  "expectedFailingRuleIds": [
+    "heat_pump_panel.breaker_sizing"
+  ],
+  "expectUtilityFlag": false
+}

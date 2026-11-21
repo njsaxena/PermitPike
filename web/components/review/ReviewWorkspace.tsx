@@ -125,24 +125,17 @@ export function ReviewWorkspace({
           <ArrowLeft aria-hidden className="size-4" strokeWidth={1.75} />
           Queue
         </Link>
-        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-          <div className="flex min-w-0 flex-col gap-3">
-            <PermitHeading app={app} />
-            <p className="text-sm text-ink">
-              Filed by <span className="font-semibold">{app.applicant.name}</span>
-              {app.applicant.company ? `, ${app.applicant.company}` : ""} · License{" "}
-              <span className="font-mono">{app.applicant.licenseNumber}</span>
-              {detail.versions.length > 1 && (
-                <span className="text-muted">
-                  {" "}
-                  · Version {version} of {detail.versions.length}
-                </span>
-              )}
-            </p>
-            {note && <p className="text-sm text-muted">{note}</p>}
-          </div>
-          {actions}
-        </div>
+        <PermitHeading
+          app={app}
+          viewer="official"
+          actions={actions}
+          facts={
+            detail.versions.length > 1
+              ? [{ label: "Version", value: `${version} of ${detail.versions.length}` }]
+              : []
+          }
+        />
+        {note && <p className="text-sm text-muted">{note}</p>}
       </div>
 
       {notice}

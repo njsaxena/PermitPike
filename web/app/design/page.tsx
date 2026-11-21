@@ -298,6 +298,7 @@ const STATUSES: StatusChipStatus[] = [
   "awaiting_official",
   "returned",
   "approved",
+  "expired",
 ];
 
 const JOB_OPTIONS = Object.entries(JOB_TYPE_LABELS).map(([value, label]) => ({ value, label }));
@@ -311,17 +312,17 @@ export default function DesignPage() {
         <div className="flex flex-col gap-6">
           <PermitPikeLogo size="md" on="background" />
           <h1 className="text-display tracking-tight text-ink">Design system</h1>
-          {/* The two sides of PermitPike, built from this system with the example permits. */}
+          {/* The two sides of PermitPike, live: file a permit, then review it. */}
           <div className="flex flex-wrap gap-3">
             <ButtonLink
-              href="/design/applicant"
+              href="/apply"
               variant="secondary"
               icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}
             >
               The applicant portal
             </ButtonLink>
             <ButtonLink
-              href="/design/portal"
+              href="/review"
               variant="secondary"
               icon={<ArrowRight aria-hidden className="size-4" strokeWidth={1.75} />}
             >
@@ -747,7 +748,7 @@ export default function DesignPage() {
           <Sample state="empty, required">
             <DocumentSlotDemo
               title="Heat pump spec sheet"
-              hint="The manufacturer's sheet for the outdoor unit. It lists the minimum circuit ampacity (MCA) and maximum overcurrent protection (MOCP)."
+              hint="The manufacturer's sheet for the outdoor unit listing minimum circuit ampacity (MCA) and maximum overcurrent protection (MOCP)."
               required
               accept=".pdf,.jpg,.png"
             />
@@ -755,7 +756,7 @@ export default function DesignPage() {
           <Sample state="attached">
             <DocumentSlotDemo
               title="Photo of the electrical panel"
-              hint="Door open, with the main breaker and the label inside the door readable. A phone photo is fine."
+              hint="The main breaker and interior label must be readable."
               required
               accept=".jpg,.png"
               files={FILES.slice(0, 1)}
@@ -764,7 +765,7 @@ export default function DesignPage() {
           <Sample state="optional, focus">
             <DocumentSlotDemo
               title="Site plan"
-              hint="Where the outdoor unit and its disconnect go. A photo of a hand sketch is fine."
+              hint="Location for outdoor unit and disconnect."
               accept=".pdf,.jpg,.png"
               data-demo="focus"
             />
@@ -772,14 +773,14 @@ export default function DesignPage() {
           <Sample state="dragging over">
             <DocumentSlotDemo
               title="Load calculation"
-              hint="Only if you already did one. PermitPike runs its own either way."
+              hint="PermitPike runs this either way."
               data-demo="dragging"
             />
           </Sample>
           <Sample state="error">
             <DocumentSlotDemo
               title="Photo of the electrical panel"
-              hint="Door open, with the main breaker and the label inside the door readable. A phone photo is fine."
+              hint="The main breaker and interior label must be readable."
               required
               error="Attach the photo of the electrical panel."
             />
