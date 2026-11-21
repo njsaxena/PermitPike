@@ -15,6 +15,7 @@ export function toSummary(app: Application): PermitSummary {
     jobType: app.jobType,
     status: app.status,
     risk: riskOf(app.recommendation),
+    closureRisk: app.closureRisk,
     filed: stamp(app.submittedAt),
     checks,
   };

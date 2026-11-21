@@ -113,13 +113,13 @@ export const APPLICATIONS = [
 
 /** Queue samples: a mix of every progress stage, deliberately out of order. */
 export const QUEUE: PermitSummary[] = [
-  { id: "a1", permitNumber: "EL-2026-04391", street: "9 Thwing St", neighborhood: "Roxbury", jobType: "home_battery", status: "approved", risk: "low", filed: "2026-11-19 11:02", checks: { fail: 0, warn: 0, pass: 5 } },
-  { id: "a2", permitNumber: "EL-2026-04417", street: "118 Marlborough St", neighborhood: "Back Bay", jobType: "heat_pump_panel", status: "awaiting_official", risk: "med", filed: "2026-11-21 09:14", checks: { fail: 0, warn: 1, pass: 3 } },
-  { id: "a3", permitNumber: "EL-2026-04409", street: "52 Pinckney St", neighborhood: "Beacon Hill", jobType: "ev_charger", status: "returned", risk: "high", filed: "2026-11-20 15:47", checks: { fail: 2, warn: 1, pass: 1 } },
-  { id: "a4", permitNumber: "EL-2026-04421", street: "37 Ashford St", neighborhood: "Allston", jobType: "ev_charger", status: "ai_review", risk: "low", filed: "2026-11-21 10:05", checks: { fail: 0, warn: 0, pass: 2 } },
-  { id: "a5", permitNumber: "EL-2026-04402", street: "211 Savin Hill Ave", neighborhood: "Dorchester", jobType: "heat_pump_panel", status: "awaiting_official", risk: "low", filed: "2026-11-20 08:31", checks: { fail: 0, warn: 0, pass: 4 } },
-  { id: "a6", permitNumber: "EL-2026-04424", street: "14 Monument Sq", neighborhood: "Charlestown", jobType: "home_battery", status: "submitted", risk: "med", filed: "2026-11-21 10:40", checks: {} },
-  { id: "a7", permitNumber: "EL-2026-04398", street: "66 Centre St", neighborhood: "Jamaica Plain", jobType: "heat_pump_panel", status: "awaiting_official", risk: "high", filed: "2026-11-19 16:20", checks: { fail: 1, warn: 2, pass: 2 } },
+  { id: "a1", permitNumber: "EL-2026-04391", street: "9 Thwing St", neighborhood: "Roxbury", jobType: "home_battery", status: "approved", risk: "low", closureRisk: null, filed: "2026-11-19 11:02", checks: { fail: 0, warn: 0, pass: 5 } },
+  { id: "a2", permitNumber: "EL-2026-04417", street: "118 Marlborough St", neighborhood: "Back Bay", jobType: "heat_pump_panel", status: "awaiting_official", risk: "med", closureRisk: null, filed: "2026-11-21 09:14", checks: { fail: 0, warn: 1, pass: 3 } },
+  { id: "a3", permitNumber: "EL-2026-04409", street: "52 Pinckney St", neighborhood: "Beacon Hill", jobType: "ev_charger", status: "returned", risk: "high", closureRisk: null, filed: "2026-11-20 15:47", checks: { fail: 2, warn: 1, pass: 1 } },
+  { id: "a4", permitNumber: "EL-2026-04421", street: "37 Ashford St", neighborhood: "Allston", jobType: "ev_charger", status: "ai_review", risk: "low", closureRisk: null, filed: "2026-11-21 10:05", checks: { fail: 0, warn: 0, pass: 2 } },
+  { id: "a5", permitNumber: "EL-2026-04402", street: "211 Savin Hill Ave", neighborhood: "Dorchester", jobType: "heat_pump_panel", status: "awaiting_official", risk: "low", closureRisk: null, filed: "2026-11-20 08:31", checks: { fail: 0, warn: 0, pass: 4 } },
+  { id: "a6", permitNumber: "EL-2026-04424", street: "14 Monument Sq", neighborhood: "Charlestown", jobType: "home_battery", status: "submitted", risk: "med", closureRisk: null, filed: "2026-11-21 10:40", checks: {} },
+  { id: "a7", permitNumber: "EL-2026-04398", street: "66 Centre St", neighborhood: "Jamaica Plain", jobType: "heat_pump_panel", status: "awaiting_official", risk: "high", closureRisk: null, filed: "2026-11-19 16:20", checks: { fail: 1, warn: 2, pass: 2 } },
 ];
 
 /* ---------------------------------------------------------- Example library */

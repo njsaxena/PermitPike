@@ -30,6 +30,7 @@ import type {
   Extraction,
   FileRef,
   Parcel,
+  PermitRiskScoreResponse,
   Recommendation,
 } from "@permitpike/contract";
 
@@ -79,6 +80,7 @@ export const applications = pgTable(
     /** Copies of the current version's agent output, so the queue reads one row. */
     extraction: jsonb("extraction").$type<Extraction>(),
     recommendation: jsonb("recommendation").$type<Recommendation>(),
+    closureRisk: jsonb("closure_risk").$type<PermitRiskScoreResponse>(),
     /** Queue risk derived from recommendation (web/lib/risk.ts). Null until reviewed. */
     risk: jsonb("risk").$type<{ level: "high" | "med" | "low" }>(),
     submittedAt: timestamptz("submitted_at").notNull().defaultNow(),
@@ -175,3 +177,11 @@ export const bostonPermits = pgTable(
     index("boston_permits_status_idx").on(t.status),
   ],
 );
+
+/** Private lookup keyed by normalized Analyze Boston applicant; never exposed in API responses. */
+export const contractorStats = pgTable("contractor_stats", {
+  normalizedApplicant: text("normalized_applicant").primaryKey(),
+  permitCount: integer("permit_count").notNull(),
+  priorClosureRate: doublePrecision("prior_closure_rate").notNull(),
+  asOfDate: timestamptz("as_of_date").notNull(),
+});

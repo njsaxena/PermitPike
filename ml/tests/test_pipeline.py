@@ -16,19 +16,21 @@ class PermitPipelineTests(unittest.TestCase):
     def test_prior_rate_uses_only_strictly_earlier_issue_dates(self):
         frame = pd.DataFrame(
             {
-                "applicant": ["A", "A", "A"],
+                "applicant": ["A", "A", "A", None],
                 "issued_date": [
                     "2020-01-01T00:00:00Z",
                     "2020-01-01T00:00:00Z",
                     "2020-01-02T00:00:00Z",
+                    "2020-01-03T00:00:00Z",
                 ],
-                "status": ["Closed", "Open", "Closed"],
+                "status": ["Closed", "Open", "Closed", "Open"],
             }
         )
         rates = compute_prior_closure_rate(frame)
         self.assertEqual(rates.iloc[0], 0)
         self.assertEqual(rates.iloc[1], 0)
         self.assertEqual(rates.iloc[2], 0.5)
+        self.assertEqual(rates.iloc[3], 0)
 
     def test_labels_and_chronological_splits(self):
         frame = pd.DataFrame(

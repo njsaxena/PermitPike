@@ -18,6 +18,8 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from ml.normalization import normalize_applicant_name
+
 MODEL_VERSION = "closure_v1"
 DATA_PATH = Path(__file__).parent / "data" / "boston_permits_2015.csv"
 MODEL_PATH = Path(__file__).parent / "model" / f"{MODEL_VERSION}.joblib"
@@ -55,7 +57,7 @@ def parse_numeric(values: pd.Series) -> pd.Series:
 def compute_prior_closure_rate(frame: pd.DataFrame) -> pd.Series:
     """Rate by applicant, excluding the current date and all later permits."""
     issued = pd.to_datetime(frame["issued_date"], utc=True, errors="coerce")
-    applicants = frame["applicant"].astype("string").str.strip().str.casefold()
+    applicants = frame["applicant"].map(normalize_applicant_name).astype("string")
     valid = issued.notna() & applicants.notna() & applicants.ne("")
     events = pd.DataFrame(
         {

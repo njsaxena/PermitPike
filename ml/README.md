@@ -111,6 +111,35 @@ The saved LightGBM artifact is 446,938 bytes.
 - Five warmed local HTTP scoring requests completed in 7.8–9.5 ms each during
   validation (well below the 300 ms target).
 
+## PermitPike integration: closure risk
+
+The web review API calls `POST /score` after saving the recommendation, with a
+2-second timeout. `RISK_API_URL` points to the service base URL; if it is unset,
+the request times out, or the response is invalid, the application stores
+`closureRisk: null` and review continues. The recommendation's separate
+`risk` field is unchanged.
+
+The contractor history is rebuilt with
+`python3.11 -m ml.rebuild_contractor_stats`. It uses the same trimmed,
+case-folded applicant names and strictly earlier issue-date closure-rate
+calculation as training. Unknown names use the citywide permit-weighted closure
+rate. The normalized names stay in the private `contractor_stats` table and are
+never sent to the scoring API or returned to the browser.
+
+Job mapping to the most representative Boston training categories:
+
+| PermitPike job | Boston `worktype` | Boston `permittypedescr` |
+|---|---|---|
+| Heat pump / panel | `ELECTRICAL` | `Electrical Permit` |
+| EV charger | `SPCEVE` | `Short Form Bldg Permit` |
+| Home battery | `SOL` | `Electrical Permit` |
+
+These are nearest category matches, not a claim that the source descriptions
+identify the same project type. ZIP comes from the application address and
+square footage from extracted dwelling area when available; occupancy and
+valuation remain null until the application stores assessment occupancy and
+`estimatedProjectCost`.
+
 Run with Python 3.11:
 
 ```bash
@@ -118,6 +147,7 @@ python3.11 -m pip install -r ml/requirements.txt
 python3.11 -m ml.download_data
 python3.11 -m ml.train
 python3.11 -m ml.ingest
+python3.11 -m ml.rebuild_contractor_stats
 python3.11 -m uvicorn ml.app:app --host 0.0.0.0 --port 8000
 ```
 
