@@ -2,6 +2,8 @@
   <img src="docs/readme-banner.png" alt="PermitPike, built at BostonHacks 2026" width="100%">
 </h1>
 
+PermitPike is the fast lane for Boston electrical permits.
+
 AI permit desk for residential electrical permits in Boston (heat pumps, panel
 upgrades, EV chargers, home batteries). An electrician uploads specs; the agent
 extracts fields, runs a shared load calc plus device-specific rule packs, and posts a
