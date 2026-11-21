@@ -72,6 +72,7 @@ export function ReviewDetail({ id }: { id: string }) {
       detail={data}
       version={pinned}
       backHref="/review"
+      archiveHref={`/review/archive?from=${encodeURIComponent(app.id)}`}
       notice={
         isStale && (
           <Callout tone="warning" title={STALE}>

@@ -127,6 +127,16 @@ results. `pnpm evals` runs every case through the same pipeline and reports deci
 accuracy, accuracy per rule and dangerous misses (a failing check scored as a pass), and
 writes each run to `eval_runs` in Tiger Data for the eval dashboard at `/review/evals`.
 
+### Boston permit archive
+
+Open **Archive** from the reviewer header or **Search permit archive** from a permit.
+The chat searches public Analyze Boston permit records by address, neighborhood, type
+of work, year, or permit number. Reviewers can compare records, download summaries,
+open official reference PDFs, and look up original scans in the City’s ScerIS archive.
+On the web host, `GOOGLE_GENERATIVE_AI_API_KEY` enables optional Gemini assistance
+when the shared database rate limiter is available. Searches use the same public
+sources when Gemini is unavailable.
+
 ## Stack
 
 | Tool | What it does in PermitPike |
