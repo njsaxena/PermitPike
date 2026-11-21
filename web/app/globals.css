@@ -90,6 +90,12 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* The page stops at its top and bottom: no rubber-band bounce past either end. */
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
   /* Borders default to granite, not currentColor. */
   *,
   ::before,

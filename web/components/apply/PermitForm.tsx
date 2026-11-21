@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { JOB_DESCRIPTION_MAX, JOB_TYPE_LABELS, JobType, type Address, type FileKind } from "@permitpike/contract";
 import { Button, DocumentSlot, Input, Select, Textarea, type FileChipData } from "@/components/ui";
 import { DOCUMENTS } from "@/lib/documents";
@@ -26,6 +26,21 @@ export function parseUsd(input: string): number | null {
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
   const n = Number(cleaned);
   return Number.isFinite(n) && n <= 100_000_000 ? n : null;
+}
+
+/** "30000" -> "30,000", "1234567.5" -> "1,234,567.5": digits grouped by thousands as they're typed, two decimals at most. */
+export function groupUsd(input: string): string {
+  const cleaned = input.replace(/[^\d.]/g, "");
+  const [whole = "", ...rest] = cleaned.split(".");
+  const grouped = whole.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return cleaned.includes(".") ? `${grouped}.${rest.join("").slice(0, 2)}` : grouped;
+}
+
+/** Where the caret goes in `value` to sit after `digits` digits (commas don't count). */
+function caretAfter(value: string, digits: number): number {
+  let i = 0;
+  for (let seen = 0; i < value.length && seen < digits; i++) if (/[\d.]/.test(value[i]!)) seen++;
+  return i;
 }
 
 export interface PermitFormInitial {
@@ -72,7 +87,16 @@ export function PermitForm({
   const [parcelNeighborhood, setParcelNeighborhood] = useState<string | null>(initial.neighborhood ?? null);
   const [zip, setZip] = useState(initial.zip ?? "");
   const [property, setProperty] = useState<PropertyState>({ kind: "idle" });
-  const [cost, setCost] = useState(initial.cost ?? "");
+  const [cost, setCost] = useState(groupUsd(initial.cost ?? ""));
+  // Commas move as the cost is typed; keep the caret after the same digit.
+  const costCaret = useRef<{ el: HTMLInputElement; digits: number } | null>(null);
+  useLayoutEffect(() => {
+    const pending = costCaret.current;
+    if (!pending) return;
+    costCaret.current = null;
+    const at = caretAfter(pending.el.value, pending.digits);
+    pending.el.setSelectionRange(at, at);
+  }, [cost]);
   const [description, setDescription] = useState(initial.description ?? "");
   // Kept by kind, so switching the job keeps what was already attached.
   const [files, setFiles] = useState<Partial<Record<FileKind, FileChipData[]>>>(initial.files ?? {});
@@ -188,7 +212,18 @@ export function PermitForm({
             mono
             inputMode="decimal"
             value={cost}
-            onChange={(e) => setCost(e.target.value)}
+            onChange={(e) => {
+              const el = e.target;
+              let raw = el.value;
+              let caret = el.selectionStart ?? raw.length;
+              // Backspace on a comma: take the digit before it instead.
+              if (groupUsd(raw) === cost && raw.length < cost.length && caret > 0) {
+                raw = raw.slice(0, caret - 1) + raw.slice(caret);
+                caret -= 1;
+              }
+              costCaret.current = { el, digits: raw.slice(0, caret).replace(/[^\d.]/g, "").length };
+              setCost(groupUsd(raw));
+            }}
             error={errors.cost}
             required
           />

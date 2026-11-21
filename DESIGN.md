@@ -64,6 +64,8 @@ color. Where a whole row is the link, only the row shows the wash.
 
 **System text selection.** Never restyle `::selection`; selected text uses the browser's own highlight.
 
+**No overscroll bounce.** `html` and `body` set `overscroll-behavior: none`: the page stops at its top and bottom instead of rubber-banding past them.
+
 Every text/background pair passes WCAG AA. Tints are for backgrounds only.
 
 ### Type
@@ -292,7 +294,8 @@ The electrician's side (`/apply`).
   the queue. There is no pretend filing anywhere. Not signed in yet: name and license
   first, then straight back to the form that was picked.
 - **One form.** `PermitForm` is the form without the saving; `FilePermitForm` uploads and
-  files. Validation: street, 5-digit ZIP, cost in dollars, each required document.
+  files. Validation: street, 5-digit ZIP, cost in dollars, each required document. The cost
+  groups itself with commas as it's typed (30000 → 30,000), keeping the caret in place.
 - **After filing** the page leads with the tracking code, then the permit as it stands.
 - **One permit** (`ApplicantPermitView`): heading, tracking code, trail, a one-line status
   ("Waiting for a building official. PermitPike found 1 problem they will look at."),
