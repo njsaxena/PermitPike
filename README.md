@@ -55,7 +55,39 @@ Mastra dev server on http://localhost:4111.
 | `pnpm check`       | Typecheck every package + build web. Run before every push. |
 | `pnpm db:generate` | Generate a migration after editing `packages/db/schema.ts` |
 | `pnpm db:migrate`  | Apply migrations to `DATABASE_URL`         |
+| `pnpm db:check`    | Row counts per table + newest `permits_weekly` rows |
 | `pnpm evals`       | Validate and run eval cases                |
+
+## Database
+
+Tiger Data (Postgres 18 + TimescaleDB). Everything reads `DATABASE_URL` from the root
+`.env` (Tiger's connection string, `sslmode=require`). `.env` is gitignored; never commit it.
+
+Run migrations (safe to rerun; only new ones apply):
+
+```bash
+pnpm db:migrate
+```
+
+Seed the three demo applications into the reviewer queue (rerun to reset the demo):
+
+```bash
+pnpm seed
+```
+
+Check what's in the database:
+
+```bash
+pnpm db:check
+```
+
+Tables: `applicants`, `applications`, `application_versions`, `reviewer_actions` (append-only
+audit log) and `eval_runs` come from `packages/db/schema.ts` via `migrations/0000_init.sql`.
+`boston_permits` is a hypertable on `issued_date` (segmented by `worktype`), and
+`permits_weekly` is a continuous aggregate of weekly counts by `worktype` and `zip`, refreshed
+hourly. Both are in the hand-written `migrations/0001_boston_permits_hypertable.sql`, because
+Drizzle doesn't know hypertables. After editing `schema.ts`, run `pnpm db:generate`; never edit
+a migration that has been applied, add a new one.
 
 ## API
 

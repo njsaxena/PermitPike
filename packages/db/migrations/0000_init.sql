@@ -1,6 +1,16 @@
+-- boston_permits is in schema.ts (and the snapshot) but is created by 0001 as a hypertable.
 CREATE TYPE "public"."application_status" AS ENUM('submitted', 'ai_review', 'awaiting_official', 'returned', 'approved');--> statement-breakpoint
 CREATE TYPE "public"."job_type" AS ENUM('heat_pump_panel', 'ev_charger', 'home_battery');--> statement-breakpoint
 CREATE TYPE "public"."reviewer_action_type" AS ENUM('approve', 'return', 'override');--> statement-breakpoint
+CREATE TABLE "applicants" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"company" text,
+	"license_number" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "applicants_license_number_unique" UNIQUE("license_number")
+);
+--> statement-breakpoint
 CREATE TABLE "application_versions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"application_id" uuid NOT NULL,
@@ -15,34 +25,21 @@ CREATE TABLE "application_versions" (
 --> statement-breakpoint
 CREATE TABLE "applications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"permit_seq" serial NOT NULL,
+	"applicant_id" uuid NOT NULL,
 	"job_type" "job_type" NOT NULL,
 	"address" jsonb NOT NULL,
 	"applicant" jsonb NOT NULL,
+	"parcel_id" text,
 	"status" "application_status" DEFAULT 'submitted' NOT NULL,
-	"current_version" integer DEFAULT 1 NOT NULL,
+	"version" integer DEFAULT 1 NOT NULL,
+	"extraction" jsonb,
+	"recommendation" jsonb,
+	"risk" jsonb,
 	"submitted_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"decided_at" timestamp with time zone,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "boston_permits" (
-	"permit_number" text NOT NULL,
-	"issued_date" timestamp with time zone NOT NULL,
-	"expiration_date" timestamp with time zone,
-	"work_type" text,
-	"permit_type_descr" text,
-	"description" text,
-	"comments" text,
-	"status" text,
-	"declared_valuation" numeric,
-	"total_fees" numeric,
-	"address" text,
-	"zip" text,
-	"property_id" text,
-	"parcel_id" text,
-	"latitude" double precision,
-	"longitude" double precision,
-	CONSTRAINT "boston_permits_permit_number_issued_date_pk" PRIMARY KEY("permit_number","issued_date")
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "applications_permit_seq_unique" UNIQUE("permit_seq")
 );
 --> statement-breakpoint
 CREATE TABLE "eval_runs" (
@@ -71,7 +68,8 @@ CREATE TABLE "reviewer_actions" (
 );
 --> statement-breakpoint
 ALTER TABLE "application_versions" ADD CONSTRAINT "application_versions_application_id_applications_id_fk" FOREIGN KEY ("application_id") REFERENCES "public"."applications"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "applications" ADD CONSTRAINT "applications_applicant_id_applicants_id_fk" FOREIGN KEY ("applicant_id") REFERENCES "public"."applicants"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "reviewer_actions" ADD CONSTRAINT "reviewer_actions_application_id_applications_id_fk" FOREIGN KEY ("application_id") REFERENCES "public"."applications"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "applications_status_idx" ON "applications" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "boston_permits_work_type_idx" ON "boston_permits" USING btree ("work_type","issued_date");--> statement-breakpoint
+CREATE INDEX "applications_status_idx" ON "applications" USING btree ("status","submitted_at");--> statement-breakpoint
+CREATE INDEX "applications_applicant_idx" ON "applications" USING btree ("applicant_id","submitted_at");--> statement-breakpoint
 CREATE INDEX "reviewer_actions_app_idx" ON "reviewer_actions" USING btree ("application_id","created_at");

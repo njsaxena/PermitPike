@@ -5,14 +5,14 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1795277768539,
+      "when": 1795282605458,
       "tag": "0000_init",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1795277769750,
+      "when": 1795282606625,
       "tag": "0001_boston_permits_hypertable",
       "breakpoints": true
     }

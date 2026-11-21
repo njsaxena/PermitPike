@@ -13,9 +13,12 @@
     "check": "pnpm typecheck && pnpm build",
     "db:generate": "pnpm --filter @permitpike/db generate",
     "db:migrate": "pnpm --filter @permitpike/db migrate",
+    "db:check": "tsx scripts/db-check.ts",
     "evals": "pnpm --filter @permitpike/evals run evals"
   },
   "devDependencies": {
+    "@permitpike/db": "workspace:*",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.0"
   }
 }
