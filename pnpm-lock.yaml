@@ -166,6 +166,12 @@ importers:
 
   .:
     devDependencies:
+      '@permitpike/db':
+        specifier: workspace:*
+        version: link:packages/db
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       typescript:
         specifier: ^5.9.0
         version: 5.9.3

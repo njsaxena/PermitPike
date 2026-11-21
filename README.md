@@ -1,4 +1,6 @@
-# PermitPike
+<h1>
+  <img src="docs/readme-banner.png" alt="PermitPike, built at BostonHacks 2026" width="100%">
+</h1>
 
 AI permit desk for residential electrical permits in Boston (heat pumps, panel
 upgrades, EV chargers, home batteries). An electrician uploads specs; the agent
@@ -8,7 +10,7 @@ confidence score and a code citation on every check.
 
 A licensed official always makes the final call. The AI never approves on its own.
 
-BostonHacks 2026. Status: scaffold. API routes serve mocks.
+BostonHacks 2026. Applications live in Tiger Data; every device sees the same queue.
 
 ## Layout
 
@@ -40,8 +42,14 @@ cp .env.example .env
 pnpm dev:web
 ```
 
-Open http://localhost:3000/api/applications. With `USE_MOCKS=true` every route returns
-mock data from `web/mocks/`.
+Open http://localhost:3000. Needs `DATABASE_URL` in `.env`; uploads also need `BLOB_READ_WRITE_TOKEN`. First time against a new database:
+
+```bash
+pnpm db:migrate && pnpm seed
+```
+
+`pnpm seed` puts the three demo applications from `web/mocks/` into the database
+(rerun it to reset the demo).
 
 ```bash
 pnpm dev:agent
@@ -101,14 +109,49 @@ authority. The MCP supplies references for review and has no permit decision act
 | `pnpm check`       | Typecheck every package + build web. Run before every push. |
 | `pnpm db:generate` | Generate a migration after editing `packages/db/schema.ts` |
 | `pnpm db:migrate`  | Apply migrations to `DATABASE_URL`         |
+| `pnpm db:check`    | Row counts per table + newest `permits_weekly` rows |
 | `pnpm evals`       | Validate and run eval cases                |
+
+## Database
+
+Tiger Data (Postgres 18 + TimescaleDB). Everything reads `DATABASE_URL` from the root
+`.env` (Tiger's connection string, `sslmode=require`). `.env` is gitignored; never commit it.
+
+Run migrations (safe to rerun; only new ones apply):
+
+```bash
+pnpm db:migrate
+```
+
+Seed the three demo applications into the reviewer queue (rerun to reset the demo):
+
+```bash
+pnpm seed
+```
+
+Check what's in the database:
+
+```bash
+pnpm db:check
+```
+
+Tables: `applicants`, `applications`, `application_versions`, `reviewer_actions` (append-only
+audit log) and `eval_runs` come from `packages/db/schema.ts` via `migrations/0000_init.sql`.
+`boston_permits` is a hypertable on `issued_date` (segmented by `worktype`), and
+`permits_weekly` is a continuous aggregate of weekly counts by `worktype` and `zip`, refreshed
+hourly. Both are in the hand-written `migrations/0001_boston_permits_hypertable.sql`, because
+Drizzle doesn't know hypertables. After editing `schema.ts`, run `pnpm db:generate`; never edit
+a migration that has been applied, add a new one.
 
 ## API
 
 All shapes live in `packages/contract/index.ts` (`API_ROUTES`).
 
+- `POST /api/applicants` (name + license number; creates or reuses)
+- `POST /api/reviewer/session` (reviewer name; sets the reviewer cookie, no passcode)
+- `POST /api/blob` (upload tokens; browsers upload straight to Vercel Blob)
 - `POST /api/applications`
-- `GET /api/applications?status=&jobType=`
+- `GET /api/applications?status=&jobType=` (reviewer) or `?applicantId=` (My permits)
 - `GET /api/applications/:id`
 - `POST /api/applications/:id/resubmit`
 - `POST /api/applications/:id/review`
