@@ -59,6 +59,7 @@ const readings: Evidence = {
   proposedBreakerAmps: reading(20, "Proposed breaker 20 A", "A"),
   conductorAWG: missing,
   disconnectWithinSight: missing,
+  gfciProtected: missing,
   outdoorUnitSetbackFt: missing,
   "panelUpgrade.proposedPanelRatingAmps": missing,
   "panelUpgrade.proposedServiceAmps": missing,
@@ -111,6 +112,7 @@ test("uploaded spec and worksheet produce a contract-valid Gemini extraction tog
   assert.equal(result.fields.existingLoad.hasLaundryCircuit, true);
   assert.equal(result.fields.heatPump.mcaAmps, 15);
   assert.equal(result.fields.proposedBreakerAmps, 20);
+  assert.equal(result.fields.gfciProtected, null);
   assert.equal(result.fields.outdoorUnitSetbackFt, null);
   assert.equal(result.fieldConfidence["heatPump.mcaAmps"], 0.95);
   assert.ok(result.missingFields.includes("outdoorUnitSetbackFt"));
