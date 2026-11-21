@@ -74,7 +74,10 @@ function Base({ children, className }: { children: ReactNode; className?: string
       center={BOSTON}
       zoom={13}
       maxZoom={19}
-      scrollWheelZoom={false}
+      // The wheel zooms the map while the pointer is over it, and the page doesn't scroll.
+      // A softer step than the default so trackpads don't race through zoom levels.
+      scrollWheelZoom
+      wheelPxPerZoomLevel={120}
       attributionControl={false}
       className={className}
     >

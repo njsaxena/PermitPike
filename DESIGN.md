@@ -345,7 +345,7 @@ The electrician's side (`/apply`).
 | `PermitPikeLogo`, `PermitPikeMark` | The logo (see Logo) |
 | `BostonDrawing` | Line drawings (see Imagery) |
 | `EmptyState` | Drawing, one sentence, at most one action |
-| `PropertyMap` | Leaflet map (next/dynamic, `ssr:false`) of one parcel: grayscale OpenStreetMap tiles with visible attribution, harbor-navy outline, brick-red square pin. Screen-reader summary on the focusable map; arrow keys pan, +/- zoom. With no parcel it renders `MapUnavailable` |
+| `PropertyMap` | Leaflet map (next/dynamic, `ssr:false`) of one parcel: grayscale OpenStreetMap tiles with visible attribution, harbor-navy outline, brick-red square pin. Screen-reader summary on the focusable map; arrow keys pan, +/- zoom. The scroll wheel zooms the map while the pointer is over it, and the page stays still. The queue's permit map works the same way. With no parcel it renders `MapUnavailable` |
 | `MapUnavailable` | The address as text plus "Map unavailable". Used whenever the lookup fails, finds nothing or takes over 3 seconds. Never blocks filing |
 | `ZoningChips` | Zoning district (ink edge, subdistrict in mono), then overlays (quiet) |
 | `PropertyCard` | Reviewer detail, beside the checks: map, parcel ID, assessor address, zoning, overlays and the article's dimensional tables (labelled "Setback table" when the job has a setback check) |
