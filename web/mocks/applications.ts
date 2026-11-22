@@ -17,9 +17,11 @@ import type {
   ApplicationVersion,
   CheckResult,
   FileRef,
+  ExistingLoadInputs,
   HeatPumpPanelFields,
-  Recommendation,
   LoadCalcInput,
+  LoadCalcResult,
+  Recommendation,
   NewLoad,
 } from "@permitpike/contract";
 import { Parcel } from "@permitpike/contract";
@@ -51,17 +53,17 @@ function file(id: string, kind: FileRef["kind"], name: string, uploadedAt: strin
 /** Load calc input from the mock's extracted existing-load fields. */
 function mockLoadCalc(
   ratingAmps: number,
-  existing: { dwellingSqFt: number; smallApplianceCircuits: number; hasLaundryCircuit: boolean; fixedAppliancesVA: number },
+  existing: Pick<ExistingLoadInputs, "dwellingSqFt" | "smallApplianceCircuits" | "hasLaundryCircuit" | "fixedAppliancesVA">,
   newLoads: NewLoad[],
-): Recommendation["loadCalc"] {
+): LoadCalcResult {
   const input: LoadCalcInput = {
     service: { ratingAmps, voltage: 240 },
     home: {
       squareFeet: existing.dwellingSqFt,
-      smallApplianceCircuits: existing.smallApplianceCircuits,
+      smallApplianceCircuits: existing.smallApplianceCircuits ?? undefined,
       laundryCircuits: existing.hasLaundryCircuit ? 1 : 0,
       existingAppliances: [
-        { name: "Fixed appliances (nameplate total)", watts: existing.fixedAppliancesVA, isHeatingOrCooling: false },
+        { name: "Fixed appliances (nameplate total)", watts: existing.fixedAppliancesVA ?? 0, isHeatingOrCooling: false },
       ],
     },
     newLoads,

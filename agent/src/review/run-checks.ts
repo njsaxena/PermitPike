@@ -11,7 +11,7 @@ import type {
   LoadCalcInput,
   LoadCalcResult,
 } from "@permitpike/contract";
-import { calculateLoad } from "@permitpike/loadcalc";
+import { calculateLoad, missingInputsCheck } from "@permitpike/loadcalc";
 import { getPack, type Rule, type RulePack } from "@permitpike/packs";
 
 /**
@@ -35,24 +35,45 @@ export const RULE_REQUIRED_FIELDS: Record<string, string[]> = {
   ],
 };
 
-/** Dot paths the load calc reads. If any is missing the review can't finish. */
+/** Dot paths the load calc reads. If any is missing the load calc goes to manual review. */
 const LOAD_CALC_REQUIRED_FIELDS = ["serviceVoltage", "existingServiceAmps", "existingLoad.fixedAppliancesVA", "existingLoad.existingHvacVA"];
 const LOAD_CALC_SQFT_FIELD = "existingLoad.dwellingSqFt";
+/** Plain words for the fields checks read, for the official and the applicant. */
+const FIELD_WORDS: Record<string, string> = {
+  serviceVoltage: "the service voltage",
+  existingServiceAmps: "the existing service rating",
+  "existingLoad.fixedAppliancesVA": "the existing fixed appliance load",
+  "existingLoad.existingHvacVA": "the existing heating and cooling load",
+  "existingLoad.dwellingSqFt": "the home's square footage",
+  "heatPump.mcaAmps": "the heat pump's MCA",
+  "heatPump.mocpAmps": "the heat pump's MOCP",
+  "heatPump.voltage": "the heat pump's voltage",
+  proposedBreakerAmps: "the new circuit's breaker size",
+  outdoorUnitSetbackFt: "the outdoor unit's setback",
+  disconnectWithinSight: "the disconnect location",
+  gfciProtected: "GFCI protection",
+  conductorAWG: "the conductor size",
+  availableBreakerSpaces: "the open breaker spaces",
+  panelWorkingClearanceIn: "the working clearance in front of the panel",
+  panelUpgrade: "the panel upgrade ratings",
+};
+const words = (paths: string[]) => paths.map((p) => FIELD_WORDS[p] ?? p).join(", ");
 const LOAD_CALC_REQUIRED_BY_JOB: Partial<Record<JobType, string[]>> = {
   heat_pump_panel: ["heatPump.mcaAmps", "heatPump.voltage"],
 };
 
-/** Thrown when the review can't produce an honest result. The message says why. */
-export class ReviewIncompleteError extends Error {
-  override name = "ReviewIncompleteError";
-}
-
 export interface ChecksResult {
   /** Rule checks, manual-review items (status "warn"), then the load calc check. */
   checks: CheckResult[];
-  loadCalc: LoadCalcResult;
+  /** Null when a load calc input is missing; the last check then says which. */
+  loadCalc: LoadCalcResult | null;
   /** Rule ids skipped because a field they read was missing. */
   manualReviewRuleIds: string[];
+}
+
+/** The value at a dot path, or undefined when a parent is missing. */
+function valueAt(fields: ExtractedFields, path: string): unknown {
+  return path.split(".").reduce<unknown>((v, key) => (v && typeof v === "object" ? (v as Record<string, unknown>)[key] : undefined), fields);
 }
 
 /** True when `path` is missing, or a parent of it is (missing "heatPump" covers "heatPump.mcaAmps"). */
@@ -61,7 +82,7 @@ function isMissing(path: string, missing: string[]): boolean {
 }
 
 function manualReviewCheck(rule: Pick<Rule<JobType>, "id" | "title" | "citation">, paths: string[]): CheckResult {
-  const list = paths.join(", ");
+  const list = words(paths);
   return {
     ruleId: rule.id,
     title: rule.title,
@@ -76,10 +97,10 @@ function manualReviewCheck(rule: Pick<Rule<JobType>, "id" | "title" | "citation"
 export function loadCalcInput(fields: ExtractedFields, pack: RulePack<JobType>): LoadCalcInput {
   const e = fields.existingLoad;
   const appliances: ExistingAppliance[] = [];
-  if (e.fixedAppliancesVA > 0) {
+  if (e.fixedAppliancesVA !== null && e.fixedAppliancesVA > 0) {
     appliances.push({ name: "Fixed appliances (nameplate total)", watts: e.fixedAppliancesVA, isHeatingOrCooling: false });
   }
-  if (e.existingHvacVA > 0) {
+  if (e.existingHvacVA !== null && e.existingHvacVA > 0) {
     // Season unknown from the documents, so "both": never omitted (conservative).
     appliances.push({ name: "Existing heating/cooling that stays", watts: e.existingHvacVA, isHeatingOrCooling: true, hvacMode: "both" });
   }
@@ -87,7 +108,8 @@ export function loadCalcInput(fields: ExtractedFields, pack: RulePack<JobType>):
     service: { ratingAmps: pack.serviceRatingAmps(fields), voltage: fields.serviceVoltage },
     home: {
       squareFeet: e.dwellingSqFt,
-      smallApplianceCircuits: e.smallApplianceCircuits,
+      // Null means not shown: loadcalc then uses the code minimum of 2.
+      smallApplianceCircuits: e.smallApplianceCircuits ?? undefined,
       laundryCircuits: e.hasLaundryCircuit ? 1 : 0,
       existingAppliances: appliances,
       ...(e.measuredPeakDemandKW !== null
@@ -121,11 +143,11 @@ export function runChecks(extraction: Extraction): ChecksResult {
     ...LOAD_CALC_REQUIRED_FIELDS,
     ...(LOAD_CALC_REQUIRED_BY_JOB[fields.jobType] ?? []),
     ...(fields.existingLoad.measuredPeakDemandKW === null ? [LOAD_CALC_SQFT_FIELD] : []),
-  ].filter((p) => isMissing(p, missing));
+  ].filter((p) => isMissing(p, missing) || valueAt(fields, p) == null);
   if (loadCalcNeeds.length > 0) {
-    throw new ReviewIncompleteError(
-      `Load calc can't run: the documents do not show ${loadCalcNeeds.join(", ")}. No recommendation was made.`,
-    );
+    // Run nothing on a guessed value: flag the load calc for manual review and keep the rest.
+    checks.push(missingInputsCheck(loadCalcNeeds.map((p) => FIELD_WORDS[p] ?? p)));
+    return { checks, loadCalc: null, manualReviewRuleIds };
   }
 
   const loadCalc = calculateLoad(loadCalcInput(fields, pack));

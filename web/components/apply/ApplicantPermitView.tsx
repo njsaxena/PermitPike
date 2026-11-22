@@ -124,9 +124,11 @@ export function ApplicantPermitView({
                     <CheckRow key={c.ruleId} {...c} />
                   ))}
               </ul>
-              <div className="border border-border bg-surface p-card">
-                <ServiceMeter calc={rec.loadCalc} label="Load on the service" />
-              </div>
+              {rec.loadCalc && (
+                <div className="border border-border bg-surface p-card">
+                  <ServiceMeter calc={rec.loadCalc} label="Load on the service" />
+                </div>
+              )}
             </section>
           )}
 

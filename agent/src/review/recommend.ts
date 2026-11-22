@@ -28,9 +28,9 @@ export function confidenceFrom(extraction: Extraction): number {
 }
 
 /** The pack's own flag (a proposed service upgrade), else one when the load calc says the service is too small. */
-export function utilityFlagFor(packFlag: UtilityFlag | null, loadCalc: LoadCalcResult): UtilityFlag | null {
+export function utilityFlagFor(packFlag: UtilityFlag | null, loadCalc: LoadCalcResult | null): UtilityFlag | null {
   if (packFlag) return packFlag;
-  if (!loadCalc.utilityLikely) return null;
+  if (!loadCalc?.utilityLikely) return null;
   return {
     utility: "Eversource",
     kind: "service_upgrade",
@@ -60,7 +60,9 @@ export function fallbackSummary(r: Pick<Recommendation, "decision" | "checks" | 
     `Rule checks recommend: ${DECISION_WORDS[r.decision]}.`,
     `${count("pass")} passed, ${count("warn")} need attention, ${count("fail")} failed.`,
     failed.length ? `Failed: ${failed.join("; ")}.` : "",
-    `Load calc: ${Math.round(lc.totalAmps)} A on a ${lc.serviceAmps} A service (${Math.round(lc.percentOfRating)}%, ${lc.result.replace("_", " ")}).`,
+    lc
+      ? `Load calc: ${Math.round(lc.totalAmps)} A on a ${lc.serviceAmps} A service (${Math.round(lc.percentOfRating)}%, ${lc.result.replace("_", " ")}).`
+      : "Load calc: not run, the documents do not give its inputs.",
     r.utilityFlag ? `Eversource: ${r.utilityFlag.reason}` : "",
     "A licensed official makes the final call.",
   ];
@@ -71,7 +73,7 @@ export interface RecommendInput {
   version: number;
   extraction: Extraction;
   checks: CheckResult[];
-  loadCalc: LoadCalcResult;
+  loadCalc: LoadCalcResult | null;
   createdAt: string;
 }
 

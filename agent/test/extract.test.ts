@@ -120,9 +120,16 @@ test("uploaded spec and worksheet produce a contract-valid Gemini extraction tog
 });
 
 test("Gemini cannot produce an application extraction without required evidence", async (context) => {
-  const fetch = mockGemini(context, { ...readings, "existingLoad.dwellingSqFt": missing });
+  const fetch = mockGemini(context, { ...readings, "heatPump.mcaAmps": missing });
   await assert.rejects(extract(files, jobType), IncompleteExtractionError);
   assert.equal(fetch.mock.callCount(), 3);
+});
+
+test("a load input the documents don't show comes back null and listed, not guessed", async (context) => {
+  mockGemini(context, { ...readings, "existingLoad.dwellingSqFt": missing });
+  const extraction = await extract(files, jobType);
+  assert.equal(extraction.fields.existingLoad.dwellingSqFt, null);
+  assert.ok(extraction.missingFields.includes("existingLoad.dwellingSqFt"));
 });
 
 test("an uncertain reading holds the application for manual review", async (context) => {

@@ -287,7 +287,13 @@ export function ReviewWorkspace({
                 id: "load",
                 label: "Load calculation",
                 disabled: !rec,
-                content: rec && <LoadCalcPanel calc={rec.loadCalc} before={loadCalcBefore} />,
+                content: rec && (
+                  <LoadCalcPanel
+                    calc={rec.loadCalc}
+                    before={loadCalcBefore}
+                    notRun={rec.checks.find((c) => c.ruleId === "shared.service_capacity")?.message}
+                  />
+                ),
               },
               {
                 id: "inspection",

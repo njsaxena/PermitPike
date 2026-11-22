@@ -64,6 +64,7 @@ test("without a load calc there are no total load lines", () => {
 test("with a load calc: total load and percent of rating", () => {
   const detail = byJob("heat_pump_panel");
   const calc = detail.application.recommendation!.loadCalc;
+  assert.ok(calc, "the mock heat pump has a load calc");
   const d = buildStep0Draft(upgraded(), calc, PREPARED);
   assert.deepEqual(value(d, "totalLoad"), [
     `${Math.round(calc.totalCalculatedVA / 10) / 100} kW (${Math.round(calc.totalAmps)} A)`,

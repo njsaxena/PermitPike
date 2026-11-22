@@ -44,7 +44,7 @@ export function fieldGroups(f: ExtractedFields): FieldGroup[] {
     title: "Existing load",
     rows: [
       { key: "existingLoad.dwellingSqFt", label: "Living area", value: unit(l.dwellingSqFt, "sq ft") },
-      { key: "existingLoad.smallApplianceCircuits", label: "Small-appliance circuits", value: n(l.smallApplianceCircuits) },
+      { key: "existingLoad.smallApplianceCircuits", label: "Small-appliance circuits", value: l.smallApplianceCircuits === null ? null : n(l.smallApplianceCircuits) },
       { key: "existingLoad.hasLaundryCircuit", label: "Laundry circuit", value: yesNo(l.hasLaundryCircuit) },
       { key: "existingLoad.fixedAppliancesVA", label: "Fixed appliances", value: unit(l.fixedAppliancesVA, "VA") },
       { key: "existingLoad.existingHvacVA", label: "Existing heating and cooling", value: unit(l.existingHvacVA, "VA") },

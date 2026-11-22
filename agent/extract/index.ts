@@ -1,4 +1,4 @@
-import { GoogleGenAI, type Part } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, type Part } from "@google/genai";
 import type { Extraction, JobType } from "@permitpike/contract";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
@@ -127,6 +127,9 @@ async function generateExtraction({
       systemInstruction: instructions,
       responseMimeType: "application/json",
       responseJsonSchema,
+      // Default thinking made a three-document extraction take over two minutes, past every
+      // timeout. Low thinking reads the same documents in seconds with the same values.
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
       abortSignal,
     },
   }).catch((error: unknown) => {

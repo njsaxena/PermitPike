@@ -198,15 +198,20 @@ export type FileRef = z.infer<typeof FileRef>;
 // Extracted fields (Gemini output, editable by the applicant)
 // ---------------------------------------------------------------------------
 
-/** Inputs to the shared load calc that describe the house as it is today. */
+/**
+ * Inputs to the shared load calc that describe the house as it is today. Each number is
+ * null when the documents don't show it. The review then flags the load calc for manual
+ * review instead of guessing.
+ */
 export const ExistingLoadInputs = z.object({
-  dwellingSqFt: z.number().positive(),
-  smallApplianceCircuits: z.number().int().nonnegative(),
+  dwellingSqFt: z.number().positive().nullable(),
+  /** Null when not shown. The load calc then uses the code minimum of 2. */
+  smallApplianceCircuits: z.number().int().nonnegative().nullable(),
   hasLaundryCircuit: z.boolean(),
   /** Sum of nameplate VA for fixed appliances (range, dryer, water heater, ...). */
-  fixedAppliancesVA: z.number().nonnegative(),
+  fixedAppliancesVA: z.number().nonnegative().nullable(),
   /** Existing heating/cooling nameplate VA that stays in service. */
-  existingHvacVA: z.number().nonnegative(),
+  existingHvacVA: z.number().nonnegative().nullable(),
   /** 12 months of utility peak demand, if provided. Enables NEC 2026 120.87 (not yet in loadcalc). */
   measuredPeakDemandKW: z.number().positive().nullable(),
 });
@@ -246,7 +251,8 @@ export const HeatPumpPanelFields = ServiceFields.extend({
      */
     backupHeatKW: z.number().positive().nullable().optional(),
   }),
-  proposedBreakerAmps: z.number().positive(),
+  /** Null when the documents don't show it. Checks that need it go to manual review. */
+  proposedBreakerAmps: z.number().positive().nullable(),
   conductorAWG: z.string().nullable(),
   disconnectWithinSight: z.boolean().nullable(),
   /**
@@ -277,7 +283,8 @@ export const EvChargerFields = ServiceFields.extend({
     voltage: z.number().positive(),
     connection: z.enum(["hardwired", "receptacle"]),
   }),
-  proposedBreakerAmps: z.number().positive(),
+  /** Null when the documents don't show it. Checks that need it go to manual review. */
+  proposedBreakerAmps: z.number().positive().nullable(),
   conductorAWG: z.string().nullable(),
   installLocation: z.enum(["garage", "exterior_wall", "pedestal", "other"]),
   gfciProtected: z.boolean().nullable(),
@@ -529,7 +536,11 @@ export const Recommendation = z.object({
   checks: z.array(CheckResult),
   /** Filled when decision is "approve_with_conditions". */
   conditions: z.array(z.string()),
-  loadCalc: LoadCalcResult,
+  /**
+   * Null when the documents don't give the load calc its inputs. The checks then include a
+   * "warn" for shared.service_capacity naming what is missing.
+   */
+  loadCalc: LoadCalcResult.nullable(),
   utilityFlag: UtilityFlag.nullable(),
   cleanEnergyTip: CleanEnergyTip.nullable(),
   inspectorChecklist: z.array(z.string()),

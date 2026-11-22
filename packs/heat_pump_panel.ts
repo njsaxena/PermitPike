@@ -10,7 +10,7 @@
 import { HeatPumpPanelFields } from "@permitpike/contract";
 import type { FieldsFor, NewLoad } from "@permitpike/contract";
 import { conductorAmpacity, parseConductor, smallestConductorFor } from "./conductors";
-import { result, type Rule, type RulePack } from "./types";
+import { breakerNotShown, result, type Rule, type RulePack } from "./types";
 
 type Fields = FieldsFor<"heat_pump_panel">;
 
@@ -37,6 +37,7 @@ const breakerSizing: Rule<"heat_pump_panel"> = {
   citation: "NEC 440.22", // VERIFY: no MA amendment to 440.22; NEC 2026 base text not in the compliance catalog.
   check(f) {
     const { mcaAmps, mocpAmps } = f.heatPump;
+    if (f.proposedBreakerAmps === null) return breakerNotShown(this);
     if (f.proposedBreakerAmps > mocpAmps) {
       return result(
         this,
@@ -124,6 +125,7 @@ const outdoorGfci: Rule<"heat_pump_panel"> = {
   // VERIFY the NEC 2026 210.8(F) text, scope limits and any HVAC exception.
   citation: "NEC 210.8(F)",
   check(f) {
+    if (f.proposedBreakerAmps === null) return breakerNotShown(this);
     if (f.proposedBreakerAmps > OUTDOOR_GFCI_MAX_BREAKER_AMPS || f.serviceVoltage > 240) {
       return result(
         this,

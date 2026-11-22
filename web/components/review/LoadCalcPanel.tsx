@@ -70,12 +70,26 @@ export function ServiceMeter({ calc, label }: { calc: LoadCalcResult; label: str
 export function LoadCalcPanel({
   calc,
   before,
+  notRun,
 }: {
-  calc: LoadCalcResult;
+  /** Null when the documents didn't give the load calc its inputs. */
+  calc: LoadCalcResult | null;
   /** The same load on the existing service, when the job includes a service upgrade. */
   before?: LoadCalcResult | null;
+  /** The service capacity check's message, shown when calc is null. */
+  notRun?: string;
 }) {
   const source = codeSource("NEC 2026 120.83");
+  if (!calc) {
+    return (
+      <div className="flex max-w-prose flex-col gap-2 text-ink">
+        <p>{notRun ?? "Load calculation not run: the documents do not give its inputs."}</p>
+        <p className="text-sm text-muted">
+          Check the service against the new load by hand, or return the application for a load calculation.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-6">
       {/* What this is, for officials who don't run these by hand every day. */}

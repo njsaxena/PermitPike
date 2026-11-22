@@ -19,13 +19,15 @@ function prompt(rec: Recommendation): string {
     decision: rec.decision,
     conditions: rec.conditions,
     checks: rec.checks.map((c) => ({ title: c.title, status: c.status, citation: c.citation, message: c.message })),
-    loadCalc: {
-      method: rec.loadCalc.method,
-      totalAmps: Math.round(rec.loadCalc.totalAmps),
-      serviceAmps: rec.loadCalc.serviceAmps,
-      percentOfRating: Math.round(rec.loadCalc.percentOfRating),
-      result: rec.loadCalc.result,
-    },
+    loadCalc: rec.loadCalc
+      ? {
+          method: rec.loadCalc.method,
+          totalAmps: Math.round(rec.loadCalc.totalAmps),
+          serviceAmps: rec.loadCalc.serviceAmps,
+          percentOfRating: Math.round(rec.loadCalc.percentOfRating),
+          result: rec.loadCalc.result,
+        }
+      : "not run: the documents do not give its inputs",
     utilityFlag: rec.utilityFlag,
   };
   return [
@@ -51,7 +53,11 @@ export async function summarize(agent: Agent, rec: Recommendation, modelId: stri
   });
   try {
     const out = await Promise.race([
-      agent.generate(prompt(rec), { abortSignal: controller.signal, maxSteps: 1 }),
+      agent.generate(prompt(rec), {
+        abortSignal: controller.signal,
+        maxSteps: 1,
+        providerOptions: { google: { thinkingConfig: { thinkingLevel: "low" } } },
+      }),
       timeout,
     ]);
     const text = out.text.trim();

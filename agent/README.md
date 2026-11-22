@@ -11,7 +11,8 @@ and returns an `AgentReviewResponse` (both in `packages/contract`).
 2. **run-checks** (`src/review/run-checks.ts`, pure): runs every rule in `getPack(jobType)`, then
    `calculateLoad` with `pack.addedLoads(fields)` and `pack.serviceRatingAmps(fields)`. A rule
    whose field is in `missingFields` becomes a `warn` asking for manual review
-   (`RULE_REQUIRED_FIELDS`). A missing load calc input stops the review with an error.
+   (`RULE_REQUIRED_FIELDS`). A missing load calc input skips the load calc: `loadCalc` is null
+   and `shared.service_capacity` becomes a `warn` naming what the documents don't show.
 3. **recommend** (`src/review/recommend.ts`, pure): any fail gives `return_for_fixes`; any warn
    or utility flag gives `approve_with_conditions`; otherwise `approve`. Confidence is the mean
    of `extraction.fieldConfidence`. An Eversource `service_upgrade` flag comes from the pack or

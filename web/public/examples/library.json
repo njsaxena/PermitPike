@@ -41,6 +41,15 @@
           "contentType": "application/pdf",
           "sizeBytes": 69952,
           "uploadedAt": "2026-11-16T14:05:00.000Z"
+        },
+        {
+          "id": "f_ex1_load",
+          "kind": "load_calc",
+          "name": "load-calc.pdf",
+          "url": "http://localhost:3100/examples/ev-garage-clean/load-calc.pdf",
+          "contentType": "application/pdf",
+          "sizeBytes": 109009,
+          "uploadedAt": "2026-11-16T14:05:00.000Z"
         }
       ]
     },
@@ -84,6 +93,15 @@
           "contentType": "application/pdf",
           "sizeBytes": 71466,
           "uploadedAt": "2026-11-20T15:30:00.000Z"
+        },
+        {
+          "id": "f_ex2_load",
+          "kind": "load_calc",
+          "name": "load-calc.pdf",
+          "url": "http://localhost:3100/examples/heat-pump-service-upgrade/load-calc.pdf",
+          "contentType": "application/pdf",
+          "sizeBytes": 110796,
+          "uploadedAt": "2026-11-20T15:30:00.000Z"
         }
       ]
     },
@@ -126,6 +144,15 @@
           "url": "http://localhost:3100/examples/heat-pump-setback-resubmit/site-plan-rev-a.pdf",
           "contentType": "application/pdf",
           "sizeBytes": 67204,
+          "uploadedAt": "2026-11-18T13:00:00.000Z"
+        },
+        {
+          "id": "f_ex3_load",
+          "kind": "load_calc",
+          "name": "load-calc.pdf",
+          "url": "http://localhost:3100/examples/heat-pump-setback-resubmit/load-calc.pdf",
+          "contentType": "application/pdf",
+          "sizeBytes": 104381,
           "uploadedAt": "2026-11-18T13:00:00.000Z"
         }
       ]
@@ -179,6 +206,15 @@
           "contentType": "application/pdf",
           "sizeBytes": 70148,
           "uploadedAt": "2026-11-17T19:10:00.000Z"
+        },
+        {
+          "id": "f_ex4_load",
+          "kind": "load_calc",
+          "name": "load-calc.pdf",
+          "url": "http://localhost:3100/examples/ev-triple-decker-load-management/load-calc.pdf",
+          "contentType": "application/pdf",
+          "sizeBytes": 109401,
+          "uploadedAt": "2026-11-17T19:10:00.000Z"
         }
       ]
     },
@@ -221,6 +257,15 @@
           "url": "http://localhost:3100/examples/battery-solar-busbar/site-plan.pdf",
           "contentType": "application/pdf",
           "sizeBytes": 73022,
+          "uploadedAt": "2026-11-21T08:20:00.000Z"
+        },
+        {
+          "id": "f_ex5_load",
+          "kind": "load_calc",
+          "name": "load-calc.pdf",
+          "url": "http://localhost:3100/examples/battery-solar-busbar/load-calc.pdf",
+          "contentType": "application/pdf",
+          "sizeBytes": 107430,
           "uploadedAt": "2026-11-21T08:20:00.000Z"
         }
       ]

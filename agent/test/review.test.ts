@@ -9,7 +9,7 @@ import { test } from "node:test";
 import { AgentReviewRequest, Extraction, Recommendation } from "@permitpike/contract";
 import { buildRecommendation, confidenceFrom, decide } from "../src/review/recommend";
 import { heatPumpPanelPack } from "@permitpike/packs";
-import { RULE_REQUIRED_FIELDS, ReviewIncompleteError, runChecks } from "../src/review/run-checks";
+import { RULE_REQUIRED_FIELDS, runChecks } from "../src/review/run-checks";
 import { usableExtraction } from "../src/review/request";
 
 const fixture = (name: string) =>
@@ -35,7 +35,7 @@ test("clean pass: every rule passes, load fits, approve", () => {
   assert.ok(rec.checks.every((c) => c.status === "pass"), JSON.stringify(rec.checks.map((c) => [c.ruleId, c.status])));
   assert.ok(rec.checks.every((c) => c.citation.length > 0));
   assert.ok(rec.checks.some((c) => c.ruleId === "shared.service_capacity"));
-  assert.equal(rec.loadCalc.result, "fits");
+  assert.equal(rec.loadCalc?.result, "fits");
   assert.equal(rec.decision, "approve");
   assert.deepEqual(rec.conditions, []);
   assert.equal(rec.utilityFlag, null);
@@ -96,9 +96,44 @@ test("every heat pump rule lists the fields it reads", () => {
   assert.deepEqual(unlisted, []);
 });
 
-test("missing load calc input stops the review instead of guessing", () => {
+test("missing load calc input flags the load calc for manual review instead of guessing", () => {
   const e = fixture("hp-clean-pass");
-  assert.throws(() => runChecks({ ...e, missingFields: ["existingLoad.dwellingSqFt"] }), ReviewIncompleteError);
+  const { rec } = review({ ...e, missingFields: ["existingLoad.dwellingSqFt"] });
+  assert.equal(rec.loadCalc, null);
+  const lc = rec.checks.find((c) => c.ruleId === "shared.service_capacity");
+  assert.equal(lc?.status, "warn");
+  assert.match(lc?.message ?? "", /square footage/u);
+  assert.ok((lc?.citation ?? "").includes("120.83"));
+  assert.equal(rec.decision, "approve_with_conditions");
+  assert.ok(rec.conditions.some((c) => /load calculation/u.test(c)));
+  Recommendation.parse(rec);
+});
+
+test("documents with no load inputs or breaker size still get a review", () => {
+  const e = fixture("hp-clean-pass");
+  const f = e.fields;
+  if (f.jobType !== "heat_pump_panel") throw new Error("fixture is a heat pump");
+  const gaps = [
+    "existingLoad.dwellingSqFt",
+    "existingLoad.smallApplianceCircuits",
+    "existingLoad.fixedAppliancesVA",
+    "existingLoad.existingHvacVA",
+    "proposedBreakerAmps",
+  ];
+  const fields = {
+    ...f,
+    proposedBreakerAmps: null,
+    existingLoad: { ...f.existingLoad, dwellingSqFt: null, smallApplianceCircuits: null, fixedAppliancesVA: null, existingHvacVA: null },
+  };
+  const extraction = Extraction.parse({ ...e, fields, missingFields: gaps });
+  const { rec, manualReviewRuleIds } = review(extraction);
+  assert.equal(rec.loadCalc, null);
+  assert.ok(manualReviewRuleIds.includes("heat_pump_panel.breaker_sizing"));
+  assert.equal(rec.checks.find((c) => c.ruleId === "heat_pump_panel.outdoor_setback")?.status, "pass");
+  assert.ok(rec.checks.every((c) => c.status !== "fail"), JSON.stringify(rec.checks.map((c) => [c.ruleId, c.status])));
+  assert.equal(rec.decision, "approve_with_conditions");
+  assert.match(rec.summary, /Load calc: not run/u);
+  Recommendation.parse(rec);
 });
 
 test("load over the service rating raises an Eversource service_upgrade flag", () => {
@@ -112,7 +147,7 @@ test("load over the service rating raises an Eversource service_upgrade flag", (
     existingLoad: { ...f.existingLoad, fixedAppliancesVA: 16000 },
   };
   const { rec } = review({ ...e, fields });
-  assert.equal(rec.loadCalc.result, "needs_upgrade");
+  assert.equal(rec.loadCalc?.result, "needs_upgrade");
   assert.equal(rec.utilityFlag?.utility, "Eversource");
   assert.equal(rec.utilityFlag?.kind, "service_upgrade");
 });

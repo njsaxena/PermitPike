@@ -62,3 +62,13 @@ export function result<J extends JobType>(
     suggestedFix: status === "pass" ? null : suggestedFix,
   };
 }
+
+/** For rules that need the new circuit's breaker size when the documents don't show it. */
+export function breakerNotShown<J extends JobType>(rule: Pick<Rule<J>, "id" | "title" | "citation">): CheckResult {
+  return result(
+    rule,
+    "warn",
+    "Not checked: the documents do not show the new circuit's breaker size. Manual review needed.",
+    "Add the breaker size for the new circuit to the single-line diagram or panel schedule, e.g. '40 A 2P'.",
+  );
+}

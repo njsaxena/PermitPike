@@ -19,7 +19,7 @@ const ChecksOutput = z.object({
   request: AgentReviewRequest,
   extraction: Extraction,
   checks: z.array(CheckResult),
-  loadCalc: LoadCalcResult,
+  loadCalc: LoadCalcResult.nullable(),
 });
 
 const extractStep = createStep({

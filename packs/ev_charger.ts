@@ -8,7 +8,7 @@
  */
 import { EvChargerFields } from "@permitpike/contract";
 import type { FieldsFor, NewLoad } from "@permitpike/contract";
-import { result, type Rule, type RulePack } from "./types";
+import { breakerNotShown, result, type Rule, type RulePack } from "./types";
 
 type Fields = FieldsFor<"ev_charger">;
 
@@ -75,6 +75,7 @@ const breakerContinuousLoad: Rule<"ev_charger"> = {
   citation: "NEC 625.41", // VERIFY: 2026 numbering (625.41 in the 2020 and 2023 editions)
   check(f) {
     const min = f.charger.outputAmps * EVSE_CONTINUOUS_FACTOR;
+    if (f.proposedBreakerAmps === null) return breakerNotShown(this);
     if (f.proposedBreakerAmps >= min) {
       return result(
         this,
@@ -115,9 +116,11 @@ const conductorSpecified: Rule<"ev_charger"> = {
     }
     const ampacity = COPPER_75C_AMPACITY[awg] ?? 0;
     const maxBreaker = Math.min(ampacity, SMALL_CONDUCTOR_MAX_BREAKER[awg] ?? Infinity);
-    if (f.proposedBreakerAmps > maxBreaker) {
+    const breaker = f.proposedBreakerAmps;
+    if (breaker === null) return breakerNotShown(this);
+    if (breaker > maxBreaker) {
       const fit = COPPER_SIZES_ASCENDING.find(
-        (size) => Math.min(COPPER_75C_AMPACITY[size] ?? 0, SMALL_CONDUCTOR_MAX_BREAKER[size] ?? Infinity) >= f.proposedBreakerAmps,
+        (size) => Math.min(COPPER_75C_AMPACITY[size] ?? 0, SMALL_CONDUCTOR_MAX_BREAKER[size] ?? Infinity) >= breaker,
       );
       return result(
         this,
@@ -142,7 +145,10 @@ const gfci: Rule<"ev_charger"> = {
   citation: "NEC 625.54; NEC 210.8(F)", // VERIFY: 2026 numbering and 210.8(F) scope
   check(f) {
     const receptacle = f.charger.connection === "receptacle";
-    const outdoorOutlet = isOutdoor(f) && f.proposedBreakerAmps <= OUTDOOR_GFCI_MAX_BREAKER_AMPS;
+    // An outdoor hardwired charger needs GFCI only on 50 A or less, so its breaker decides.
+    if (!receptacle && isOutdoor(f) && f.proposedBreakerAmps === null) return breakerNotShown(this);
+    const outdoorOutlet =
+      isOutdoor(f) && f.proposedBreakerAmps !== null && f.proposedBreakerAmps <= OUTDOOR_GFCI_MAX_BREAKER_AMPS;
     if (!receptacle && !outdoorOutlet) {
       return result(
         this,

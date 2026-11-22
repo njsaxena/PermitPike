@@ -5,8 +5,8 @@ import type { ExistingAppliance, LoadCalcInput, NewLoad, ServiceFields } from "@
 export function existingAppliancesFor(fields: ServiceFields): ExistingAppliance[] {
   const { fixedAppliancesVA, existingHvacVA } = fields.existingLoad;
   const out: ExistingAppliance[] = [];
-  if (fixedAppliancesVA > 0) out.push({ name: "Fixed appliances", watts: fixedAppliancesVA, isHeatingOrCooling: false });
-  if (existingHvacVA > 0) out.push({ name: "Existing heating/cooling", watts: existingHvacVA, isHeatingOrCooling: true, hvacMode: "both" });
+  if (fixedAppliancesVA !== null && fixedAppliancesVA > 0) out.push({ name: "Fixed appliances", watts: fixedAppliancesVA, isHeatingOrCooling: false });
+  if (existingHvacVA !== null && existingHvacVA > 0) out.push({ name: "Existing heating/cooling", watts: existingHvacVA, isHeatingOrCooling: true, hvacMode: "both" });
   return out;
 }
 
@@ -20,7 +20,8 @@ export function loadCalcInputFor(fields: ServiceFields, ratingAmps: number, newL
     service: { ratingAmps, voltage: fields.serviceVoltage },
     home: {
       squareFeet: fields.existingLoad.dwellingSqFt,
-      smallApplianceCircuits: fields.existingLoad.smallApplianceCircuits,
+      // Null means not shown: loadcalc then uses the code minimum.
+      smallApplianceCircuits: fields.existingLoad.smallApplianceCircuits ?? undefined,
       laundryCircuits: fields.existingLoad.hasLaundryCircuit ? 1 : 0,
       existingAppliances: existingAppliancesFor(fields),
       ...(peakKW !== null ? { measuredDemand: { peakKW, source: "utility_12_months" as const } } : {}),

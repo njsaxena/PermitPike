@@ -58,6 +58,23 @@ export class LoadCalcInputError extends Error {
 const CHECK_RULE_ID = "shared.service_capacity";
 const CHECK_TITLE = "Service capacity after the new load";
 
+/**
+ * The service capacity check when the documents don't give the load calc its inputs.
+ * A "warn" for manual review, so the rest of the review still reaches the official.
+ * `missing` lists what the applicant has to add, in plain words.
+ */
+export function missingInputsCheck(missing: string[]): CheckResult {
+  const list = missing.join(", ");
+  return {
+    ruleId: CHECK_RULE_ID,
+    title: CHECK_TITLE,
+    status: "warn",
+    citation: `${METHOD_CITATION} (${ADOPTING_REGULATION})`,
+    message: `Load calculation not run: the documents do not show ${list}. Manual review needed.`,
+    suggestedFix: `Applicant adds a load calculation, or the documents add ${list}, so the service can be checked against the new load.`,
+  };
+}
+
 /** A connected load before demand factors. */
 interface Item {
   label: string;

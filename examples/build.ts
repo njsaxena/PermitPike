@@ -48,12 +48,14 @@ import { heatPumpPanelPack } from "../packs/heat_pump_panel";
 import { result } from "../packs/types";
 import {
   fillPanel,
+  loadSheetHtml,
   PANEL_WIDTH,
   panelPhotoHeight,
   panelPhotoHtml,
   sitePlanHtml,
   specSheetHtml,
   type Breaker,
+  type LoadSheet,
   type PanelPhoto,
   type SitePlan,
   type SpecSheet,
@@ -199,6 +201,41 @@ function existingLoad(h: House) {
   };
 }
 
+/** The electrician's load calculation worksheet, from the same house and load calc as the example. */
+function loadSheetDoc(o: {
+  title: string;
+  address: Address;
+  applicant: Applicant;
+  date: string;
+  house: House;
+  existingAmps: number;
+  lc: LoadCalcResult;
+  newCircuit: LoadSheet["newCircuit"];
+}): Doc {
+  const va = (a: ExistingAppliance) => a.watts ?? (a.amps ?? 0) * (a.volts ?? 0);
+  return {
+    kind: "load_calc",
+    name: "load-calc.pdf",
+    format: "pdf",
+    html: loadSheetHtml({
+      title: o.title,
+      address: `${o.address.street}${o.address.unit ? `, ${o.address.unit}` : ""}, ${o.address.neighborhood}, MA ${o.address.zip}`,
+      preparedBy: o.applicant.company ?? o.applicant.name,
+      license: o.applicant.licenseNumber,
+      date: dateLabel(o.date),
+      service: { voltage: 240, existingAmps: o.existingAmps, calculatedOnAmps: o.lc.serviceAmps },
+      dwelling: { squareFeet: o.house.squareFeet, smallApplianceCircuits: o.house.smallApplianceCircuits, laundryCircuit: o.house.hasLaundryCircuit },
+      appliances: o.house.appliances.map((a) => ({ name: a.name, va: va(a), heatingOrCooling: a.isHeatingOrCooling })),
+      newCircuit: o.newCircuit,
+      // The worksheet ends at the total; amps and share of the service are in its Result box.
+      steps: o.lc.steps.slice(0, o.lc.steps.findIndex((st) => st.label === "Total calculated load") + 1 || undefined),
+      totalVA: o.lc.totalCalculatedVA,
+      totalAmps: o.lc.totalAmps,
+      percentOfRating: o.lc.percentOfRating,
+    }),
+  };
+}
+
 function loadCalc(h: House, ratingAmps: number, newLoads: NewLoad[]): LoadCalcResult {
   return calculateLoad({
     service: { ratingAmps, voltage: 240 },
@@ -326,7 +363,7 @@ function evChecks(f: EvChargerFields): CheckResult[] {
   const breaker = { id: "ev_charger.breaker_125_percent", title: "Branch circuit sized for continuous load", citation: "NEC 625.41" };
   const min = f.charger.outputAmps * 1.25;
   out.push(
-    f.proposedBreakerAmps >= min
+    (f.proposedBreakerAmps ?? 0) >= min
       ? result(breaker, "pass", `${f.proposedBreakerAmps} A breaker is at least 125% of the ${f.charger.outputAmps} A charger output (${min} A).`)
       : result(
           breaker,
@@ -588,6 +625,10 @@ function example1(work: string): LibraryExample {
     render(slug, "f_ex1_site", { kind: "site_plan", name: "site-plan.pdf", format: "pdf", html: sitePlanHtml(site) }, submittedAt, work),
   ];
   const lc = loadCalc(house, 200, [evNewLoad(fields)]);
+  files.push(render(slug, "f_ex1_load", loadSheetDoc({
+    title: "EV charger in the garage", address, applicant, date: submittedAt, house, existingAmps: fields.existingServiceAmps, lc,
+    newCircuit: { equipment: "HomeDock 48 EV charger, hardwired", breakerAmps: fields.proposedBreakerAmps!, poles: 2, conductor: fields.conductorAWG },
+  }), submittedAt, work));
   const checks = [lc.check, ...evChecks(fields)];
   const v1 = version({
     applicationId: id,
@@ -711,6 +752,10 @@ function example2(work: string): LibraryExample {
   ];
   const newLoads = hpNewLoads(fields);
   const lc = loadCalc(house, heatPumpPanelPack.serviceRatingAmps(fields), newLoads);
+  files.push(render(slug, "f_ex2_load", loadSheetDoc({
+    title: "Heat pump + 200 A service", address, applicant, date: submittedAt, house, existingAmps: fields.existingServiceAmps, lc,
+    newCircuit: { equipment: "Northfield NCH-36X heat pump outdoor unit", breakerAmps: fields.proposedBreakerAmps!, poles: 2, conductor: fields.conductorAWG },
+  }), submittedAt, work));
   const before = loadCalc(house, fields.existingServiceAmps, newLoads);
   const flag = heatPumpPanelPack.utilityFlag(fields);
   const checks = [lc.check, ...heatPumpPanelPack.rules.map((r) => r.check(fields))];
@@ -828,6 +873,10 @@ function example3(work: string): LibraryExample {
   const siteB = render(slug, "f_ex3_site_v2", { kind: "site_plan", name: "site-plan-rev-b.pdf", format: "pdf", html: sitePlanHtml(plan(6, "B", v2At, 30)) }, v2At, work);
 
   const lc = loadCalc(house, heatPumpPanelPack.serviceRatingAmps(v1Fields), hpNewLoads(v1Fields));
+  const load = render(slug, "f_ex3_load", loadSheetDoc({
+    title: "Heat pump outdoor unit", address, applicant, date: v1At, house, existingAmps: v1Fields.existingServiceAmps, lc,
+    newCircuit: { equipment: "Northfield NCH-24 heat pump outdoor unit", breakerAmps: v1Fields.proposedBreakerAmps!, poles: 2, conductor: v1Fields.conductorAWG },
+  }), v1At, work);
   const common = {
     applicationId: id,
     loadCalc: lc,
@@ -839,7 +888,7 @@ function example3(work: string): LibraryExample {
   const v1 = version({
     ...common,
     version: 1,
-    files: [spec, photo, siteA],
+    files: [spec, photo, siteA, load],
     fields: v1Fields,
     fieldConfidence: { "heatPump.mcaAmps": 0.97, "heatPump.mocpAmps": 0.97, outdoorUnitSetbackFt: 0.88 },
     submittedAt: v1At,
@@ -851,7 +900,7 @@ function example3(work: string): LibraryExample {
   const v2 = version({
     ...common,
     version: 2,
-    files: [spec, photo, siteB],
+    files: [spec, photo, siteB, load],
     fields: v2Fields,
     fieldConfidence: { "heatPump.mcaAmps": 0.97, "heatPump.mocpAmps": 0.97, outdoorUnitSetbackFt: 0.94 },
     submittedAt: v2At,
@@ -989,6 +1038,10 @@ function example4(work: string): LibraryExample {
     render(slug, "f_ex4_site", { kind: "site_plan", name: "site-plan.pdf", format: "pdf", html: sitePlanHtml(site) }, submittedAt, work),
   ];
   const lc = loadCalc(house, 100, [evNewLoad(fields)]);
+  files.push(render(slug, "f_ex4_load", loadSheetDoc({
+    title: "EV charger, Unit 2", address, applicant, date: submittedAt, house, existingAmps: fields.existingServiceAmps, lc,
+    newCircuit: { equipment: "HomeDock 40 EV charger with LoadGuard", breakerAmps: fields.proposedBreakerAmps!, poles: 2, conductor: fields.conductorAWG },
+  }), submittedAt, work));
   const checks = [lc.check, ...evChecks(fields)];
   const conditions = [
     "LoadGuard service limit set to 100 A and sealed; inspector verifies the setting.",
@@ -1135,6 +1188,10 @@ function example5(work: string): LibraryExample {
   ];
   // The battery adds no continuous load to the dwelling.
   const lc = loadCalc(house, 200, [{ source: "home_battery", name: "Home battery", va: 0, kind: "other", isHeatingOrCooling: false }]);
+  files.push(render(slug, "f_ex5_load", loadSheetDoc({
+    title: "Home battery with existing solar", address, applicant, date: submittedAt, house, existingAmps: fields.existingServiceAmps, lc,
+    newCircuit: { equipment: "Home battery, backfeed breaker in the main panel", breakerAmps: fields.backfeedBreakerAmps!, poles: 2, conductor: null },
+  }), submittedAt, work));
   const checks = [lc.check, ...batteryChecks(fields)];
   const flag: UtilityFlag = {
     utility: "Eversource",

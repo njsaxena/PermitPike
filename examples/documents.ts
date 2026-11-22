@@ -320,3 +320,95 @@ export function fillPanel(slots: number, available: number, named: Breaker[]): B
   if (usedSpaces(out) !== target) throw new Error(`Panel fill overshot: ${usedSpaces(out)} used, wanted ${target}`);
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Load calculation worksheet (letter, portrait PDF). The electrician's NEC 2026 120.83
+// worksheet: the house as it is, the new circuit, and the worked calculation.
+// ---------------------------------------------------------------------------
+
+export interface LoadSheet {
+  title: string;
+  address: string;
+  preparedBy: string;
+  license: string;
+  date: string;
+  service: { voltage: number; existingAmps: number; calculatedOnAmps: number };
+  dwelling: { squareFeet: number; smallApplianceCircuits: number; laundryCircuit: boolean };
+  /** Existing fixed appliances and heating/cooling that stay in service, with nameplate VA. */
+  appliances: { name: string; va: number; heatingOrCooling: boolean }[];
+  /** The circuit the job adds. */
+  newCircuit: { equipment: string; breakerAmps: number; poles: number; conductor: string | null };
+  /** The worked calculation, line by line. */
+  steps: { label: string; va: number; citation: string }[];
+  totalVA: number;
+  totalAmps: number;
+  percentOfRating: number;
+}
+
+export function loadSheetHtml(s: LoadSheet): string {
+  const n = (v: number) => Math.round(v).toLocaleString("en-US");
+  const fixed = s.appliances.filter((a) => !a.heatingOrCooling);
+  const hvac = s.appliances.filter((a) => a.heatingOrCooling);
+  const sum = (list: LoadSheet["appliances"]) => list.reduce((t, a) => t + a.va, 0);
+  const rows = (list: LoadSheet["appliances"]) =>
+    list.length ? list.map((a) => `<tr><th>${esc(a.name)}</th><td>${n(a.va)} VA</td></tr>`).join("") : `<tr><th>None</th><td>0 VA</td></tr>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    @page { size: letter; margin: 0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 40px 48px 70px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1d232a; font-size: 10pt; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1d232a; padding-bottom: 10px; }
+    h1 { margin: 0; font-size: 18pt; }
+    .sub { color: #56616d; margin-top: 4px; }
+    .meta { text-align: right; font-size: 9pt; color: #3b4652; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px; margin-top: 16px; }
+    section { break-inside: avoid; }
+    h3 { margin: 0 0 6px; font-size: 10pt; border-bottom: 1.5px solid #1d232a; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 3.5px 0; border-bottom: 1px solid #e3e6ea; vertical-align: top; font-size: 9.5pt; }
+    th { font-weight: 500; color: #3b4652; padding-right: 8px; }
+    td { font-weight: 600; text-align: right; white-space: nowrap; }
+    tr.total th, tr.total td { font-weight: 700; color: #1d232a; border-bottom: 1.5px solid #1d232a; }
+    .calc { margin-top: 16px; }
+    .calc td.cite { font-weight: 400; color: #7a848f; font-size: 8.5pt; text-align: left; padding-left: 12px; }
+    footer { position: fixed; bottom: 26px; left: 48px; right: 48px; font-size: 8pt; color: #7a848f; display: flex; justify-content: space-between; border-top: 1px solid #e3e6ea; padding-top: 8px; }
+  </style></head><body>
+    <header>
+      <div><h1>Load calculation worksheet</h1><div class="sub">${esc(s.title)} · NEC 2026 120.83, as adopted by 527 CMR 12.00</div></div>
+      <div class="meta">${esc(s.address)}<br>Prepared by ${esc(s.preparedBy)}<br>License <span style="white-space:nowrap">${esc(s.license)}</span><br>${esc(s.date)}</div>
+    </header>
+    <div class="grid">
+      <section><h3>Service</h3><table>
+        <tr><th>Service voltage</th><td>${s.service.voltage} V</td></tr>
+        <tr><th>Existing service rating</th><td>${s.service.existingAmps} A</td></tr>
+        <tr><th>Calculated against</th><td>${s.service.calculatedOnAmps} A service</td></tr>
+      </table></section>
+      <section><h3>Dwelling</h3><table>
+        <tr><th>Living area (outside dimensions)</th><td>${n(s.dwelling.squareFeet)} sq ft</td></tr>
+        <tr><th>20 A small-appliance circuits</th><td>${s.dwelling.smallApplianceCircuits}</td></tr>
+        <tr><th>Laundry circuit</th><td>${s.dwelling.laundryCircuit ? "Yes" : "No"}</td></tr>
+      </table></section>
+      <section><h3>Existing fixed appliances (nameplate)</h3><table>
+        ${rows(fixed)}
+        <tr class="total"><th>Total fixed appliances</th><td>${n(sum(fixed))} VA</td></tr>
+      </table></section>
+      <section><h3>Existing heating and cooling that stays</h3><table>
+        ${rows(hvac)}
+        <tr class="total"><th>Total existing heating and cooling</th><td>${n(sum(hvac))} VA</td></tr>
+      </table></section>
+      <section><h3>New circuit</h3><table>
+        <tr><th>Equipment</th><td>${esc(s.newCircuit.equipment)}</td></tr>
+        <tr><th>Proposed breaker</th><td>${s.newCircuit.breakerAmps} A ${s.newCircuit.poles}P</td></tr>
+        <tr><th>Conductor</th><td>${s.newCircuit.conductor ? `${esc(s.newCircuit.conductor)} AWG Cu` : "Existing"}</td></tr>
+      </table></section>
+      <section><h3>Result</h3><table>
+        <tr><th>Total calculated load</th><td>${n(s.totalVA)} VA</td></tr>
+        <tr><th>At ${s.service.voltage} V</th><td>${Math.round(s.totalAmps)} A</td></tr>
+        <tr class="total"><th>Share of the ${s.service.calculatedOnAmps} A service</th><td>${Math.round(s.percentOfRating)}%</td></tr>
+      </table></section>
+    </div>
+    <section class="calc"><h3>Worked calculation</h3><table>
+      ${s.steps.map((st) => `<tr><th>${esc(st.label)}</th><td>${n(st.va)} VA</td><td class="cite">${esc(st.citation)}</td></tr>`).join("")}
+    </table></section>
+    <footer><span>Load calculation · ${esc(s.address)}</span><span>${DEMO_NOTE}</span></footer>
+  </body></html>`;
+}
