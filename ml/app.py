@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+import hmac
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import joblib
 import numpy as np
 import pandas as pd
 import shap
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from ml.pipeline import MODEL_PATH, engineer_features
@@ -54,13 +55,25 @@ feature_names = pipeline.named_steps["features"].get_feature_names_out()
 
 app = FastAPI(title="PermitPike Closure Risk", version=artifact["version"])
 
+# The web sends the same shared secret it sends the agent, in the same header.
+SECRET_HEADER = "x-permitpike-secret"
+
+
+def require_secret(
+    provided: Annotated[str | None, Header(alias=SECRET_HEADER)] = None,
+) -> None:
+    """Reject /score calls without the shared secret. No secret configured means no scoring."""
+    expected = os.environ.get("AGENT_SHARED_SECRET", "")
+    if not expected or not provided or not hmac.compare_digest(provided.encode(), expected.encode()):
+        raise HTTPException(status_code=401, detail="Missing or wrong shared secret.")
+
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok", modelVersion=artifact["version"])
 
 
-@app.post("/score", response_model=ScoreResponse)
+@app.post("/score", response_model=ScoreResponse, dependencies=[Depends(require_secret)])
 def score(request: ScoreRequest) -> ScoreResponse:
     request_data = request.model_dump()
     row = pd.DataFrame(
