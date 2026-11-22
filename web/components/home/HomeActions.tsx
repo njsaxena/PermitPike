@@ -152,6 +152,16 @@ export function HomeActions() {
     );
   }
 
+  /** The map washes out to limestone before the next page loads, so the switch is less abrupt. */
+  function leave(e: MouseEvent<HTMLAnchorElement>) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || still()) return;
+    e.preventDefault();
+    const href = e.currentTarget.getAttribute("href");
+    if (!href) return;
+    document.documentElement.dataset.leavingHome = "";
+    window.setTimeout(() => router.push(href), 120);
+  }
+
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -177,12 +187,12 @@ export function HomeActions() {
 
   return (
     <nav aria-label="Get started" className="relative z-[2] flex flex-col gap-3">
-      <Link href="/apply" inert={expanded} className={cx(ACTION, "min-h-[68px] bg-accent px-4 text-[20px] leading-[26px] sm:px-6")}>
+      <Link href="/apply" inert={expanded} onClick={leave} className={cx(ACTION, "min-h-[68px] bg-accent px-4 text-[20px] leading-[26px] sm:px-6")}>
         <FilePlus aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
         Apply for a permit
       </Link>
       <div className="flex gap-3" inert={expanded}>
-        <Link href="/review" className={cx(ACTION, HALF)}>
+        <Link href="/review" onClick={leave} className={cx(ACTION, HALF)}>
           <Landmark aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
           Staff portal
         </Link>

@@ -213,6 +213,18 @@
     animation: pp-blink 1.2s steps(2, jump-none) infinite;
   }
 
+  /* Leaving the homepage: the map washes out to limestone, then the login settles in. */
+  [data-home] {
+    transition: opacity 150ms var(--pp-ease-out);
+  }
+  [data-leaving-home] [data-home] {
+    opacity: 0;
+    pointer-events: none;
+  }
+  [data-enter] {
+    animation: pp-rise 200ms var(--pp-ease-out) both;
+  }
+
   /* Dialogs rise into place. */
   dialog[open] {
     animation: pp-rise var(--pp-duration-base) var(--pp-ease-out);

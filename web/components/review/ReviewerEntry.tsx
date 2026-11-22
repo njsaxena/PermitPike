@@ -27,7 +27,7 @@ export function ReviewerEntry() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4 md:pt-12">
+    <form onSubmit={submit} noValidate data-enter className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4 md:pt-12">
       <BostonDrawing kind="city-hall" className="mx-auto max-w-72" />
       <h1 className="text-center text-title text-ink">Review permits</h1>
       <Input

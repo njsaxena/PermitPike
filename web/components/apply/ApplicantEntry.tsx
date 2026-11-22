@@ -30,7 +30,7 @@ export function ApplicantEntry({ onEntered }: { onEntered: (applicantId: string)
   }
 
   return (
-    <form onSubmit={submit} noValidate className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4 md:pt-12">
+    <form onSubmit={submit} noValidate data-enter className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4 md:pt-12">
       <BostonDrawing kind="triple-decker" className="mx-auto max-w-56" />
       <h1 className="text-center text-title text-ink">File permits</h1>
       <Input
