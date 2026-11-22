@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Input } from "@/components/ui";
+import { BostonDrawing, Button, Input } from "@/components/ui";
 import { api, ApiRequestError } from "@/lib/api-client";
 
 /** Name and license number, no password. Reuses the applicant with the same license. */
@@ -30,8 +30,9 @@ export function ApplicantEntry({ onEntered }: { onEntered: (applicantId: string)
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex max-w-md flex-col gap-6">
-      <h1 className="text-title text-ink">Log in to file a permit</h1>
+    <form onSubmit={submit} noValidate className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4 md:pt-12">
+      <BostonDrawing kind="triple-decker" className="mx-auto max-w-56" />
+      <h1 className="text-center text-title text-ink">File permits</h1>
       <Input
         label="Your name"
         autoComplete="name"
@@ -51,11 +52,9 @@ export function ApplicantEntry({ onEntered }: { onEntered: (applicantId: string)
         required
       />
       {errors.form && <p className="text-sm text-critical">{errors.form}</p>}
-      <div>
-        <Button type="submit" loading={busy}>
-          Continue
-        </Button>
-      </div>
+      <Button type="submit" loading={busy} className="w-full justify-center">
+        Continue
+      </Button>
     </form>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Button, Input } from "@/components/ui";
+import { BostonDrawing, Button, Input } from "@/components/ui";
 import { api } from "@/lib/api-client";
 
 /** The name goes into an httpOnly cookie and onto every permit this reviewer signs. */
@@ -27,8 +27,9 @@ export function ReviewerEntry() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex max-w-md flex-col gap-6">
-      <h1 className="text-title text-ink">Review permits</h1>
+    <form onSubmit={submit} noValidate className="mx-auto flex w-full max-w-md flex-col gap-6 pt-4 md:pt-12">
+      <BostonDrawing kind="city-hall" className="mx-auto max-w-72" />
+      <h1 className="text-center text-title text-ink">Review permits</h1>
       <Input
         label="Your name"
         autoComplete="name"
@@ -38,11 +39,9 @@ export function ReviewerEntry() {
         required
       />
       {errors.form && <p className="text-sm text-critical">{errors.form}</p>}
-      <div>
-        <Button type="submit" loading={busy}>
-          Continue
-        </Button>
-      </div>
+      <Button type="submit" loading={busy} className="w-full justify-center">
+        Continue
+      </Button>
     </form>
   );
 }
