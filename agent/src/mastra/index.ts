@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { Mastra } from "@mastra/core/mastra";
 import { registerApiRoute } from "@mastra/core/server";
+import { VercelDeployer } from "@mastra/deployer-vercel";
 import { AGENT_SECRET_HEADER, AgentReviewRequest, AgentReviewResponse } from "@permitpike/contract";
 import { permitReviewer } from "./agents/permit-reviewer";
 import { reviewApplication } from "./workflows/review-application";
@@ -26,6 +27,10 @@ const UNAUTHORIZED = { error: { code: "bad_request", message: "Missing or wrong 
 export const mastra = new Mastra({
   agents: { permitReviewer },
   workflows: { reviewApplication },
+  // Vercel needs a function bundle. The standalone build runs a Node server.
+  deployer: process.env.PERMITPIKE_VERCEL_BUILD === "1"
+    ? new VercelDeployer({ studio: false, maxDuration: 60 })
+    : undefined,
   server: {
     port: Number(process.env.PORT ?? 4111),
     // Every route, including Mastra's built-in /api/* agent and workflow routes, needs the

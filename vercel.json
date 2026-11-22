@@ -3,7 +3,8 @@
   "services": {
     "agent": {
       "root": "agent",
-      "framework": "mastra"
+      "framework": "mastra",
+      "buildCommand": "PERMITPIKE_VERCEL_BUILD=1 pnpm build"
     },
     "web": {
       "root": "web",
