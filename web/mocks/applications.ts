@@ -26,6 +26,7 @@ import type {
 } from "@permitpike/contract";
 import { Parcel } from "@permitpike/contract";
 import { calculateLoad } from "@permitpike/loadcalc";
+import { demoFileUrl } from "../lib/demo-files";
 import demoParcels from "../lib/parcel/demo-parcels.json";
 
 const MODEL = "gemini-3.8-flash";
@@ -36,14 +37,13 @@ function demoParcel(parcelId: string): Parcel {
   if (!found) throw new Error(`no cached parcel ${parcelId}; run pnpm --filter @permitpike/web cache:parcels`);
   return Parcel.parse(found);
 }
-const BLOB = "https://mock.public.blob.vercel-storage.com/mocks";
 
 function file(id: string, kind: FileRef["kind"], name: string, uploadedAt: string): FileRef {
   return {
     id,
     kind,
     name,
-    url: `${BLOB}/${name}`,
+    url: demoFileUrl(name),
     contentType: name.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
     sizeBytes: 250_000,
     uploadedAt,

@@ -30,6 +30,7 @@ import {
 import { Decision } from "@/components/permit/Decision";
 import { PermitHeading } from "@/components/permit/PermitHeading";
 import { Step0DraftCard } from "@/components/permit/Step0Draft";
+import { viewerFile } from "@/lib/demo-files";
 import { clockTime, longDate } from "@/lib/format";
 import { DOCUMENT_LABEL, RULE_FIELDS, codeSource, ruleDocument, sourcesFor } from "@/lib/review-sources";
 import { buildStep0Draft } from "@/lib/step0";
@@ -92,7 +93,7 @@ export function ReviewWorkspace({
   const [edited, setEdited] = useState<ReadonlySet<string>>(new Set());
   const extraction = shown.extraction && record ? { ...shown.extraction, fields: record } : shown.extraction;
   const checking = (app.status === "submitted" || app.status === "ai_review") && version === app.version;
-  const files: ViewerFile[] = shown.files.map((f) => ({ ...f, preview: previews[f.id] }));
+  const files: ViewerFile[] = shown.files.map((f) => viewerFile(f, previews[f.id]));
   const kinds = new Set(files.map((f) => f.kind));
 
   // Each field a check read gets that check's result.
