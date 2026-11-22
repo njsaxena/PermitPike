@@ -134,8 +134,7 @@ function RevokeApplication({ detail }: { detail: ApplicationDetail }) {
       ) : (
         <>
           <p className="text-muted">
-            Withdraws the application and its documents. The tracking code stops working. This can&apos;t be
-            undone.
+            This can&apos;t be undone.
           </p>
           {error && <p className="text-sm text-critical">{error}</p>}
           <div>
