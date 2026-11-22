@@ -7,6 +7,7 @@ import {
   type Recommendation,
 } from "@permitpike/contract";
 import { hpVersion1, hpVersion2, MOCK_APPLICATIONS } from "@/mocks/applications";
+import { serviceUrl } from "@/lib/service-url";
 import { getVersionForReview, markInReview, saveRecommendation } from "./repo";
 import { scoreAndSaveClosureRisk } from "./closure-risk";
 
@@ -54,7 +55,7 @@ async function callAgent(agentUrl: string, applicationId: string, version: numbe
     files: row.v.files,
     extraction: row.v.extraction,
   };
-  const res = await fetch(new URL("/review", agentUrl), {
+  const res = await fetch(serviceUrl(agentUrl, "review"), {
     method: "POST",
     headers: {
       "content-type": "application/json",

@@ -9,6 +9,7 @@ import {
 import { contractorStats, getDb } from "@permitpike/db";
 import type { Application, Extraction } from "@permitpike/contract";
 import { buildPermitRiskScoreRequest } from "@/lib/closure-risk";
+import { serviceUrl } from "@/lib/service-url";
 import { saveClosureRisk } from "./repo";
 
 const SCORE_TIMEOUT_MS = 2_000;
@@ -59,7 +60,7 @@ export async function scoreAndSaveClosureRisk(
       // The applicant's own words and estimate, from the filing form.
       { estimatedProjectCost: application.estimatedProjectCost, jobDescription: application.jobDescription },
     );
-    const response = await fetch(new URL("/score", riskApiUrl), {
+    const response = await fetch(serviceUrl(riskApiUrl, "score"), {
       method: "POST",
       headers: {
         "content-type": "application/json",
