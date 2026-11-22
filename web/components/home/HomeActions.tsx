@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ArrowRight, FilePlus, Landmark, Search, X } from "lucide-react";
+import { Archive, ArrowRight, FilePlus, Landmark, Search, X } from "lucide-react";
 import Link from "next/link";
 import { cx } from "@/lib/cx";
 import { normalizeTrackingCode } from "@/lib/tracking-code";
@@ -13,14 +13,14 @@ type Phase = "closed" | "opening" | "open" | "closing";
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const FULL = "inset(0px 0px 0px 0px)";
 
-/* Borderless, straight on the map: gold for the main way in, white for the other two. */
+/* Borderless, straight on the map: gold for the main way in, white for the other links. */
 const ACTION =
-  "flex items-center justify-center gap-2.5 px-4 font-semibold sm:px-6 whitespace-nowrap text-ink no-underline transition-[box-shadow] duration-150 ease-out motion-reduce:transition-none hov:wash";
-const HALF = "min-h-14 min-w-0 flex-1 basis-0 bg-surface text-[18px] leading-6";
+  "flex items-center justify-center gap-2 font-semibold whitespace-nowrap text-ink no-underline transition-[box-shadow] duration-150 ease-out motion-reduce:transition-none hov:wash sm:gap-2.5";
+const HALF = "min-h-14 min-w-0 flex-1 basis-0 bg-surface px-2 text-base leading-6 sm:px-6 sm:text-[18px]";
 
 /**
- * The three ways in. "Check status" grows out of its own button into a panel the size of
- * all three, asks for the tracking code from the filing confirmation, and opens that permit.
+ * "Check status" grows out of its own button into a panel the size of the other links,
+ * asks for the tracking code from the filing confirmation, and opens that permit.
  * Without JavaScript it is a plain link to /track.
  */
 export function HomeActions() {
@@ -177,7 +177,7 @@ export function HomeActions() {
 
   return (
     <nav aria-label="Get started" className="relative z-[2] flex flex-col gap-3">
-      <Link href="/apply" inert={expanded} className={cx(ACTION, "min-h-[68px] bg-accent text-[20px] leading-[26px]")}>
+      <Link href="/apply" inert={expanded} className={cx(ACTION, "min-h-[68px] bg-accent px-4 text-[20px] leading-[26px] sm:px-6")}>
         <FilePlus aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
         Apply for a permit
       </Link>
@@ -198,6 +198,10 @@ export function HomeActions() {
           Check status
         </Link>
       </div>
+      <Link href="/archive" inert={expanded} className={cx(ACTION, "min-h-14 bg-surface px-4 text-base leading-6 sm:px-6 sm:text-[18px]")}>
+        <Archive aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
+        Search permit archives
+      </Link>
 
       <div
         ref={panelRef}

@@ -1,5 +1,9 @@
 export const ARCHIVE_PORTAL_URL = "https://scerisecm.boston.gov/ScerIS/CmPublic/";
 
+export function archivePermitId(value: string | string[] | undefined): string | null {
+  return typeof value === "string" && /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(value) ? value : null;
+}
+
 export interface ArchiveChatTurn {
   role: "user" | "assistant";
   content: string;

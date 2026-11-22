@@ -125,8 +125,9 @@ Mass Save and utility programs that fit the job.
 - **Closure-risk model.** LightGBM trained on 477,776 Boston permits flags permits likely to
   stall, with up to three plain-English reasons from SHAP, and sorts the queue so reviewers see
   them first.
-- **Permit archive.** Reviewers chat to search an address's Analyze Boston permit records,
-  compare past work and open the City's original scans.
+- **Permit archive.** Anyone can open `/archive` from the homepage or header and chat to search
+  Analyze Boston permit records, compare past work and open the City's original scans. Reviewers
+  reach it from a permit and return to that permit when finished.
 - **Human in the loop, by construction.** Only a reviewer action from a signed-in official can
   approve or return a permit.
 
