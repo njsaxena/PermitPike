@@ -64,7 +64,11 @@ async function callAgent(agentUrl: string, applicationId: string, version: numbe
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`agent responded ${res.status}`);
+  if (!res.ok) {
+    // The agent's error carries only ids and a reason (no fields or file contents), so it is safe to log.
+    const detail = (await res.text().catch(() => "")).slice(0, 500);
+    throw new Error(`agent responded ${res.status}${detail ? `: ${detail}` : ""}`);
+  }
   return AgentReviewResponse.parse(await res.json());
 }
 
