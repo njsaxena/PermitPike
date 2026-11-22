@@ -33,8 +33,6 @@ export function Header() {
     <HeaderShell
       role={role}
       homeHref={applicant ? "/apply" : reviewer ? "/review" : "/"}
-      // One permit open for review uses the wider workspace.
-      wide={/^\/(review|design\/portal)\/[^/]+/.test(path) && path !== "/review/archive"}
       action={
         role && (
           <span className="flex items-center gap-3">

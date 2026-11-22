@@ -122,8 +122,7 @@ export function ReviewWorkspace({
     : 0;
 
   return (
-    // Wider than the reading width: documents and evidence side by side need the room.
-    <div className="relative left-1/2 flex w-[calc(min(100vw,var(--pp-workspace-width))-2rem)] -translate-x-1/2 flex-col gap-8 sm:w-[calc(min(100vw,var(--pp-workspace-width))-3rem)]">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href={backHref} className="pp-link inline-flex items-center gap-1.5 text-sm">

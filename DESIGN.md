@@ -93,9 +93,11 @@ Every text/background pair passes WCAG AA. Tints are for backgrounds only.
 
 - 4px spacing grid (`--spacing: 4px`). Prefer multiples of 8.
 - Corners: square. No rounded corners anywhere (`--pp-radius: 0`; Tailwind radius tokens are cleared).
-- Borders are 1px. Card padding is 24px (`p-card`). Page max width is 1100px (`max-w-page`).
-  The review workspace (one permit open for an official) is wider, 1400px
-  (`--pp-workspace-width`), so documents and evidence fit side by side; its header widens to match.
+- Borders are 1px. Card padding is 24px (`p-card`). Page max width is 1400px (`max-w-page`) on every
+  internal page, with the same 16/24px side padding, so the header and the content's left edge
+  never move between pages. The review workspace needs that width for documents beside the
+  evidence; narrower content (forms, reading text) keeps its own max width but starts at the same
+  left edge. Only the home landing page is full screen.
 - Focus: one 2px ink line drawn over the element's border (offset -1px), so it never
   reads as a double border. Never remove it.
 

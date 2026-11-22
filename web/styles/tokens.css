@@ -67,8 +67,7 @@
   --pp-radius: 0; /* square corners everywhere; no rounded corners */
   --pp-border-width: 1px;
   --pp-card-padding: 24px;
-  --pp-page-width: 1100px;
-  --pp-workspace-width: 1400px; /* the review workspace: documents beside the evidence */
+  --pp-page-width: 1400px; /* every internal page, so the frame doesn't move between pages; the review workspace needs this room */
 
   /* Focus: one ink line drawn over the element's own 1px border. */
   --pp-focus-width: 2px;
