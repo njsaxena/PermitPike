@@ -1,10 +1,10 @@
 # Example permit library
 
 Five permit requests and their documents, for applicants to start a real filing from
-(`/apply/new?example=<slug>`). The library holds only what is filed: the job, the
-address, the cost, the description and the documents. What PermitPike finds and what an
-official decides are not saved anywhere; they happen when the permit is filed. Every
-person, company, product and document is fictional, and each document says so.
+(`/apply/new?example=<slug>`). Each example holds what gets filed: the job, address, cost,
+description and documents. PermitPike's review and the official's decision happen live when the
+permit is filed. Every person, company, product and document is fictional, and each document
+says so.
 
 | # | Slug | Request |
 | - | ---- | ------- |
@@ -16,25 +16,10 @@ person, company, product and document is fictional, and each document says so.
 
 ## Files
 
-- `web/public/examples/library.json`: the requests (shape below).
-- `web/public/examples/<slug>/`: the documents for each example (spec sheet, panel photo, site plan, plus extras),
-  with a PNG of the first page of each PDF to look through on the filing screen.
-  The web app serves them at `/examples/<slug>/<file>`.
-- `examples/build.ts`: builds all of the above. `examples/documents.ts`: the document templates.
-
-```ts
-interface ExampleLibrary {
-  note: string;
-  examples: {
-    slug: string;
-    jobType: JobType;               // from @permitpike/contract
-    address: Address;
-    estimatedProjectCost: number;   // USD, as the electrician types it
-    jobDescription: string;
-    files: FileRef[];               // the documents of the first submission
-  }[];
-}
-```
+- `web/public/examples/library.json`: the requests.
+- `web/public/examples/<slug>/`: each example's documents (spec sheet, panel photo, site plan and
+  extras), plus a PNG of each PDF's first page, served at `/examples/<slug>/<file>`.
+- `examples/build.ts` builds them; `examples/documents.ts` holds the document templates.
 
 ## Rebuilding
 
@@ -42,7 +27,5 @@ interface ExampleLibrary {
 pnpm examples
 ```
 
-Needs Google Chrome (set `CHROME_PATH` if it isn't in `/Applications`) and macOS `sips`.
-`FileRef.url` must be absolute, so URLs use `EXAMPLES_ORIGIN` (default `http://localhost:3100`).
-
-The library is plain JSON against the contract in `packages/`, so nothing imports it at build time.
+Needs Google Chrome (set `CHROME_PATH` if it lives outside `/Applications`) and macOS `sips`. File
+URLs use `EXAMPLES_ORIGIN` (default `http://localhost:3100`).

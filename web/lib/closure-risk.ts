@@ -4,7 +4,6 @@ import {
   type Application,
   type Extraction,
   type PermitRiskScoreRequest as PermitRiskScoreRequestType,
-  type PermitRiskScoreResponse,
 } from "@permitpike/contract";
 
 const BOSTON_JOB_MAPPING: Record<
@@ -37,5 +36,3 @@ export function buildPermitRiskScoreRequest(
     applicantPriorClosureRate,
   });
 }
-
-export type ClosureRisk = PermitRiskScoreResponse;

@@ -388,7 +388,7 @@ and set `RISK_API_URL=http://localhost:8000`.
 | `pnpm db:check` | Row counts per table and the newest `permits_weekly` rows |
 | `pnpm seed` | Load the demo applications |
 
-All request and response shapes live in `packages/contract/index.ts` (`API_ROUTES`):
+All request and response shapes live in `packages/contract/index.ts`. Routes:
 `POST /api/applicants`, `POST /api/reviewer/session`, `POST /api/blob`, `GET /api/parcel`,
 `POST /api/applications`, `GET /api/applications`, `GET /api/applications/:id`,
 `POST /api/applications/:id/resubmit`, `POST /api/applications/:id/review`,

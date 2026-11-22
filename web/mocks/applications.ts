@@ -538,11 +538,3 @@ const batDetail: ApplicationDetail = {
 };
 
 export const MOCK_APPLICATIONS: ApplicationDetail[] = [hpDetail, evDetail, batDetail];
-
-/**
- * Scripted agent output for resubmits, keyed by application id then version.
- * The seed and review stub use these so the heat pump demo flips from fail to pass.
- */
-export const MOCK_RESUBMISSIONS: Record<string, Record<number, ApplicationVersion>> = {
-  [HP_ID]: { 2: hpVersion2 },
-};

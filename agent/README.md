@@ -1,41 +1,38 @@
 # @permitpike/agent
 
-Mastra server that reviews one permit application. `POST /review` takes an
-`AgentReviewRequest` and returns an `AgentReviewResponse` (both in `packages/contract`).
+Mastra server that reviews one permit application. `POST /review` takes an `AgentReviewRequest`
+and returns an `AgentReviewResponse` (both in `packages/contract`).
 
-## Pipeline (`src/mastra/workflows/review-application.ts`)
+## Workflow (`src/mastra/workflows/review-application.ts`)
 
-1. **extract**: uses `request.extraction` when it is for this job type and passes the
-   pack's schema. Otherwise downloads the permit's public Vercel Blob uploads and
-   reads them together with Gemini. Review requires evidence for every required
-   field and confidence of at least 0.7 for each value extracted.
-2. **run-checks** (`src/review/run-checks.ts`, pure): runs every rule in
-   `getPack(jobType)`, then `calculateLoad` with `pack.addedLoads(fields)` and
-   `pack.serviceRatingAmps(fields)`. A rule whose field is in `missingFields` is not run;
-   it becomes a `warn` check saying manual review is needed (`RULE_REQUIRED_FIELDS`).
-   If a load calc input is missing, the review stops with an error.
-3. **recommend** (`src/review/recommend.ts`, pure): any fail -> `return_for_fixes`;
-   any warn or a utility flag -> `approve_with_conditions`; else `approve`. Confidence is
-   the mean of `extraction.fieldConfidence`. An Eversource `service_upgrade` flag comes
-   from the pack or from a load calc that needs an upgrade. Then `permitReviewer` writes
-   the summary (15 s timeout, `src/review/summary.ts`); on failure, or with no
-   `GOOGLE_GENERATIVE_AI_API_KEY`, a plain summary is used. The model only writes the
-   summary. The response is validated against `AgentReviewResponse` before it is returned.
+1. **extract**: reuses `request.extraction` when it matches the job type; otherwise downloads the
+   permit's Vercel Blob uploads and reads them with Gemini. Every required field needs evidence
+   and a confidence of at least 0.7.
+2. **run-checks** (`src/review/run-checks.ts`, pure): runs every rule in `getPack(jobType)`, then
+   `calculateLoad` with `pack.addedLoads(fields)` and `pack.serviceRatingAmps(fields)`. A rule
+   whose field is in `missingFields` becomes a `warn` asking for manual review
+   (`RULE_REQUIRED_FIELDS`). A missing load calc input stops the review with an error.
+3. **recommend** (`src/review/recommend.ts`, pure): any fail gives `return_for_fixes`; any warn
+   or utility flag gives `approve_with_conditions`; otherwise `approve`. Confidence is the mean
+   of `extraction.fieldConfidence`. An Eversource `service_upgrade` flag comes from the pack or
+   from a load calc that needs an upgrade. `permitReviewer` then writes the summary (15 s
+   timeout, `src/review/summary.ts`), with a plain fallback summary when the model is
+   unavailable. The response is validated against `AgentReviewResponse`.
 
-If the workflow can't finish, `/review` returns `500 { error: { code: "internal", message } }`
-and no recommendation. The web app then puts the application in the queue without one.
+When the workflow fails, `/review` returns `500 { error: { code: "internal", message } }` and the
+web app queues the application for a human review.
 
-## Run locally with the web app
+## Run locally
 
-`.env` at the repo root (copy `.env.example`):
+In the root `.env` (copied from `.env.example`):
 
 ```
 AGENT_URL=http://localhost:4111
 AGENT_SHARED_SECRET=change-me-locally   # same value for web and agent
-GOOGLE_GENERATIVE_AI_API_KEY=           # required for document extraction and model summaries
+GOOGLE_GENERATIVE_AI_API_KEY=           # for extraction and summaries
 ```
 
-Two terminals from the repo root:
+Then, in two terminals from the repo root:
 
 ```bash
 pnpm dev:agent
@@ -45,14 +42,9 @@ pnpm dev:agent
 pnpm dev:web
 ```
 
-File an application in the web app. The web calls `POST $AGENT_URL/review` after filing
-and saves the result; the application shows up in the reviewer queue with it.
-
-New filings send `extraction: null`. Include documents that identify the equipment
-and state the service, installation, and existing load details. When required
-information is missing, the application goes to the reviewer queue without a
-recommendation. For a standalone review with pre-extracted fields, POST a request
-carrying the extraction and the `x-permitpike-secret` header.
+Filing an application calls `POST $AGENT_URL/review` and saves the result to the reviewer queue.
+To review pre-extracted fields directly, POST a request with the extraction and the
+`x-permitpike-secret` header.
 
 ## Tests
 
@@ -60,4 +52,4 @@ carrying the extraction and the `x-permitpike-secret` header.
 pnpm --filter @permitpike/agent test
 ```
 
-Fixture extractions in `test/fixtures` are fictional: clean pass, verified fail, missing field.
+`test/fixtures` holds fictional extractions: a clean pass, a verified fail and a missing field.

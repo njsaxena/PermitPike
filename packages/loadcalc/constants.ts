@@ -89,32 +89,6 @@ export const TABLE_CITATION = `${CODE_EDITION} Table 120.83`;
  */
 export const FIRST_TIER_ALLOCATION_NOTE = "existing first, then lowest-factor new loads (most conservative)";
 
-/**
- * Heat pump backup (supplemental) electric resistance heat, e.g. "10 kW heat strip"
- * in an air handler. It is central electric resistance space heating, so it is its own
- * NewLoad with kind "central_resistance_heat" (80%) and hvacMode "heating", on top of
- * the heat pump itself ("other", 50%, hvacMode "both"). Both run together in deep cold
- * and defrost, and nothing makes them noncoincident.
- * Boston data (Approved Building Permits, electrical, 2020 to Nov 2026): about 1 to 2%
- * of the 2,058 heat pump permits mention resistance backup, nearly all ducted or
- * fan-coil systems, sized 5 to 15 kW. About 54% are ductless mini-splits with none.
- * Rare, but as large as the heat pump when present, so it must not be dropped.
- */
-export const HEAT_PUMP_BACKUP_HEAT_KIND = "central_resistance_heat" as const;
-
-/**
- * NEC 2026 120.57: EVSE load is the nameplate rating; 7,200 VA is used only when the
- * nameplate is not available. It is not a minimum: SR-7809 "allows the use of nameplate
- * ratings, in lieu of the 7200 VA value" (NFPA 2026 Second Draft, CMP-2, PC 1713 et al.).
- * Some guides still quote the First Draft's "whichever is larger".
- * For packs: pass the charger's nameplate VA (output amps x voltage); use this value
- * only when the nameplate is unknown.
- * Boston data: of 203 EV permits since 2020 that state an amperage, about 92% are 40 A
- * circuits or larger (9,600 VA and up), so the 7,200 VA value rarely matters.
- */
-export const EVSE_VA_WHEN_NAMEPLATE_UNKNOWN = 7200;
-export const EVSE_CITATION = `${CODE_EDITION} 120.57`;
-
 // ---------------------------------------------------------------------------
 // NEC 2026 120.87: existing load from measured maximum demand
 // Source: same NFPA document, pp. 101-105 (PC 1121, 1611, 1613, 86; SR-7849).
