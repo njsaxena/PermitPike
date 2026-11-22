@@ -44,23 +44,16 @@ is approved the same week it's filed.
   <tr>
     <td align="center" width="25%"><h2>40,000</h2>permits a year from Boston ISD<sup>1</sup></td>
     <td align="center" width="25%"><h2>477,776</h2>Boston permits our closure-risk model trained on<sup>2</sup></td>
-    <td align="center" width="25%"><h2>55%</h2>of eligible Boston permits since 2015 never marked closed<sup>3</sup></td>
+    <td align="center" width="25%"><h2>55%</h2>of eligible Boston permits since 2015 still open on the city's books<sup>3</sup></td>
     <td align="center" width="25%"><h2>&lt; 1 min</h2>from filing to a cited recommendation in the queue</td>
   </tr>
 </table>
-
-<sub>
-1. <a href="https://content.boston.gov/node/16047426">City of Boston</a>.
-2. Analyze Boston building permits, 2015 to November 2026; test ROC AUC 0.759 (<a href="ml/README.md">model card</a>).
-3. 252,478 of 457,253 eligible permits issued 2015 on, Analyze Boston snapshot of November 21st, 2026 (<a href="ml/README.md">model card</a>).
-</sub>
 
 ---
 
 ## Two sides of one permit
 
 PermitPike is one app with two doors. Electricians file and fix; officials review and decide.
-Both see the same permit move along the same trail, from filed to signed.
 
 <table>
   <tr>
@@ -75,12 +68,12 @@ Both see the same permit move along the same trail, from filed to signed.
     <td valign="top">
       <b>File in minutes.</b> Pick the job (heat pump or panel upgrade, EV charger, home battery),
       confirm the property on a map of the parcel, and attach one document per row. The permit
-      gets a tracking code (<code>PP-XXXX-XXXX</code>) and lands straight in the city's queue.
+      gets a tracking code (<code>PP-XXXX-XXXX</code>) and lands in the city's queue.
     </td>
     <td valign="top">
       <b>One shared queue.</b> A board (In progress, Waiting, Returned) or a table, sorted by
-      closure risk, with every open permit pinned on a map of Boston. Pin heads use the same
-      mark shapes as the status chips, so status never depends on color alone.
+      closure risk, with every open permit pinned on a map of Boston. Each status has its own
+      mark shape, on the pins and the chips.
     </td>
   </tr>
   <tr>
@@ -94,17 +87,16 @@ Both see the same permit move along the same trail, from filed to signed.
       the corrected documents and resubmit; the official sees only what changed.
     </td>
     <td valign="top">
-      <b>Documents first.</b> The workspace opens on the applicant's actual files, with zoom, and
-      under each one the values to check against it. Anything read with under 85% confidence
-      is flagged to read from the document. "Change status" approves or returns; overriding a
-      failing check needs a written reason, and every action is signed into an audit log.
+      <b>Documents first.</b> The workspace opens on the applicant's files, with the values to
+      check under each one and low-confidence values flagged. "Change status" approves or
+      returns; overriding a failing check takes a written reason, and every action is signed
+      into an audit log.
     </td>
   </tr>
 </table>
 
-Anyone with a tracking code can check a permit at `/track` without signing in. The public page
-shows the status and next steps, never the AI recommendation, plus the Mass Save and utility
-programs that fit the job.
+Anyone with a tracking code can check a permit at `/track`: the status, next steps, and the
+Mass Save and utility programs that fit the job.
 
 ## Stack
 
@@ -118,29 +110,25 @@ programs that fit the job.
 
 ## Features
 
-- **Gemini document reader.** Spec sheets, panel photos and site plans become structured,
-  typed fields (breaker sizes, nameplate amps, MCA and MOCP, setbacks), each with its own
-  confidence. The electrician confirms every value before filing; nothing is filled in
-  silently.
-- **A rule pack per device.** Deterministic code checks, failures first, each returning pass,
-  warn or fail with a code citation, a link to the published source and a suggested fix.
-- **Load calculation you can audit.** Every line with its volt-amps and code section, the
-  totals, and a meter against the service with 80% and 100% marks, before and after an upgrade.
-- **Utility flag.** When a job needs the utility (a service upgrade, a battery that can export),
-  the recommendation says so, so the Eversource request goes in early.
-- **Boston compliance MCP.** The same read-only tools the agent uses, served over the Model
-  Context Protocol: search official Massachusetts and Boston sources, pull live excerpts with
-  page numbers, and resolve any Boston address to its parcel and zoning.
-- **Closure-risk model.** LightGBM trained on 477,776 Boston permits predicts which permits are
-  likely to stall, with up to three plain-English reasons from SHAP. It sorts the queue; it
-  never touches the recommendation.
-- **Permit archive.** Reviewers search public Analyze Boston permit records for an address by
-  chat, compare past work and open the City's original scans.
-- **The Freedom Trail.** Every permit's progress is a solid brick-red line from Filed to Signed,
-  the same trail on both sides of the app.
-- **Human in the loop, by construction.** The AI's output always reads "PermitPike recommends",
-  is marked Advisory and is written in ink, never in a verdict color. Only a reviewer action
-  from a signed-in official can approve or return a permit.
+- **Gemini document reader.** Spec sheets, panel photos and site plans become typed fields
+  (breaker sizes, nameplate amps, MCA and MOCP, setbacks), each with a confidence score.
+- **A rule pack per device.** Deterministic code checks, each returning pass, warn or fail with
+  a code citation, a source link and a suggested fix.
+- **Load calculation you can audit.** Every line with its volt-amps and code section, plus a
+  meter against the service at 80% and 100%, before and after an upgrade.
+- **Utility flag.** When a job needs a service upgrade or has a battery that can export, the
+  recommendation flags it so the Eversource request goes in early. Eversource, Boston's electric
+  utility, approves any job that adds service or sends power back to the grid.
+- **Boston compliance MCP.** The agent's read-only tools over the Model Context Protocol: search
+  official Massachusetts and Boston sources, pull live excerpts with page numbers, and resolve
+  any Boston address to its parcel and zoning.
+- **Closure-risk model.** LightGBM trained on 477,776 Boston permits flags permits likely to
+  stall, with up to three plain-English reasons from SHAP, and sorts the queue so reviewers see
+  them first.
+- **Permit archive.** Reviewers chat to search an address's Analyze Boston permit records,
+  compare past work and open the City's original scans.
+- **Human in the loop, by construction.** Only a reviewer action from a signed-in official can
+  approve or return a permit.
 
 ## How it works
 
@@ -155,7 +143,7 @@ flowchart LR
   official(["Building official"]):::ext
   web["<b>Web app</b> · Next.js on Vercel<br/>Filing, review, public tracking<br/>Shared queue and maps"]:::app
   blob[("<b>Vercel Blob</b><br/>Uploaded documents")]:::data
-  agent["<b>Review agent</b> · Mastra on Vultr<br/>Extract → load calc → rule pack<br/>→ recommend → utility flag"]:::ai
+  agent["<b>Review agent</b> · Mastra on Vultr<br/>Extract → run checks<br/>→ recommend"]:::ai
   gemini["<b>Gemini API</b><br/>Reads documents,<br/>writes the summary"]:::ai
   mcp["<b>Boston compliance MCP</b><br/>Code sources, parcel zoning"]:::ai
   risk["<b>Closure-risk model</b><br/>LightGBM + SHAP · FastAPI on Vultr"]:::ai
@@ -206,46 +194,41 @@ sequenceDiagram
 | | |
 | ---: | --- |
 | **3** | job types: heat pump with panel work, EV charger, home battery |
-| **17** | deterministic code checks across the three rule packs, every one cited |
+| **17** | code checks across three rule packs, each cited |
 | **11** | official Massachusetts and Boston sources in the compliance catalog |
 | **3** | MCP tools: code search, live code excerpts, parcel and zoning lookup |
 | **477,776** | Boston permits (2015 to November 2026) in a TimescaleDB hypertable |
 | **0.759** | test ROC AUC for closure risk, against 0.733 for logistic regression |
-| **< 10 ms** | to score one permit (7.8 to 9.5 ms, warmed, on the FastAPI service) |
+| **< 10 ms** | to score one permit (7.8 to 9.5 ms warmed) |
 | **38** | rule pack and load calculation tests, all passing |
 
 ### Gemini document reader (`agent/extract`)
 
 The agent sends each upload to the Gemini API (`gemini-3.8-flash`) with the job's extraction
-schema, and gets back typed fields plus a confidence for each one. Schemas live in the shared
-Zod contract, so the same shape is validated by the agent, the database and the filing form.
-Values under 85% confidence, or not found, are never guessed: the electrician confirms them
-when filing, and the official sees them flagged in brass with a sentence telling them to read
-the value from the document. Gemini also turns the finished checks into the short
-recommendation summary. It never decides a check.
+schema and gets back typed fields, each with a confidence. Values under 85% go to the
+electrician to confirm when filing and show flagged in brass for the official. Gemini also
+writes the short recommendation summary from the finished checks.
 
 ### Review agent (`agent/`)
 
-A Mastra server exposes one `POST /review` route, and each request runs a typed three-step
-workflow (`review-application`):
+A Mastra server exposes one `POST /review` route that runs a typed three-step workflow:
 
 1. **`extract`** calls the Gemini extractor with the job's schema.
 2. **`run-checks`** loads the job's rule pack and runs the shared load calculation
-   (`packages/loadcalc`), which adds the new load to the home's existing load with the NEC
-   optional method for dwellings and compares it with the service rating at 80% and 100%.
-3. **`recommend`** turns the results into approve, approve with conditions, or return for fixes,
-   with drafted fixes, an inspector checklist and an Eversource flag when the job needs more
-   service. Only then does the `permit-reviewer` Mastra agent, with the compliance tools
-   attached, write the plain-English summary. The decision itself is plain TypeScript, so the
-   same inputs always give the same answer.
+   (`packages/loadcalc`): the NEC optional method for dwellings, new load plus existing,
+   against the service rating at 80% and 100%.
+3. **`recommend`** decides approve, approve with conditions, or return for fixes, in plain
+   TypeScript so the same inputs always give the same answer, and adds drafted fixes, an
+   inspector checklist and an Eversource flag. The `permit-reviewer` Mastra agent, with the
+   compliance tools attached, then writes the summary.
 
-Every step's input and output is a Zod schema from the contract, and the agent's response is
-parsed against `AgentReviewResponse` before it leaves the server.
+Each step's input and output is a Zod schema, and the response is parsed against
+`AgentReviewResponse` before it leaves the server.
 
 ### Rule packs (`packs/`)
 
-Each device is one pack: an extraction schema, the load it adds, and its checks. Adding a
-device means adding a pack; the load engine and the agent stay the same.
+Each device is one pack: extraction schema, added load and checks. A new device is one new
+pack file.
 
 | Pack | Checks | What it checks |
 | --- | ---: | --- |
@@ -253,9 +236,9 @@ device means adding a pack; the load engine and the agent stay the same.
 | EV charger | 5 | Breaker sized for continuous load, conductor size, GFCI, outdoor rating, pedestal location |
 | Home battery | 4 | UL 9540 listing, backfeed breaker within the busbar 120% rule, install location and clearance to openings, breaker space |
 
-Every check cites its source (NEC article, 527 CMR or Boston Zoning Code), and the citation
-links to a reviewed catalog of official sources in `packages/compliance`. The NEC is NFPA's
-copyright, so PermitPike stores section numbers and links, never code text.
+Every check cites its NEC article, 527 CMR section or Boston Zoning Code section, linked to a
+reviewed catalog of official sources. PermitPike stores section numbers and links, since the
+NEC is NFPA's copyright.
 
 ### Boston compliance MCP (`packages/compliance`)
 
@@ -286,29 +269,27 @@ Install the workspace dependencies (Node 22.13+ for Mastra), then:
 Try `search_compliance_sources` with `{"jobType":"ev_charger","query":"EVSE"}`, then
 `get_compliance_source` with `{"sourceId":"boston-evse-installation-guide","query":"electrical permit"}`,
 or `resolve_parcel_zoning` with `{"street":"300 Washington Street","zip":"02121"}`. Catalog
-search works offline; excerpts need outbound HTTPS. The server has no permit decision actions.
+search works offline; excerpts fetch live over HTTPS.
 
 </details>
 
 ### Closure-risk model (`ml/`)
 
 A LightGBM classifier trained on Analyze Boston's approved building permits predicts whether a
-permit will stall before it is closed out. The split is by issue date so the model never sees the
-future: training through 2022, validation on 2023 (38,519 permits) and test on the first half
-of 2024 (18,888 permits).
+permit will stall before closeout. The split is by issue date, so it learns only from the past:
+train through 2022, validate on 2023 (38,519 permits), test on the first half of 2024 (18,888).
 
 | Model | Test ROC AUC | Test PR AUC | Lift in top 10% |
 | --- | ---: | ---: | ---: |
 | Logistic regression (baseline) | 0.733 | 0.718 | 1.73× |
 | **LightGBM** | **0.759** | **0.760** | **1.86×** |
 
-Features are work and permit type, occupancy, ZIP, declared valuation, fees, timing, nine
-keyword flags (heat pump, EV, panel, 200 amp, battery, solar and more), up to 500 TF-IDF
-description terms, and the applicant's closure rate on strictly earlier permits. The applicant's
-name is never a feature. A FastAPI service returns a band (low below ⅓, medium below ⅔, high
-above) with up to three SHAP reasons in plain English, in 7.8 to 9.5 ms per warmed request. The
-web app calls it with a 2-second timeout; if it's slow or down, review carries on without a score. It predicts paperwork closure, not safety or compliance, and
-it never affects the recommendation. Full model card: [`ml/README.md`](ml/README.md).
+Features: work and permit type, occupancy, ZIP, valuation, fees, timing, nine keyword flags
+(heat pump, EV, panel, 200 amp, battery, solar and more), up to 500 TF-IDF description terms,
+and the applicant's closure rate on earlier permits, which is the one place names are used. A
+FastAPI service returns a band (low below ⅓, medium below ⅔, high above) and up to three SHAP
+reasons in 7.8 to 9.5 ms. The web app calls it with a 2-second timeout, and the score sits
+beside the recommendation as its own signal. Full model card: [`ml/README.md`](ml/README.md).
 
 ### Tiger Data (`packages/db`)
 
@@ -320,17 +301,17 @@ for the risk model.
 
 ### Front end (`web/`)
 
-Next.js 15 and React on Vercel, with API routes for filing, review and tracking. Browsers upload
-documents straight to Vercel Blob with short-lived tokens. Every request and response is
-validated against the shared Zod contract (`packages/contract/index.ts`), the single source of
-truth for web, agent, packs and database. Maps are Leaflet over grayscale OpenStreetMap tiles
-with parcel outlines from Boston GIS; the scroll wheel zooms the map while the page stays still.
+Next.js 15 and React 19 on Vercel, with API routes for filing, review and tracking. Browsers
+upload documents straight to Vercel Blob with short-lived tokens. Every request and response is
+validated against the shared contract (`packages/contract/index.ts`): Zod schemas, which are
+TypeScript definitions of each data shape that also check data at runtime. Web, agent, packs
+and database all import from it. Maps are Leaflet over grayscale OpenStreetMap tiles with
+parcel outlines from Boston GIS.
 
 ## Design: Boston permit office, made modern
 
-Official, calm and precise, with some civic pride and one lively color. It should feel like a
-well-designed city form, not a startup site, and it draws on Boston's buildings and streets,
-not its brands.
+Official, calm and precise, with civic pride and one lively color: a well-designed city form,
+drawn from Boston's buildings and streets.
 
 | Boston | Becomes |
 | --- | --- |
@@ -341,15 +322,15 @@ not its brands.
 | The Freedom Trail | The timeline: a solid brick-red line from Filed to Signed |
 | Triple-deckers, brownstones, gas lamps | Line drawings for empty states and the role choice |
 
-- **The homepage** is a blurred heat map of Boston's residential electrical permits that drifts
-  on a fresh loop around the city every visit, Allston to the North End. The corner names the
-  neighborhood under the middle of the screen with its real permit counts by year.
+- **The homepage** is a blurred heat map of Boston's residential electrical permits, drifting on
+  a fresh loop from Allston to the North End each visit. The corner names the neighborhood at
+  the center of the screen with its permit counts by year.
 - **Type** is Red Hat Text with even-width figures, so permit numbers and amps line up. Headings
   are regular weight; size carries the hierarchy. Dates are written in words ("November 21st").
 - **Accessible by default:** WCAG AA contrast, visible labels on every input, native `<dialog>`,
-  arrow-key tabs, and status that never relies on color: every state has its own mark shape.
-- **Motion** is one authored moment (the trail lays itself, stop by stop) and all of it respects
-  reduced motion. The full system lives in [`DESIGN.md`](DESIGN.md) and at `/design`.
+  arrow-key tabs, and a mark shape for every status, so it reads in color or in grayscale.
+- **Motion** is one moment (the trail lays itself, stop by stop), and all of it respects reduced
+  motion. Full system: [`DESIGN.md`](DESIGN.md) and `/design`.
 
 ## Repository
 
@@ -418,8 +399,8 @@ All request and response shapes live in `packages/contract/index.ts` (`API_ROUTE
 - **Risk model:** `docker build -f ml/Dockerfile -t permitpike-closure-risk .`, then run it on
   Vultr on port 8000.
 
-The hypertable and continuous aggregate are a hand-written migration, because Drizzle doesn't
-know hypertables. Never edit an applied migration; add a new one.
+The hypertable and continuous aggregate live in a hand-written migration, since they're
+TimescaleDB features. To change the schema, add a new migration.
 
 </details>
 
@@ -427,5 +408,10 @@ know hypertables. Never edit an applied migration; add a new one.
 
 - Boston permit records come from [Analyze Boston](https://data.boston.gov) (public domain);
   parcels and zoning from the City's ArcGIS services; map tiles © OpenStreetMap contributors.
-- Code citations point to official Massachusetts and Boston publications, as section numbers and
-  links only.
+- Code citations link to official Massachusetts and Boston publications by section number.
+
+<sub>
+1. <a href="https://content.boston.gov/node/16047426">City of Boston</a>.
+2. Analyze Boston building permits, 2015 to November 2026; test ROC AUC 0.759 (<a href="ml/README.md">model card</a>).
+3. 252,478 of 457,253 eligible permits issued 2015 on, Analyze Boston snapshot of November 21st, 2026 (<a href="ml/README.md">model card</a>).
+</sub>
