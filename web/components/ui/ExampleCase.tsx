@@ -13,7 +13,7 @@ import { CheckSummary } from "./CheckRow";
 
 /*
  * The example library: labeled permits that show what PermitPike should find.
- * Each example is an EvalCase from /evals/cases. The card says what it is and the
+ * Each example is an EvalCase. The card says what it is and the
  * expected outcome. The detail leads with the checks, one line each saying pass or
  * fail and why; every field sits behind "All fields", marked by its check.
  */
@@ -37,16 +37,7 @@ const STATUS: Record<CheckStatus, { word: string; Icon: typeof Check; tile: stri
 const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, pass: 2 };
 
 /** The outcome an example expects. Same shape as StatusChip; the icon carries the meaning too. */
-export function DecisionChip({
-  decision,
-  className,
-  srLabel = "Expected outcome: ",
-}: {
-  decision: RecommendationDecision;
-  className?: string;
-  /** Screen-reader prefix; pass "" where a column header already says what the chip is. */
-  srLabel?: string;
-}) {
+export function DecisionChip({ decision, className }: { decision: RecommendationDecision; className?: string }) {
   const d = DECISION[decision];
   return (
     <span
@@ -57,7 +48,7 @@ export function DecisionChip({
       )}
     >
       <d.Icon aria-hidden className="size-3.5" strokeWidth={3} />
-      {srLabel && <span className="sr-only">{srLabel}</span>}
+      <span className="sr-only">Expected outcome: </span>
       {d.label}
     </span>
   );

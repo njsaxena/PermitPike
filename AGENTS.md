@@ -11,7 +11,7 @@ commit messages, PR descriptions, README, code comments, or docs.
 ## Project rules
 
 - `packages/contract/index.ts` is the single source of truth for shapes shared between
-  web, agent, packs, db and evals. Do not redefine those types locally; import them.
+  web, agent, packs and db. Do not redefine those types locally; import them.
 - The AI only recommends. It never sets an application to `approved` or `returned`;
   only a `ReviewerAction` from a human official does that.
 - Every `CheckResult` carries a code citation. No citation, no check.

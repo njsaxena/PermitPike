@@ -100,7 +100,9 @@ The saved LightGBM artifact is 446,938 bytes.
 
 - Artifact: `ml/model/closure_v1.joblib`; the training command saves it once
   after evaluation and prints its exact file size.
-- `POST /score` accepts the feature inputs and an
+- `POST /score` requires the `x-permitpike-secret` header to match
+  `AGENT_SHARED_SECRET` (the same secret the agent uses); without it the
+  service answers 401. It accepts the feature inputs and an
   `applicantPriorClosureRate` computed upstream from earlier-issued permits.
   It returns `riskScore`, `band`, up to three SHAP-based plain-English
   `reasons`, and `modelVersion`.

@@ -33,7 +33,7 @@ starts from the evidence and a recommendation instead of a blank application.
 flowchart LR
   web["<b>Web app</b> · Vercel<br/>Apply, review and tracking screens<br/>Shared queue, property map"]
   agent["<b>Review agent</b> · Mastra on Vultr<br/>1. Extract fields<br/>2. Load calc + rule pack<br/>3. Recommend, draft fixes<br/>4. Utility flag"]
-  db[("<b>Tiger Data</b> · Postgres + TimescaleDB<br/>Applications, audit log, eval results<br/>477,767 Boston permits, weekly aggregates")]
+  db[("<b>Tiger Data</b> · Postgres + TimescaleDB<br/>Applications, audit log<br/>477,767 Boston permits, weekly aggregates")]
   gemini["<b>Gemini API</b><br/>Reads spec sheets and photos"]
   mcp["<b>Boston compliance MCP</b><br/>Code sources, parcel zoning"]
   utility["<b>Utility capacity</b><br/>Eversource, National Grid"]
@@ -120,13 +120,6 @@ returns a low, medium or high band with up to three plain-English reasons (SHAP)
 as a small FastAPI service on Vultr (`ml/`). It predicts paperwork closure, not safety or
 compliance, and it never affects the recommendation.
 
-### Evals
-
-`evals/cases` holds labeled applications with the expected decision and per-check
-results. `pnpm evals` runs every case through the same pipeline and reports decision
-accuracy, accuracy per rule and dangerous misses (a failing check scored as a pass), and
-writes each run to `eval_runs` in Tiger Data for the eval dashboard at `/review/evals`.
-
 ### Boston permit archive
 
 Open **Archive** from the homepage or app header. Anyone can use `/archive` without
@@ -145,14 +138,14 @@ sources when Gemini is unavailable.
 | --- | --- |
 | **Gemini API** | Reads uploaded spec sheets and panel photos into structured fields, and writes the recommendation summary |
 | **Mastra** | Runs the review agent and workflow (extract, check, recommend), and serves the Boston compliance MCP tools |
-| **Tiger Data** | The one shared database: applications, versions, audit log and eval runs, plus a hypertable of Boston permit history with continuous weekly aggregates |
+| **Tiger Data** | The one shared database: applications, versions and audit log, plus a hypertable of Boston permit history with continuous weekly aggregates |
 | **Vultr** | Hosts the Mastra agent and the closure-risk model API |
 | **Vercel** | Hosts the Next.js web app and stores uploads in Vercel Blob |
 | **Analyze Boston** | Public Boston permit records for the closure-risk model and permit history |
 | **OpenStreetMap + Boston GIS** | Parcel outlines, zoning layers and the map tiles |
 
 Everything is TypeScript except the model service (Python). Shapes shared between the web
-app, agent, packs, database and evals live in one Zod contract,
+app, agent, packs and database live in one Zod contract,
 `packages/contract/index.ts`.
 
 ## Layout
@@ -167,7 +160,6 @@ app, agent, packs, database and evals live in one Zod contract,
 | `packages/db/` | Drizzle schema and migrations for Tiger Data |
 | `packs/` | Rule packs, one per job type |
 | `ml/` | Closure-risk model: training, scoring API, Dockerfile |
-| `evals/` | Labeled cases and the eval runner |
 | `data/` | Boston permits seed data (not committed) |
 
 ## Setup
@@ -219,15 +211,14 @@ To run the closure-risk model locally, see `ml/README.md`, then set
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` |
 | `pnpm db:check` | Row counts per table and the newest `permits_weekly` rows |
 | `pnpm seed` | Load the demo applications |
-| `pnpm evals` | Validate and run the eval cases |
 
 ## Database
 
 Tiger Data (Postgres + TimescaleDB). Everything reads `DATABASE_URL` from the root `.env`
 (Tiger's connection string, `sslmode=require`). `.env` is gitignored.
 
-- `applicants`, `applications`, `application_versions`, `reviewer_actions` (append-only
-  audit log) and `eval_runs` come from `packages/db/schema.ts`.
+- `applicants`, `applications`, `application_versions` and `reviewer_actions` (append-only
+  audit log) come from `packages/db/schema.ts`.
 - `boston_permits` is a hypertable on `issued_date`, segmented by `worktype`.
 - `permits_weekly` is a continuous aggregate of weekly counts by `worktype` and ZIP,
   refreshed hourly.
@@ -251,7 +242,6 @@ All request and response shapes live in `packages/contract/index.ts` (`API_ROUTE
 - `POST /api/applications/:id/resubmit`
 - `POST /api/applications/:id/review` (official's approve, return or override)
 - `GET /api/track/:code` (public status by tracking code)
-- `GET /api/evals`
 
 ## Boston compliance MCP
 

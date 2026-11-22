@@ -100,7 +100,7 @@ export function loadCalcInput(fields: ExtractedFields, pack: RulePack<JobType>):
 
 export function runChecks(extraction: Extraction): ChecksResult {
   const fields = extraction.fields;
-  // Each pack only sees its own job type's fields (same pattern as evals/run.ts).
+  // Each pack only sees its own job type's fields.
   const pack = getPack(fields.jobType) as unknown as RulePack<JobType>;
   const f = fields as Parameters<typeof pack.serviceRatingAmps>[0];
   const missing = extraction.missingFields;

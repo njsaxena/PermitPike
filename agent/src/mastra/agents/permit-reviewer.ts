@@ -1,7 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 import { complianceTools } from "@permitpike/compliance";
 
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
 
 /**
  * Writes the human-readable summary of a review. It does NOT decide the outcome:

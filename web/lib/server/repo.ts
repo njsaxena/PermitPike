@@ -4,7 +4,6 @@ import {
   applicants,
   applications,
   applicationVersions,
-  evalRuns,
   getDb,
   reviewerActions,
 } from "@permitpike/db";
@@ -15,7 +14,6 @@ import type {
   ApplicationDetail,
   ApplicationVersion,
   CreateApplicationRequest,
-  EvalRun,
   ListApplicationsQuery,
   Parcel,
   PermitRiskScoreResponse,
@@ -464,23 +462,6 @@ export async function getVersionForReview(
       ),
     );
   return row ?? null;
-}
-
-// ---------------------------------------------------------------------------
-// Evals
-// ---------------------------------------------------------------------------
-
-export async function listEvalRuns(): Promise<EvalRun[]> {
-  const rows = await getDb().select().from(evalRuns).orderBy(desc(evalRuns.ranAt)).limit(50);
-  return rows.map((r) => ({
-    id: r.id,
-    ranAt: iso(r.ranAt),
-    gitSha: r.gitSha,
-    model: r.model,
-    totalCases: r.totalCases,
-    passedCases: r.passedCases,
-    results: r.results,
-  }));
 }
 
 // ---------------------------------------------------------------------------

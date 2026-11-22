@@ -18,14 +18,11 @@ export function HeaderShell({
   role,
   action,
   homeHref = "/",
-  wide,
   className,
 }: {
   role?: ShellRole | null;
   /** Where the logo goes: the home of the side you're on, e.g. "/apply". */
   homeHref?: string;
-  /** Match the wider review workspace (--pp-workspace-width). */
-  wide?: boolean;
   /** Navigation and actions, also available on public pages without a role. */
   action?: ReactNode;
   className?: string;
@@ -34,10 +31,7 @@ export function HeaderShell({
   return (
     <header className={cx("border-b border-ink bg-surface", className)}>
       <div
-        className={cx(
-          "mx-auto flex h-16 items-center justify-between gap-3 px-4 max-[359px]:px-3 sm:gap-4 sm:px-6",
-          wide ? "max-w-[var(--pp-workspace-width)]" : "max-w-page",
-        )}
+        className="mx-auto flex h-16 max-w-page items-center justify-between gap-3 px-4 max-[359px]:px-3 sm:gap-4 sm:px-6"
       >
         <div className="flex min-w-0 items-center gap-4">
           <Link href={homeHref} aria-label="PermitPike home">

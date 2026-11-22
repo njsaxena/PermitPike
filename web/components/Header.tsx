@@ -33,8 +33,6 @@ export function Header() {
     <HeaderShell
       role={role}
       homeHref={applicant ? "/apply" : reviewer ? "/review" : "/"}
-      // One permit open for review uses the wider workspace.
-      wide={/^\/(review|design\/portal)\/[^/]+/.test(path) && path !== "/review/evals" && path !== "/review/archive"}
       action={
         <nav aria-label="Main" className="flex items-center gap-2.5 text-sm whitespace-nowrap max-[359px]:gap-2 max-[359px]:text-xs sm:gap-3">
           <Link
@@ -47,11 +45,6 @@ export function Header() {
           {applicant && applicantId && (
             <Link href="/apply/account" aria-current={path === "/apply/account" ? "page" : undefined} className="pp-link">
               Account
-            </Link>
-          )}
-          {reviewer && (
-            <Link href="/review/evals" aria-current={path === "/review/evals" ? "page" : undefined} className="pp-link">
-              Evals
             </Link>
           )}
           {role && (

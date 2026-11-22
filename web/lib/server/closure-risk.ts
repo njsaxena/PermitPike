@@ -1,6 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import {
+  AGENT_SECRET_HEADER,
   PermitRiskScoreResponse,
   type PermitRiskScoreRequest,
   type PermitRiskScoreResponse as PermitRiskScoreResponseType,
@@ -60,7 +61,11 @@ export async function scoreAndSaveClosureRisk(
     );
     const response = await fetch(new URL("/score", riskApiUrl), {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        // Same shared secret the agent checks; the risk API rejects /score without it.
+        [AGENT_SECRET_HEADER]: process.env.AGENT_SHARED_SECRET ?? "",
+      },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(SCORE_TIMEOUT_MS),
     });

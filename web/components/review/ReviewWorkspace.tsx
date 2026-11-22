@@ -29,8 +29,10 @@ import {
 } from "@/components/ui";
 import { Decision } from "@/components/permit/Decision";
 import { PermitHeading } from "@/components/permit/PermitHeading";
+import { Step0DraftCard } from "@/components/permit/Step0Draft";
 import { clockTime, longDate } from "@/lib/format";
 import { DOCUMENT_LABEL, RULE_FIELDS, codeSource, ruleDocument, sourcesFor } from "@/lib/review-sources";
+import { buildStep0Draft } from "@/lib/step0";
 import { trailSteps } from "@/lib/trail";
 import { DocumentViewer, docTabId, type ViewerFile } from "./DocumentViewer";
 import { LoadCalcPanel } from "./LoadCalcPanel";
@@ -120,8 +122,7 @@ export function ReviewWorkspace({
     : 0;
 
   return (
-    // Wider than the reading width: documents and evidence side by side need the room.
-    <div className="relative left-1/2 flex w-[calc(min(100vw,var(--pp-workspace-width))-2rem)] -translate-x-1/2 flex-col gap-8 sm:w-[calc(min(100vw,var(--pp-workspace-width))-3rem)]">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href={backHref} className="pp-link inline-flex items-center gap-1.5 text-sm">
@@ -186,6 +187,10 @@ export function ReviewWorkspace({
             <Callout tone="utility" title={`${rec.utilityFlag.utility}: ${rec.utilityFlag.reason}`}>
               {rec.utilityFlag.action}
             </Callout>
+          )}
+          {rec?.utilityFlag && (
+            // From the record as it stands on screen, so the official's corrections carry into the draft.
+            <Step0DraftCard draft={buildStep0Draft({ ...app, extraction }, rec.loadCalc)} />
           )}
           {!rec && !checking && (
             <Callout title="PermitPike could not review this application. Check the documents yourself." />

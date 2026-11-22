@@ -6,6 +6,7 @@ import useSWR from "swr";
 import type { ReviewerActionInput } from "@permitpike/contract";
 import { Button, Callout } from "@/components/ui";
 import { api, ApiRequestError, POLL_MS } from "@/lib/api-client";
+import { buildStep0Draft } from "@/lib/step0";
 import { ChangeStatus } from "./ChangeStatus";
 import { ReviewWorkspace } from "./ReviewWorkspace";
 
@@ -21,7 +22,8 @@ export function ReviewDetail({ id }: { id: string }) {
   const { data, error, mutate } = useSWR(["application", id], () => api.getApplication(id), {
     refreshInterval: POLL_MS,
   });
-  const [pinned, setPinned] = useState<number | null>(null);
+  // Pinned on the first render when the server sent the permit with the page.
+  const [pinned, setPinned] = useState<number | null>(data?.application.version ?? null);
   const [stale, setStale] = useState(false);
 
   useEffect(() => {
@@ -83,7 +85,13 @@ export function ReviewDetail({ id }: { id: string }) {
         )
       }
       actions={
-        app.status === "awaiting_official" && !isStale ? <ChangeStatus app={app} rec={rec} onSubmit={submit} /> : undefined
+        app.status === "awaiting_official" && !isStale ? <ChangeStatus
+            app={app}
+            rec={rec}
+            onSubmit={submit}
+            // What the electrician gets: their permit's values, without the city's load calculation.
+            step0={rec?.utilityFlag ? buildStep0Draft(app) : null}
+          /> : undefined
       }
     />
   );

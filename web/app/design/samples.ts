@@ -133,7 +133,7 @@ const LOAD_1400 = {
   measuredPeakDemandKW: null,
 };
 
-/** The first is evals/cases/hp_setback_fail.json as written; the rest are illustrative. */
+/** Illustrative example permits for the design page. */
 export const EXAMPLES: EvalCase[] = [
   {
     id: "hp_setback_fail",

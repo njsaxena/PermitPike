@@ -87,6 +87,8 @@
     line-height: var(--pp-leading-body);
     caret-color: var(--pp-ink);
     scrollbar-color: var(--pp-border-strong) var(--pp-background);
+    /* Room for the scrollbar on every page, so the frame doesn't shift between short and long pages. */
+    scrollbar-gutter: stable;
     font-variant-numeric: tabular-nums;
   }
 

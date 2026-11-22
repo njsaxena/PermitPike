@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { Mastra } from "@mastra/core/mastra";
 import { registerApiRoute } from "@mastra/core/server";
 import { AGENT_SECRET_HEADER, AgentReviewRequest, AgentReviewResponse } from "@permitpike/contract";
@@ -11,20 +12,39 @@ function reviewFailed(applicationId: string, version: number, reason: string) {
   return { error: { code: "internal" as const, message: `Review could not finish: ${reason}` } };
 }
 
+/** True only when the request carries the shared secret the web sends. */
+function hasSecret(header: string | undefined): boolean {
+  const secret = process.env.AGENT_SHARED_SECRET;
+  if (!secret || !header) return false;
+  const a = Buffer.from(header);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+const UNAUTHORIZED = { error: { code: "bad_request", message: "Missing or wrong shared secret." } } as const;
+
 export const mastra = new Mastra({
   agents: { permitReviewer },
   workflows: { reviewApplication },
   server: {
     port: Number(process.env.PORT ?? 4111),
+    // Every route, including Mastra's built-in /api/* agent and workflow routes, needs the
+    // shared secret. Otherwise anyone who finds the server could run the agent on our Gemini key.
+    middleware: [
+      {
+        path: "/*",
+        handler: async (c, next) => {
+          if (!hasSecret(c.req.header(AGENT_SECRET_HEADER))) return c.json(UNAUTHORIZED, 401);
+          await next();
+        },
+      },
+    ],
     apiRoutes: [
       // POST /review  body: AgentReviewRequest  ->  AgentReviewResponse
       registerApiRoute("/review", {
         method: "POST",
         handler: async (c) => {
-          const secret = process.env.AGENT_SHARED_SECRET;
-          if (!secret || c.req.header(AGENT_SECRET_HEADER) !== secret) {
-            return c.json({ error: { code: "bad_request", message: "Missing or wrong shared secret." } }, 401);
-          }
+          if (!hasSecret(c.req.header(AGENT_SECRET_HEADER))) return c.json(UNAUTHORIZED, 401);
           const parsed = AgentReviewRequest.safeParse(await c.req.json());
           if (!parsed.success) {
             return c.json({ error: { code: "bad_request", message: "Invalid review request.", issues: parsed.error.issues } }, 400);

@@ -38,7 +38,7 @@ interface Rule<J> {
    title and citation are always attached.
 2. Missing input -> `warn` with a fix telling the applicant what to add. Never guess.
 3. No I/O, no LLM calls, no clocks. Same fields in, same result out.
-4. Add an eval case in `/evals/cases` that makes the rule fail.
+4. Add a test that makes the rule fail.
 
 ## Citations
 

@@ -3,7 +3,7 @@
 ## The contract
 
 - `packages/contract/index.ts` defines every shape that crosses a boundary
-  (web <-> agent <-> db <-> packs <-> evals).
+  (web <-> agent <-> db <-> packs).
 - Never copy contract types into your own package. Import them.
 
 ## Before you push

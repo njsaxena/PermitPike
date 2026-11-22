@@ -3,7 +3,6 @@ packages:
   - agent
   - packages/*
   - packs
-  - evals
 
 allowBuilds:
   esbuild: true

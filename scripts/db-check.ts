@@ -15,7 +15,6 @@ const TABLES = [
   "applications",
   "application_versions",
   "reviewer_actions",
-  "eval_runs",
   "boston_permits",
   "permits_weekly",
 ] as const;
