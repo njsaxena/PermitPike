@@ -393,11 +393,9 @@ All request and response shapes live in `packages/contract/index.ts` (`API_ROUTE
 `POST /api/applications/:id/resubmit`, `POST /api/applications/:id/review`,
 `GET /api/track/:code`.
 
-- **Web:** Vercel project with root directory `web` and the env vars from `.env.example`,
-  including `AGENT_URL` and `RISK_API_URL`.
-- **Agent:** `pnpm --filter @permitpike/agent build`, then `node .mastra/output/index.mjs` on Vultr.
-- **Risk model:** `docker build -f ml/Dockerfile -t permitpike-closure-risk .`, then run it on
-  Vultr on port 8000.
+Deploy the Next.js web app through Vercel. The [Vultr deployment runbook](deploy/vultr/README.md)
+covers starting the review agent and closure-risk API, connecting Vercel to them, and
+verifying a new filing before cutting over production traffic.
 
 The hypertable and continuous aggregate live in a hand-written migration, since they're
 TimescaleDB features. To change the schema, add a new migration.

@@ -1,0 +1,29 @@
+https://{$DEPLOY_HOST} {
+	@review {
+		method POST
+		path /review
+	}
+	handle @review {
+		reverse_proxy agent:4111
+	}
+
+	@score {
+		method POST
+		path /score
+	}
+	handle @score {
+		reverse_proxy risk:8000
+	}
+
+	@health {
+		method GET
+		path /health
+	}
+	handle @health {
+		reverse_proxy risk:8000
+	}
+
+	handle {
+		respond 404
+	}
+}
