@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://permitpike.vercel.app"><img src="https://img.shields.io/badge/live-permitpike.vercel.app-FFD21F?style=flat-square&labelColor=15191F" alt="Live app"></a>
+  <a href="https://permitpike.us"><img src="https://img.shields.io/badge/live-permitpike.us-FFD21F?style=flat-square&labelColor=15191F" alt="Live app"></a>
   <img src="https://img.shields.io/badge/Gemini-document%20reader-A23B2A?style=flat-square&labelColor=15191F" alt="Gemini">
   <img src="https://img.shields.io/badge/Mastra-agent%20%2B%20MCP-A23B2A?style=flat-square&labelColor=15191F" alt="Mastra">
   <img src="https://img.shields.io/badge/LightGBM-ROC%20AUC%200.76-A23B2A?style=flat-square&labelColor=15191F" alt="LightGBM">
