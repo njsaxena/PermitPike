@@ -1,0 +1,64 @@
+name: permitpike
+
+services:
+  agent:
+    build:
+      context: ../..
+      dockerfile: deploy/vultr/agent.Dockerfile
+    environment:
+      MASTRA_HOST: 0.0.0.0
+      PORT: "4111"
+      AGENT_SHARED_SECRET: ${AGENT_SHARED_SECRET:?Set AGENT_SHARED_SECRET}
+      GOOGLE_GENERATIVE_AI_API_KEY: ${GOOGLE_GENERATIVE_AI_API_KEY:?Set GOOGLE_GENERATIVE_AI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4111/health').then(response => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  risk:
+    build:
+      context: ../..
+      dockerfile: ml/Dockerfile
+    environment:
+      AGENT_SHARED_SECRET: ${AGENT_SHARED_SECRET:?Set AGENT_SHARED_SECRET}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health', timeout=2).close()"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      DEPLOY_HOST: ${DEPLOY_HOST:?Set DEPLOY_HOST}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      agent:
+        condition: service_healthy
+      risk:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
