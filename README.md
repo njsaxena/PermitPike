@@ -10,7 +10,7 @@
   </picture>
 </p>
 
-<h1 align="center">PermitPike is Boston's fast lane for electrical permits</h1>
+<h1 align="center">Boston's fast lane for electrical permits</h1>
 
 <p align="center">
   <b>Built for BostonHacks 2026</b> · Boundless Boston track
