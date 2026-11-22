@@ -213,16 +213,20 @@
     animation: pp-blink 1.2s steps(2, jump-none) infinite;
   }
 
-  /* Leaving the homepage: the map washes out to limestone, then the login settles in. */
-  [data-home] {
-    transition: opacity 150ms var(--pp-ease-out);
-  }
-  [data-leaving-home] [data-home] {
-    opacity: 0;
-    pointer-events: none;
+  /*
+   * Leaving the homepage (lib/home-transition.ts): the map crossfades into the page over
+   * 300ms, and the login rises in behind it, about 500ms in all.
+   */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 300ms;
+    animation-timing-function: var(--pp-ease-out);
   }
   [data-enter] {
-    animation: pp-rise 200ms var(--pp-ease-out) both;
+    animation: pp-rise 300ms var(--pp-ease-out) both;
+  }
+  [data-from-home] [data-enter] {
+    animation-delay: 220ms;
   }
 
   /* Dialogs rise into place. */

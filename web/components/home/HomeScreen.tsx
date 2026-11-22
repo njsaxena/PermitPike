@@ -64,14 +64,6 @@ export function HomeScreen() {
   const [hood, setHood] = useState(-1);
   const [shown, setShown] = useState(false);
 
-  // Clear the wash from the last time someone left this page (Back returns here).
-  useEffect(() => {
-    delete document.documentElement.dataset.leavingHome;
-    return () => {
-      delete document.documentElement.dataset.leavingHome;
-    };
-  }, []);
-
   useEffect(() => {
     const box = boxRef.current, img = imgRef.current;
     if (!box || !img) return;
@@ -138,7 +130,7 @@ export function HomeScreen() {
 
   return (
     // Covers the whole window, over the app shell, and scrolls on its own if the window is short.
-    <div data-home className="fixed inset-0 z-10 overflow-y-auto bg-background">
+    <div className="fixed inset-0 z-10 overflow-y-auto bg-background">
       <div className="relative min-h-full overflow-hidden">
         <div ref={boxRef} aria-hidden className="absolute inset-0 overflow-hidden">
           {/* A drifting background picture, not content: next/image would resize a 5600px map we move by hand. */}

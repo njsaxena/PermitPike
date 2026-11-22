@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Archive, ArrowRight, FilePlus, Landmark, Search, X } from "lucide-react";
 import Link from "next/link";
 import { cx } from "@/lib/cx";
+import { leaveHome } from "@/lib/home-transition";
 import { normalizeTrackingCode } from "@/lib/tracking-code";
 
 type Phase = "closed" | "opening" | "open" | "closing";
@@ -152,14 +153,11 @@ export function HomeActions() {
     );
   }
 
-  /** The map washes out to limestone before the next page loads, so the switch is less abrupt. */
+  /** The map holds until the login has rendered, then crossfades into it. */
   function leave(e: MouseEvent<HTMLAnchorElement>) {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || still()) return;
-    e.preventDefault();
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const href = e.currentTarget.getAttribute("href");
-    if (!href) return;
-    document.documentElement.dataset.leavingHome = "";
-    window.setTimeout(() => router.push(href), 120);
+    if (href && leaveHome(() => router.push(href))) e.preventDefault();
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -187,12 +185,12 @@ export function HomeActions() {
 
   return (
     <nav aria-label="Get started" className="relative z-[2] flex flex-col gap-3">
-      <Link href="/apply" inert={expanded} onClick={leave} className={cx(ACTION, "min-h-[68px] bg-accent px-4 text-[20px] leading-[26px] sm:px-6")}>
+      <Link href="/apply" prefetch inert={expanded} onClick={leave} className={cx(ACTION, "min-h-[68px] bg-accent px-4 text-[20px] leading-[26px] sm:px-6")}>
         <FilePlus aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
         Apply for a permit
       </Link>
       <div className="flex gap-3" inert={expanded}>
-        <Link href="/review" onClick={leave} className={cx(ACTION, HALF)}>
+        <Link href="/review" prefetch onClick={leave} className={cx(ACTION, HALF)}>
           <Landmark aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
           Staff portal
         </Link>

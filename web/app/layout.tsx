@@ -3,6 +3,7 @@ import { Public_Sans, Red_Hat_Text } from "next/font/google";
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
 import { MotionObserver } from "@/components/ui/MotionObserver";
+import { RouteSettled } from "@/components/ui/RouteSettled";
 // Before globals.css, so the PermitPike overrides of Leaflet win.
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Header />
         <main className="mx-auto max-w-page px-4 py-8 sm:px-6">{children}</main>
         <MotionObserver />
+        <RouteSettled />
       </body>
     </html>
   );
