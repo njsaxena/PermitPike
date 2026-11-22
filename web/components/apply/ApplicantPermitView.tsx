@@ -6,7 +6,7 @@ import { Decision, latestAction } from "@/components/permit/Decision";
 import { PermitHeading } from "@/components/permit/PermitHeading";
 import { Step0DraftCard } from "@/components/permit/Step0Draft";
 import { ServiceMeter } from "@/components/review/LoadCalcPanel";
-import { ProgramsCard } from "@/components/track/ProgramsCard";
+import { ProgramsCard, programsTitle } from "@/components/track/ProgramsCard";
 import { TrackingCodeCopy } from "@/components/track/TrackingCode";
 import { applicantProposesUpgrade, buildStep0Draft, STEP0_TITLE } from "@/lib/step0";
 import { trailSteps } from "@/lib/trail";
@@ -135,10 +135,10 @@ export function ApplicantPermitView({
           {footer}
         </div>
 
-        {/* Second column: programs to look into while the permit waits. */}
-        <aside aria-label="While you wait" className="flex flex-col gap-8 lg:sticky lg:top-8">
+        {/* Second column: programs to look into while the permit waits, recommended once it's approved. */}
+        <aside aria-label={programsTitle(app.status === "approved")} className="flex flex-col gap-8 lg:sticky lg:top-8">
           {ownStep0 && <Step0DraftCard draft={ownStep0} compact />}
-          <ProgramsCard jobType={app.jobType} />
+          <ProgramsCard jobType={app.jobType} approved={app.status === "approved"} />
         </aside>
       </div>
     </div>

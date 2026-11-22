@@ -9,7 +9,7 @@ import { clockTime, longDate } from "@/lib/format";
 import { cx } from "@/lib/cx";
 import { applicantProposesUpgrade, buildStep0Draft } from "@/lib/step0";
 import { Step0DraftCard } from "@/components/permit/Step0Draft";
-import { ProgramsCard } from "./ProgramsCard";
+import { ProgramsCard, programsTitle } from "./ProgramsCard";
 import { TrackLookup } from "./TrackLookup";
 
 /** Public status for one tracking code. Polls every 10 seconds while the page is open. */
@@ -77,9 +77,9 @@ export function TrackView({ view }: { view: PublicTrackView }) {
         </section>
       </div>
 
-      <aside aria-label="While you wait" className="flex flex-col gap-8">
+      <aside aria-label={programsTitle(view.status === "approved")} className="flex flex-col gap-8">
         {(view.status === "received" || view.status === "in_queue") && <OwnerStep0 code={view.code} />}
-        <ProgramsCardForLabel label={view.jobTypeLabel} />
+        <ProgramsCardForLabel label={view.jobTypeLabel} approved={view.status === "approved"} />
       </aside>
     </div>
   );
@@ -91,9 +91,9 @@ function aheadLine(n: number): string {
 }
 
 /** The public view carries the job's label, not its id; map it back for the programs list. */
-function ProgramsCardForLabel({ label }: { label: string }) {
+function ProgramsCardForLabel({ label, approved }: { label: string; approved: boolean }) {
   const jobType = jobTypeFromLabel(label);
-  return jobType ? <ProgramsCard jobType={jobType} /> : null;
+  return jobType ? <ProgramsCard jobType={jobType} approved={approved} /> : null;
 }
 
 function jobTypeFromLabel(label: string): JobType | null {

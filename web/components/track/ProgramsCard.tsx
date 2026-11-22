@@ -4,10 +4,15 @@ import { Card } from "@/components/ui";
 import { ELIGIBILITY_NOTE, programsFor } from "@/lib/programs";
 import { cx } from "@/lib/cx";
 
+/** The card's title: something to do while waiting, then a recommendation once approved. */
+export function programsTitle(approved: boolean): string {
+  return approved ? "Recommended programs" : "Programs while you wait";
+}
+
 /** Clean-energy programs for this kind of job. From the job type only, so it shows from filing on. */
-export function ProgramsCard({ jobType, className }: { jobType: JobType; className?: string }) {
+export function ProgramsCard({ jobType, approved = false, className }: { jobType: JobType; approved?: boolean; className?: string }) {
   return (
-    <Card label="Programs while you wait" className={cx("max-w-2xl", className)}>
+    <Card label={programsTitle(approved)} className={cx("max-w-2xl", className)}>
       <ul className="flex flex-col divide-y divide-border">
         {programsFor(jobType).map((p) => (
           <li key={p.url} className="flex flex-col gap-1 py-3 first:pt-0">
